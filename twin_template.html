@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BearingTwin — Jumeau numérique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c1117; --bg2:#0f151d; --panel:#141b24; --panel2:#18212c; --line:#232e3b; --line2:#2d3a4a;
+  --txt:#e6edf3; --mut:#8b98a5; --dim:#5d6b7a;
+  --ok:#3fb68b; --warn:#f5a524; --crit:#ef4444; --acc:#4c9aff; --acc2:#a78bfa;
+  --ok-bg:rgba(63,182,139,.12); --warn-bg:rgba(245,165,36,.13); --crit-bg:rgba(239,68,68,.14);
+  --r:14px; --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.45 Inter,system-ui,'Segoe UI',sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+.mono{font-family:var(--mono)}
+
+/* ---------- barre du haut ---------- */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;padding:12px 24px;
+  background:rgba(12,17,23,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand svg{flex:none}
+.brand h1{margin:0;font-size:16px;font-weight:800;letter-spacing:.2px;white-space:nowrap}
+.brand .sub{color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg{margin-left:auto;display:flex;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:3px}
+.seg button{border:0;background:none;padding:8px 14px;border-radius:8px;color:var(--mut);font-weight:600;font-size:13px;white-space:nowrap}
+.seg button.on{background:var(--panel2);color:var(--txt);box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 0 0 1px var(--line2)}
+
+/* ---------- chaîne de traitement ---------- */
+.pipe{display:flex;gap:6px;align-items:center;padding:10px 24px;border-bottom:1px solid var(--line);background:var(--bg2);overflow-x:auto}
+.pipe .st{display:flex;align-items:center;gap:8px;padding:6px 11px;border:1px solid var(--line);border-radius:999px;color:var(--mut);font-size:12px;white-space:nowrap;transition:.3s}
+.pipe .st b{color:var(--txt);font-weight:600}
+.pipe .st.act{border-color:var(--acc);color:var(--txt);box-shadow:0 0 0 3px rgba(76,154,255,.12)}
+.pipe .ar{color:var(--dim);flex:none}
+
+/* ---------- grille ---------- */
+main{padding:18px 24px 40px;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;max-width:1500px;margin:0 auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;min-width:0}
+.card h2{margin:0 0 12px;font-size:12px;letter-spacing:1.1px;text-transform:uppercase;color:var(--mut);font-weight:700;display:flex;align-items:center;gap:8px}
+.card h2 .hint{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:500;color:var(--dim)}
+.c7{grid-column:span 7}.c5{grid-column:span 5}.c6{grid-column:span 6}.c8{grid-column:span 8}.c4{grid-column:span 4}.c12{grid-column:span 12}
+@media(max-width:1100px){.c7,.c5,.c6,.c8,.c4{grid-column:span 12}}
+@media(max-width:640px){main{padding:12px 12px 32px;gap:12px}.top{padding:10px 14px;flex-wrap:wrap}.seg{margin-left:0;width:100%}.seg button{flex:1}.pipe{padding:8px 12px}.brand .sub{display:none}}
+
+/* ---------- machine ---------- */
+#rig{width:100%;height:auto;display:block}
+.brg{cursor:pointer}
+.brg .housing{transition:fill .4s,stroke .4s}
+.brg:hover .housing{stroke:var(--acc)}
+.brg.sel .selring{opacity:1}
+.selring{opacity:0;transition:.2s}
+@keyframes pulse{0%{opacity:.75;transform:scale(1)}100%{opacity:0;transform:scale(1.55)}}
+.halo{transform-box:fill-box;transform-origin:center;opacity:0}
+.halo.on{animation:pulse 1.4s ease-out infinite}
+@keyframes spin{to{transform:translateX(-24px)}}
+.shaftpat{animation:spin .35s linear infinite}
+.paused .shaftpat{animation-play-state:paused}
+
+/* ---------- lecture ---------- */
+.player{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+.pbtn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line2);background:var(--panel2);display:grid;place-items:center;flex:none}
+.pbtn.main{background:var(--acc);border-color:var(--acc);color:#04111f}
+.pbtn:focus-visible,.seg button:focus-visible,.speed button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.tl{flex:1;min-width:220px;position:relative}
+.tl canvas{display:block;width:100%;height:10px;border-radius:5px}
+.tl input{width:100%;margin:6px 0 0;accent-color:var(--acc)}
+.clock{font-family:var(--mono);font-size:13px;color:var(--mut);min-width:150px;text-align:right}
+.clock b{color:var(--txt);font-size:15px}
+.speed{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.speed button{border:0;background:none;padding:7px 10px;color:var(--mut);font-size:12px;font-weight:600}
+.speed button.on{background:var(--panel2);color:var(--txt)}
+
+.fleet{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px}
+.fl{background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:10px 12px;cursor:pointer;transition:.2s;text-align:left}
+.fl:hover{border-color:var(--line2)}.fl.sel{border-color:var(--acc);box-shadow:0 0 0 3px rgba(76,154,255,.12)}
+.fl .h{display:flex;align-items:center;gap:7px;font-weight:800}
+.fl .h i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.fl .s{font-size:11.5px;font-weight:700;letter-spacing:.4px;margin-top:4px}
+.fl .m{font-family:var(--mono);font-size:12px;color:var(--mut);margin-top:2px}
+@media(max-width:640px){.fleet{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* ---------- état ---------- */
+.status{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;border:1px solid var(--line2);background:var(--panel2);transition:.4s}
+.status .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.04)}
+.status .t{font-size:20px;font-weight:800;letter-spacing:.4px}
+.status .d{color:var(--mut);font-size:13px}
+.status.ok{border-color:rgba(63,182,139,.45);background:var(--ok-bg)}.status.ok .t{color:var(--ok)}
+.status.warn{border-color:rgba(245,165,36,.5);background:var(--warn-bg)}.status.warn .t{color:var(--warn)}
+.status.crit{border-color:rgba(239,68,68,.55);background:var(--crit-bg)}.status.crit .t{color:var(--crit)}
+.status.calib .t{color:var(--mut)}
+.gaugewrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;align-items:center;margin-top:14px}
+@media(max-width:520px){.gaugewrap{grid-template-columns:1fr}}
+#gauge{width:100%;height:auto;display:block}
+.kpis{display:grid;gap:10px}
+.kpi{background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+.kpi .l{color:var(--mut);font-size:12px}
+.kpi .v{font-family:var(--mono);font-size:20px;font-weight:700;margin-top:2px}
+.kpi .u{color:var(--dim);font-size:11.5px}
+.reco{margin-top:14px;padding:12px 14px;border-radius:11px;background:var(--bg2);border:1px solid var(--line);font-size:13.5px}
+.reco b{display:block;margin-bottom:3px}
+
+/* ---------- graphiques ---------- */
+.chart{position:relative;width:100%;height:260px}
+.chart canvas{position:absolute;inset:0;width:100%;height:100%}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;color:var(--mut);font-size:12px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.tip{position:absolute;pointer-events:none;background:rgba(10,14,19,.95);border:1px solid var(--line2);border-radius:9px;padding:8px 10px;font-size:12px;white-space:nowrap;display:none;z-index:5}
+.tip .mono{font-size:12px}
+.verdict{display:flex;gap:10px;align-items:center;margin-bottom:10px;padding:10px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);font-size:13.5px}
+.verdict .dot{width:10px;height:10px;border-radius:50%;flex:none}
+
+/* ---------- journal / fiche modèle ---------- */
+.log{list-style:none;margin:0;padding:0;max-height:250px;overflow:auto}
+.log li{display:grid;grid-template-columns:12px auto 1fr;gap:10px;align-items:start;padding:9px 2px;border-bottom:1px solid var(--line);font-size:13px}
+.log li:last-child{border-bottom:0}
+.log .dot{width:10px;height:10px;border-radius:50%;margin-top:4px}
+.log time{font-family:var(--mono);color:var(--mut);font-size:12px;white-space:nowrap}
+.empty{color:var(--dim);font-size:13px;padding:8px 0}
+.log li.empty{display:block;border:0}
+.mcard{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.mcard .kpi .v{font-size:17px}
+.note{color:var(--mut);font-size:12.5px;margin-top:10px;line-height:1.55}
+
+/* ---------- mode fichiers ---------- */
+.drop{border:1.5px dashed var(--line2);border-radius:14px;padding:26px;text-align:center;transition:.2s;background:var(--bg2)}
+.drop.over{border-color:var(--acc);background:rgba(76,154,255,.06)}
+.drop h3{margin:8px 0 4px;font-size:17px}
+.drop p{color:var(--mut);margin:0 0 14px;font-size:13px}
+.btn{border:1px solid var(--line2);background:var(--panel2);padding:10px 16px;border-radius:10px;font-weight:600}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#04111f}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center}
+select{background:var(--panel2);color:var(--txt);border:1px solid var(--line2);border-radius:9px;padding:9px 10px;font:inherit}
+.prog{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:14px;display:none}
+.prog i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+.msg{margin-top:12px;font-size:13px;color:var(--mut)}
+.msg.err{color:#ff8a80}
+.hidden{display:none!important}
+footer{grid-column:span 12;color:var(--dim);font-size:12px;text-align:center;padding-top:6px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="none" stroke="#4c9aff" stroke-width="2.5"/><circle cx="17" cy="17" r="7" fill="none" stroke="#4c9aff" stroke-width="2.5"/><g fill="#4c9aff"><circle cx="17" cy="6.5" r="2.2"/><circle cx="27.5" cy="17" r="2.2"/><circle cx="17" cy="27.5" r="2.2"/><circle cx="6.5" cy="17" r="2.2"/><circle cx="24.4" cy="9.6" r="2.2"/><circle cx="24.4" cy="24.4" r="2.2"/><circle cx="9.6" cy="24.4" r="2.2"/><circle cx="9.6" cy="9.6" r="2.2"/></g></svg>
+    <div><h1>BearingTwin</h1><div class="sub">Jumeau numérique de roulement · maintenance prédictive · NASA IMS</div></div>
+  </div>
+  <nav class="seg" role="tablist">
+    <button id="tabReplay" class="on" role="tab">▶ Rejeu du 2nd test</button>
+    <button id="tabFiles" role="tab">📂 Analyser mes fichiers</button>
+  </nav>
+</header>
+
+<div class="pipe" id="pipe">
+  <span class="st" data-s="0">📡 <b>Vibration brute</b> 20 kHz · 1 s / 10 min</span><span class="ar">→</span>
+  <span class="st" data-s="1">🧮 <b>4 indicateurs</b> RMS · Énergie · Entropie · Kurtosis</span><span class="ar">→</span>
+  <span class="st" data-s="2">⚖️ <b>Référence</b> roulement neuf</span><span class="ar">→</span>
+  <span class="st" data-s="3">🧠 <b>CNN-LSTM</b> fenêtre 5 h</span><span class="ar">→</span>
+  <span class="st" data-s="4">⏱️ <b>RUL</b> + décision</span>
+</div>
+
+<main>
+  <!-- Mode fichiers : dépôt -->
+  <section class="card c12 hidden" id="filesPanel">
+    <h2>Analyser les acquisitions d'un roulement</h2>
+    <div class="drop" id="drop">
+      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#4c9aff" stroke-width="1.6" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 10v6m-3-3 3-3 3 3"/></svg>
+      <h3>Déposez ici le dossier d'acquisitions</h3>
+      <p>Fichiers bruts IMS (1 fichier = 1 s de vibration, nommé par date). Au moins <b>230 fichiers</b> depuis la mise en service : les 200 premiers servent de référence « roulement neuf ».</p>
+      <div class="row">
+        <label for="col" style="color:var(--mut)">Roulement (colonne)</label>
+        <select id="col"><option value="0">Colonne 1</option><option value="1">Colonne 2</option><option value="2">Colonne 3</option><option value="3">Colonne 4</option><option value="4">Colonne 5</option><option value="5">Colonne 6</option><option value="6">Colonne 7</option><option value="7">Colonne 8</option></select>
+        <button class="btn pri" id="pickFolder">📁 Choisir le dossier</button>
+        <button class="btn" id="pickFiles">Choisir des fichiers</button>
+      </div>
+      <input type="file" id="inFolder" webkitdirectory multiple class="hidden">
+      <input type="file" id="inFiles" multiple class="hidden">
+      <div class="prog" id="prog"><i></i></div>
+      <div class="msg" id="msg"></div>
+    </div>
+  </section>
+
+  <!-- Machine + lecture -->
+  <section class="card c7" id="rigCard">
+    <h2>Banc d'essai <span class="hint" id="rigHint">Cliquez sur un roulement pour l'inspecter</span></h2>
+    <svg id="rig" viewBox="0 0 900 270" role="img" aria-label="Schéma du banc d'essai : moteur, arbre et 4 roulements">
+      <defs>
+        <pattern id="stripes" width="24" height="24" patternUnits="userSpaceOnUse">
+          <g class="shaftpat"><rect width="48" height="24" fill="#3a4757"/><path d="M0 24 L12 0 M12 24 L24 0 M24 24 L36 0 M36 24 L48 0" stroke="#4b5a6c" stroke-width="5"/></g>
+        </pattern>
+        <linearGradient id="motorG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a3646"/><stop offset="1" stop-color="#1b2430"/></linearGradient>
+      </defs>
+      <!-- socle -->
+      <rect x="20" y="214" width="860" height="16" rx="4" fill="#1b2430" stroke="#2d3a4a"/>
+      <!-- moteur -->
+      <g>
+        <rect x="34" y="92" width="132" height="102" rx="12" fill="url(#motorG)" stroke="#2d3a4a"/>
+        <g stroke="#2d3a4a" stroke-width="3">
+          <line x1="52" y1="104" x2="52" y2="182"/><line x1="68" y1="104" x2="68" y2="182"/><line x1="84" y1="104" x2="84" y2="182"/><line x1="100" y1="104" x2="100" y2="182"/><line x1="116" y1="104" x2="116" y2="182"/>
+        </g>
+        <rect x="56" y="194" width="88" height="20" rx="3" fill="#1b2430" stroke="#2d3a4a"/>
+        <text x="100" y="86" text-anchor="middle" fill="#8b98a5" font-size="12" font-weight="600">MOTEUR AC · 2000 tr/min</text>
+      </g>
+      <!-- accouplement -->
+      <rect x="166" y="128" width="30" height="30" rx="5" fill="#2a3646" stroke="#3a4757"/>
+      <!-- arbre -->
+      <rect x="196" y="134" width="660" height="18" rx="9" fill="url(#stripes)" stroke="#2d3a4a"/>
+      <!-- charge radiale -->
+      <g>
+        <line x1="530" y1="36" x2="530" y2="96" stroke="#a78bfa" stroke-width="2.5"/>
+        <path d="M522 90 L530 104 L538 90 Z" fill="#a78bfa"/>
+        <line x1="380" y1="36" x2="380" y2="96" stroke="#a78bfa" stroke-width="2.5"/>
+        <path d="M372 90 L380 104 L388 90 Z" fill="#a78bfa"/>
+        <text x="455" y="30" text-anchor="middle" fill="#a78bfa" font-size="12" font-weight="600">Charge radiale 6000 lbs (B2 et B3)</text>
+      </g>
+      <g id="brgs"></g>
+    </svg>
+    <div class="player" id="player">
+      <button class="pbtn" id="btnBack" aria-label="Revenir au début">⏮</button>
+      <button class="pbtn main" id="btnPlay" aria-label="Lecture">▶</button>
+      <div class="speed" id="speed"><button data-v="1">×1</button><button data-v="4" class="on">×4</button><button data-v="16">×16</button></div>
+      <div class="tl"><canvas id="strip" height="10"></canvas><input type="range" id="slider" min="0" max="983" value="230" aria-label="Instant de l'essai"></div>
+      <div class="clock" id="clock"></div>
+    </div>
+    <div class="fleet" id="fleet"></div>
+  </section>
+
+  <!-- État -->
+  <section class="card c5">
+    <h2>État du roulement <span class="hint" id="selName">B1</span></h2>
+    <div class="status" id="status"><div class="ic" id="stIc">⏳</div><div><div class="t" id="stT">—</div><div class="d" id="stD"></div></div></div>
+    <div class="gaugewrap">
+      <svg id="gauge" viewBox="0 0 240 170" aria-label="Jauge de durée de vie résiduelle"></svg>
+      <div class="kpis">
+        <div class="kpi"><div class="l">Vibration vs neuf</div><div class="v" id="kRms">—</div><div class="u">RMS · 1,00 = comme neuf</div></div>
+        <div class="kpi"><div class="l">Impulsivité (kurtosis)</div><div class="v" id="kKur">—</div><div class="u">≈ 0 si sain · chocs si élevé</div></div>
+        <div class="kpi"><div class="l">RUL réelle</div><div class="v" id="kReal">—</div><div class="u" id="kRealU">connue après la panne</div></div>
+      </div>
+    </div>
+    <div class="reco" id="reco"></div>
+  </section>
+
+  <!-- RUL -->
+  <section class="card c6">
+    <h2>Durée de vie résiduelle <span class="hint">jours avant la panne</span></h2>
+    <div class="chart" id="chRul"></div>
+    <div class="legend"><span><i style="background:var(--acc)"></i>RUL prédite (lissée 1 h)</span><span><i style="background:rgba(76,154,255,.35)"></i>Prédiction brute</span><span id="lgReal"><i style="background:#e6edf3"></i>RUL réelle</span></div>
+  </section>
+
+  <!-- Indicateurs -->
+  <section class="card c6">
+    <h2>Indicateurs de santé <span class="hint">calculés sur la vibration brute</span></h2>
+    <div class="chart" id="chHealth"></div>
+    <div class="legend"><span><i style="background:#22d3ee"></i>RMS / RMS neuf</span><span><i style="background:var(--warn)"></i>Kurtosis (axe droit)</span><span><i style="background:var(--line2)"></i>Référence roulement neuf</span></div>
+  </section>
+
+  <!-- Spectre -->
+  <section class="card c8">
+    <h2>Diagnostic fréquentiel · spectre d'enveloppe (amplitude ×10⁻³ g) <span class="hint" id="specHint"></span></h2>
+    <div class="verdict" id="verdict"><span class="dot"></span><span></span></div>
+    <div class="chart" id="chSpec" style="height:240px"></div>
+    <div class="legend"><span><i style="background:var(--crit)"></i>BPFO bague extérieure</span><span><i style="background:var(--warn)"></i>BPFI bague intérieure</span><span><i style="background:var(--acc2)"></i>BSF élément roulant</span></div>
+  </section>
+
+  <!-- Journal -->
+  <section class="card c4">
+    <h2>Journal des alertes <span class="hint">4 roulements</span></h2>
+    <ul class="log" id="log"></ul>
+  </section>
+
+  <!-- Fiche modèle -->
+  <section class="card c12">
+    <h2>Fiabilité du modèle</h2>
+    <div class="mcard" id="mcard"></div>
+    <div class="note" id="mnote"></div>
+  </section>
+  <footer>BearingTwin · PFA génie industriel · données NASA IMS (University of Cincinnati) · inférence CNN-LSTM exécutée dans le navigateur, aucune donnée envoyée</footer>
+</main>
+
+<script id="model-data" type="application/json">__MODEL_DATA__</script>
+<script id="replay-data" type="application/json">__REPLAY_DATA__</script>
+<script id="engine">
+/* ======================= Moteur de calcul (aussi utilisé par le Web Worker) ======================= */
+function modelForward(win, W){
+  function relu(v){ return v > 0 ? v : 0; }
+  function conv1d(x, ks, In, Out, kf, bf){
+    var T = x.length, lpad = ks >> 1, res = new Array(T);
+    for(var t = 0; t < T; t++){
+      var o = new Float64Array(Out);
+      for(var c = 0; c < Out; c++){
+        var s = bf[c];
+        for(var j = 0; j < ks; j++){
+          var ti = t + j - lpad; if(ti < 0 || ti >= T) continue;
+          var row = x[ti], base = j * In * Out + c;
+          for(var i = 0; i < In; i++) s += row[i] * kf[base + i * Out];
+        }
+        o[c] = relu(s);
+      }
+      res[t] = o;
+    }
+    return res;
+  }
+  function bn(x, nC, g, b, m, v){
+    return x.map(function(r){ var o = new Float64Array(nC); for(var c = 0; c < nC; c++) o[c] = g[c] * (r[c] - m[c]) / Math.sqrt(v[c] + 1e-3) + b[c]; return o; });
+  }
+  function pool(x, nC){
+    var Tn = Math.floor((x.length - 2) / 2) + 1, res = new Array(Tn);
+    for(var t = 0; t < Tn; t++){ var o = new Float64Array(nC); for(var c = 0; c < nC; c++) o[c] = Math.max(x[2*t][c], x[2*t+1][c]); res[t] = o; }
+    return res;
+  }
+  function sig(v){ return 1 / (1 + Math.exp(-v)); }
+  function lstm(x, In, U, kf, uf, bf){
+    var G = 4 * U, h = new Float64Array(U), c = new Float64Array(U), z = new Float64Array(G);
+    for(var t = 0; t < x.length; t++){
+      var xt = x[t];
+      for(var g = 0; g < G; g++){
+        var a = bf[g];
+        for(var i = 0; i < In; i++) a += xt[i] * kf[i * G + g];
+        for(var r = 0; r < U; r++) a += h[r] * uf[r * G + g];
+        z[g] = a;
+      }
+      var nh = new Float64Array(U);
+      for(var u = 0; u < U; u++){
+        c[u] = sig(z[U + u]) * c[u] + sig(z[u]) * Math.tanh(z[2 * U + u]);
+        nh[u] = sig(z[3 * U + u]) * Math.tanh(c[u]);
+      }
+      h = nh;
+    }
+    return h;
+  }
+  var x = conv1d(win, 5, 4, 128, W.conv1_k, W.conv1_b);
+  x = pool(bn(x, 128, W.bn1_g, W.bn1_b, W.bn1_m, W.bn1_v), 128);
+  x = conv1d(x, 3, 128, 64, W.conv2_k, W.conv2_b);
+  x = pool(bn(x, 64, W.bn2_g, W.bn2_b, W.bn2_m, W.bn2_v), 64);
+  var h = lstm(x, 64, 64, W.lstm_k, W.lstm_u, W.lstm_b), out = W.dense2_b[0];
+  for(var r = 0; r < 32; r++){ var a = W.dense1_b[r]; for(var i = 0; i < 64; i++) a += h[i] * W.dense1_w[i * 32 + r]; out += relu(a) * W.dense2_w[r]; }
+  return out;
+}
+function median(a){ var b = Array.prototype.slice.call(a).sort(function(x, y){ return x - y; }), h = b.length >> 1; return b.length % 2 ? b[h] : (b[h-1] + b[h]) / 2; }
+function reference(rows){ var ref = []; for(var f = 0; f < 4; f++) ref.push(median(rows.map(function(r){ return r[f]; }))); return ref; }
+function relative(r, ref){ return [r[0]/ref[0], r[1]/ref[1], r[2]/ref[2], (r[3]+3)/(ref[3]+3)]; }
+/* Prédiction à l'acquisition i : fenêtre des 30 dernières acquisitions valides (RMS ≥ 0,01) jusqu'à i */
+function predictAt(rows, ref, i, W, win){
+  var seq = [];
+  for(var k = i; k >= 0 && seq.length < win; k--) if(rows[k][0] >= 0.01) seq.unshift(rows[k]);
+  if(seq.length < win) return null;
+  return modelForward(seq.map(function(r){ return relative(r, ref).map(Math.log); }), W);
+}
+</script>
+<script>
+/* ======================= Données ======================= */
+var MODEL = JSON.parse(document.getElementById('model-data').textContent);
+var REPLAY = JSON.parse(document.getElementById('replay-data').textContent);
+var WIN = MODEL.window, NBASE = MODEL.n_base, FS = 20000;
+var GEOM = (function(){ var n = 16, d = .331, D = 2.815, a = 15.17 * Math.PI / 180, fr = 2000 / 60, q = d / D * Math.cos(a);
+  return {BPFO: n/2*fr*(1-q), BPFI: n/2*fr*(1+q), BSF: D/(2*d)*fr*(1-q*q), FR: fr}; })();
+var CSS = getComputedStyle(document.documentElement);
+var C = {ok: '#3fb68b', warn: '#f5a524', crit: '#ef4444', acc: '#4c9aff', acc2: '#a78bfa', mut: '#8b98a5', dim: '#5d6b7a', line: '#232e3b', line2: '#2d3a4a', txt: '#e6edf3', cyan: '#22d3ee', idle: '#3a4757'};
+var $ = function(id){ return document.getElementById(id); };
+function fmt(v, d){ return v.toFixed(d).replace('.', ','); }
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+
+/* ======================= FFT (taille quelconque = 2^k × p) ======================= */
+function fft2(re, im){
+  var n = re.length, i, j = 0, t;
+  for(i = 1; i < n; i++){ var bit = n >> 1; for(; j & bit; bit >>= 1) j ^= bit; j ^= bit;
+    if(i < j){ t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+  for(var len = 2; len <= n; len <<= 1){
+    var ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang), h = len >> 1;
+    for(var k = 0; k < n; k += len){ var cr = 1, ci = 0;
+      for(j = 0; j < h; j++){ var a = k + j, b = a + h, vr = re[b]*cr - im[b]*ci, vi = re[b]*ci + im[b]*cr;
+        re[b] = re[a] - vr; im[b] = im[a] - vi; re[a] += vr; im[a] += vi; var nr = cr*wr - ci*wi; ci = cr*wi + ci*wr; cr = nr; } }
+  }
+}
+function fftC(xr, xi){
+  var n = xr.length, m = 1; while(n % (m * 2) === 0) m *= 2;
+  var p = n / m, subs = [], r, j, k;
+  for(r = 0; r < p; r++){ var sr = new Float64Array(m), si = new Float64Array(m);
+    for(j = 0; j < m; j++){ sr[j] = xr[j*p + r]; si[j] = xi[j*p + r]; } fft2(sr, si); subs.push([sr, si]); }
+  if(p === 1) return subs[0];
+  var cs = new Float64Array(n), sn = new Float64Array(n);
+  for(j = 0; j < n; j++){ cs[j] = Math.cos(-2*Math.PI*j/n); sn[j] = Math.sin(-2*Math.PI*j/n); }
+  var Or = new Float64Array(n), Oi = new Float64Array(n);
+  for(k = 0; k < n; k++){ var km = k % m, ar = 0, ai = 0;
+    for(r = 0; r < p; r++){ var w = (r*k) % n, a = subs[r][0][km], b = subs[r][1][km]; ar += a*cs[w] - b*sn[w]; ai += a*sn[w] + b*cs[w]; }
+    Or[k] = ar; Oi[k] = ai; }
+  return [Or, Oi];
+}
+function sampleFeatures(sig){
+  var n = sig.length, s2 = 0, mean = 0, i;
+  for(i = 0; i < n; i++){ mean += sig[i]; s2 += sig[i]*sig[i]; } mean /= n;
+  var xr = new Float64Array(n); for(i = 0; i < n; i++) xr[i] = sig[i] - mean;
+  var F = fftC(xr, new Float64Array(n)), half = n >> 1, sm = 0, mags = new Float64Array(half + 1);
+  for(i = 0; i <= half; i++){ mags[i] = Math.hypot(F[0][i], F[1][i]); sm += mags[i]; }
+  var ent = 0; for(i = 0; i <= half; i++){ var p = mags[i] / (sm + 1e-12); ent -= p * Math.log(p + 1e-12); }
+  var m2 = 0, m4 = 0; for(i = 0; i < n; i++){ var d = sig[i] - mean; m2 += d*d; m4 += d*d*d*d; } m2 /= n; m4 /= n;
+  return [Math.sqrt(s2/n), s2, ent, m4 / (m2*m2 + 1e-12) - 3];
+}
+/* Spectre d'enveloppe : passe-bande 2–8 kHz + signal analytique (Hilbert) par FFT, puis FFT de l'enveloppe */
+function envelopeSpectrum(sig, fmax){
+  var n = sig.length, mean = 0, i; for(i = 0; i < n; i++) mean += sig[i]; mean /= n;
+  var xr = new Float64Array(n); for(i = 0; i < n; i++) xr[i] = sig[i] - mean;
+  var X = fftC(xr, new Float64Array(n)), df = FS / n;
+  var zr = new Float64Array(n), zi = new Float64Array(n);
+  for(i = 1; i < n / 2; i++){ var f = i * df; if(f >= 2000 && f <= 8000){ zr[i] = 2 * X[0][i]; zi[i] = 2 * X[1][i]; } }
+  for(i = 0; i < n; i++) zi[i] = -zi[i];                          // IFFT par conjugaison
+  var Z = fftC(zr, zi), env = new Float64Array(n), em = 0;
+  for(i = 0; i < n; i++){ env[i] = Math.hypot(Z[0][i], Z[1][i]) / n; em += env[i]; }
+  em /= n; for(i = 0; i < n; i++) env[i] -= em;
+  var E = fftC(env, new Float64Array(n)), kmax = Math.floor(fmax / df), out = {f: [], a: []};
+  for(i = 0; i <= kmax; i++){ out.f.push(i * df); out.a.push(Math.hypot(E[0][i], E[1][i]) / n); }
+  return out;
+}
+function diagnose(spec){
+  var noise = median(spec.a.filter(function(_, i){ return spec.f[i] > 20; })) + 1e-12, res = [];
+  [['BPFO', 'bague extérieure', C.crit], ['BPFI', 'bague intérieure', C.warn], ['BSF', 'élément roulant', C.acc2]].forEach(function(t){
+    var F = GEOM[t[0]], s = 0, peaks = [];
+    for(var h = 1; h <= 3; h++){
+      var best = 0, bf = 0;
+      spec.f.forEach(function(f, i){ if(Math.abs(f - h * F) <= 0.03 * h * F && spec.a[i] > best){ best = spec.a[i]; bf = f; } });
+      s += best / noise / 3; peaks.push([bf, best]);
+    }
+    res.push({key: t[0], name: t[1], color: t[2], score: s, peaks: peaks});
+  });
+  res.sort(function(a, b){ return b.score - a.score; });
+  return res;
+}
+function decodeF32(b64){ var bin = atob(b64), u = new Uint8Array(bin.length); for(var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Float32Array(u.buffer); }
+
+/* ======================= État de l'application ======================= */
+var S = {mode: 'replay', sel: 1, step: 230, playing: false, speed: 4, src: null};
+var SRC = {};   // sources par mode : {rows{b}, ref{b}, times[], pred{b}[], real{b}, raw[], W, n, bearings[]}
+
+function buildReplaySource(){
+  var s = {bearings: [1, 2, 3, 4], rows: {}, ref: {}, pred: {}, W: REPLAY.weights, n: REPLAY.minutes.length, label: 'replay'};
+  var t0 = new Date(REPLAY.start.replace(' ', 'T'));
+  s.times = REPLAY.minutes.map(function(m){ return new Date(t0.getTime() + m * 60000); });
+  s.failure = new Date(REPLAY.failure.replace(' ', 'T'));
+  s.bearings.forEach(function(b){ s.rows[b] = REPLAY.bearings[b]; s.ref[b] = reference(s.rows[b].slice(0, NBASE)); s.pred[b] = new Array(s.n).fill(undefined); });
+  s.real = {1: true};
+  s.raw = REPLAY.raw_b1.map(function(r){ return {idx: r.idx, bearing: 1, sig: decodeF32(r.f32)}; });
+  s.minStep = NBASE - 1 + 0; s.startStep = 230;
+  return s;
+}
+function statusOf(rul){ if(rul == null) return 'calib'; if(rul < 1) return 'crit'; if(rul < 2.5) return 'warn'; return 'ok'; }
+var ST = {
+  ok: {t: 'NORMAL', ic: '✅', col: C.ok, reco: ['Fonctionnement normal', 'Aucune dégradation détectée. Poursuivre la surveillance habituelle.']},
+  warn: {t: 'SURVEILLANCE', ic: '⚠️', col: C.warn, reco: ['Dégradation en cours', 'Rapprocher les contrôles, commander la pièce de rechange et planifier l’intervention.']},
+  crit: {t: 'ARRÊT RECOMMANDÉ', ic: '🛑', col: C.crit, reco: ['Risque de casse imminent', 'Planifier l’arrêt et le remplacement du roulement dès que possible.']},
+  calib: {t: 'CALIBRATION', ic: '⏳', col: C.idle, reco: ['Apprentissage de la référence', 'Les 200 premières acquisitions (≈ 33 h) définissent l’état « roulement neuf ».']}
+};
+function rawPred(s, b, i){
+  if(i < NBASE - 1) return null;
+  if(s.pred[b][i] === undefined) s.pred[b][i] = predictAt(s.rows[b], s.ref[b], i, s.W, WIN);
+  return s.pred[b][i];
+}
+function smoothPred(s, b, i, compute){  // médiane des 6 dernières prédictions (1 h)
+  var v = [];
+  for(var k = i; k >= Math.max(NBASE - 1, i - 5); k--){
+    var p = compute ? rawPred(s, b, k) : s.pred[b][k];
+    if(p != null && p !== undefined) v.push(Math.max(0, p));
+  }
+  return v.length ? median(v) : null;
+}
+
+/* ======================= Web Worker : précalcul de toutes les prédictions ======================= */
+function startWorker(s){
+  if(s.worker) s.worker.terminate();
+  var code = document.getElementById('engine').textContent + '\nonmessage=function(e){var d=e.data;' +
+    'for(var q=0;q<d.order.length;q++){var b=d.order[q],out=[];for(var i=d.from;i<d.n;i++){out.push(predictAt(d.rows[b],d.ref[b],i,d.W,d.win));' +
+    'if(out.length===40||i===d.n-1){postMessage({b:b,start:i-out.length+1,vals:out});out=[];}}}postMessage({done:true});};';
+  var order = [S.sel].concat(s.bearings.filter(function(b){ return b !== S.sel; }));
+  function fallback(){  // repli sans Worker : calcul par petits lots dans la page
+    if(s.worker){ s.worker.terminate(); s.worker = null; }
+    var q = 0, i = NBASE - 1;
+    (function chunk(){
+      var t = performance.now();
+      while(performance.now() - t < 14 && q < order.length){ rawPred(s, order[q], i++); if(i >= s.n){ i = NBASE - 1; q++; } }
+      scheduleDraw(); if(q < order.length) setTimeout(chunk, 0); else { s.complete = true; scheduleDraw(); }
+    })();
+  }
+  try {
+    s.worker = new Worker(URL.createObjectURL(new Blob([code], {type: 'text/javascript'})));
+    var alive = false, watchdog = setTimeout(function(){ if(!alive) fallback(); }, 2000);
+    s.worker.onerror = function(){ clearTimeout(watchdog); fallback(); };
+    s.worker.onmessage = function(e){
+      alive = true;
+      var d = e.data; if(d.done){ s.complete = true; document.body.dataset.worker = 'ok'; scheduleDraw(); return; }
+      for(var k = 0; k < d.vals.length; k++) if(s.pred[d.b][d.start + k] === undefined) s.pred[d.b][d.start + k] = d.vals[k];
+      scheduleDraw();
+    };
+    s.worker.postMessage({order: order, rows: s.rows, ref: s.ref, W: s.W, win: WIN, from: NBASE - 1, n: s.n});
+  } catch(err){ fallback(); }
+}
+
+/* ======================= Graphiques canvas ======================= */
+function Chart2(host, opt){
+  this.host = host; this.opt = opt; this.cv = document.createElement('canvas'); host.appendChild(this.cv);
+  this.tip = document.createElement('div'); this.tip.className = 'tip'; host.appendChild(this.tip);
+  var me = this; this.hx = null;
+  this.cv.addEventListener('mousemove', function(e){ var r = me.cv.getBoundingClientRect(); me.hx = e.clientX - r.left; me.draw(); });
+  this.cv.addEventListener('mouseleave', function(){ me.hx = null; me.tip.style.display = 'none'; me.draw(); });
+  new ResizeObserver(function(){ me.draw(); }).observe(host);
+}
+Chart2.prototype.draw = function(){
+  var o = this.opt, cv = this.cv, dpr = window.devicePixelRatio || 1, W = this.host.clientWidth, H = this.host.clientHeight;
+  if(!W) return;
+  cv.width = W * dpr; cv.height = H * dpr; var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  var d = o.data(); if(!d){ this.tip.style.display = 'none'; return; }
+  var P = {l: 44, r: d.y2 ? 44 : 14, t: 12, b: 26}, iw = W - P.l - P.r, ih = H - P.t - P.b;
+  var X = function(v){ return P.l + (v - d.x[0]) / (d.x[1] - d.x[0]) * iw; };
+  var Y = function(v, ax){ var a = ax || d.y; return P.t + ih - (Math.min(Math.max(v, a[0]), a[1]) - a[0]) / (a[1] - a[0]) * ih; };
+  g.font = '11px Inter,system-ui,sans-serif'; g.textBaseline = 'middle';
+  (d.bands || []).forEach(function(b){ g.fillStyle = b.c; g.fillRect(P.l, Y(b.to), iw, Y(b.from) - Y(b.to)); });
+  g.strokeStyle = C.line; g.lineWidth = 1; g.fillStyle = C.dim; g.textAlign = 'right';
+  d.yt.forEach(function(v){ var y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(P.l, y); g.lineTo(W - P.r, y); g.stroke(); g.fillText(d.yf(v), P.l - 8, y); });
+  if(d.y2){ g.textAlign = 'left'; d.y2t.forEach(function(v){ g.fillText(d.y2f(v), W - P.r + 8, Y(v, d.y2)); }); }
+  g.textAlign = 'center'; g.textBaseline = 'top';
+  d.xt.forEach(function(v){ g.fillText(d.xf(v), X(v), H - P.b + 8); });
+  (d.vlines || []).forEach(function(l){
+    g.strokeStyle = l.c; g.globalAlpha = l.a || .75; g.setLineDash(l.dash || [4, 4]); g.lineWidth = l.w || 1.2;
+    g.beginPath(); g.moveTo(X(l.x), P.t); g.lineTo(X(l.x), P.t + ih); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+    if(l.label){ g.fillStyle = l.c; g.textBaseline = 'top'; g.font = '600 10.5px Inter,system-ui'; g.fillText(l.label, X(l.x), P.t + 1); g.font = '11px Inter,system-ui'; }
+  });
+  d.series.forEach(function(s){
+    if(s.area){ g.beginPath(); var first = true, lastx = null;
+      s.pts.forEach(function(p){ if(p[1] == null) return; var x = X(p[0]), y = Y(p[1], s.ax); if(first){ g.moveTo(x, Y(s.ax ? s.ax[0] : d.y[0], s.ax)); g.lineTo(x, y); first = false; } else g.lineTo(x, y); lastx = x; });
+      if(lastx != null){ g.lineTo(lastx, Y(s.ax ? s.ax[0] : d.y[0], s.ax)); g.closePath(); g.fillStyle = s.area; g.fill(); } }
+    g.strokeStyle = s.c; g.lineWidth = s.w || 1.6; g.globalAlpha = s.a || 1; g.setLineDash(s.dash || []); g.lineJoin = 'round';
+    g.beginPath(); var pen = false;
+    s.pts.forEach(function(p){ if(p[1] == null){ pen = false; return; } var x = X(p[0]), y = Y(p[1], s.ax); if(pen) g.lineTo(x, y); else { g.moveTo(x, y); pen = true; } });
+    g.stroke(); g.globalAlpha = 1; g.setLineDash([]);
+  });
+  if(d.cursor != null){ var cx = X(d.cursor); g.fillStyle = 'rgba(12,17,23,.55)'; g.fillRect(cx, P.t, W - P.r - cx, ih);
+    g.strokeStyle = C.txt; g.lineWidth = 1.2; g.beginPath(); g.moveTo(cx, P.t); g.lineTo(cx, P.t + ih); g.stroke(); }
+  (d.dots || []).forEach(function(p){ g.fillStyle = p.c; g.beginPath(); g.arc(X(p.x), Y(p.y, p.ax), 4.5, 0, 7); g.fill(); g.strokeStyle = '#0c1117'; g.lineWidth = 2; g.stroke(); });
+  if(this.hx != null && this.hx >= P.l && this.hx <= W - P.r && d.tip){
+    var xv = d.x[0] + (this.hx - P.l) / iw * (d.x[1] - d.x[0]), html = d.tip(xv);
+    if(html){ g.strokeStyle = C.mut; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(this.hx, P.t); g.lineTo(this.hx, P.t + ih); g.stroke(); g.setLineDash([]);
+      this.tip.innerHTML = html; this.tip.style.display = 'block';
+      var tw = this.tip.offsetWidth; this.tip.style.left = Math.min(this.hx + 12, W - tw - 4) + 'px'; this.tip.style.top = '8px'; }
+    else this.tip.style.display = 'none';
+  }
+};
+function niceTicks(a, b, n){ var span = b - a, step = Math.pow(10, Math.floor(Math.log10(span / n))), err = span / n / step;
+  if(err >= 7.5) step *= 10; else if(err >= 3.5) step *= 5; else if(err >= 1.5) step *= 2;
+  var out = []; for(var v = Math.ceil(a / step) * step; v <= b + 1e-9; v += step) out.push(+v.toFixed(10)); return out; }
+
+/* ======================= Rendu ======================= */
+function days(s, i){ return (s.times[i] - s.times[0]) / 864e5; }
+function dateStr(d){ return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function nearestIdx(s, xv){ var lo = 0, hi = s.n - 1; while(hi - lo > 1){ var m = (lo + hi) >> 1; if(days(s, m) < xv) lo = m; else hi = m; } return Math.abs(days(s, lo) - xv) < Math.abs(days(s, hi) - xv) ? lo : hi; }
+
+var chRul = new Chart2($('chRul'), {data: function(){
+  var s = SRC[S.mode]; if(!s) return null; var b = S.sel, pts = [], sm = [], xEnd = days(s, s.n - 1);
+  for(var i = NBASE - 1; i <= S.step; i++){ var p = s.pred[b][i]; pts.push([days(s, i), p == null ? null : Math.max(0, p)]); }
+  for(var j = NBASE - 1; j <= S.step; j++) sm.push([days(s, j), smoothPred(s, b, j, false)]);
+  var series = [{pts: pts, c: C.acc, w: 1, a: .35}, {pts: sm, c: C.acc, w: 2.4, area: 'rgba(76,154,255,.10)'}];
+  if(s.real && s.real[b]){  // RUL réelle linéaire (écrêtée à 3,5 j pour l'affichage)
+    var fd = (s.failure - s.times[0]) / 864e5;
+    series.unshift({pts: [[0, Math.min(3.5, fd)], [Math.max(0, fd - 3.5), 3.5], [fd, 0]], c: C.txt, w: 1.4, dash: [6, 5], a: .8}); }
+  return {x: [0, xEnd], y: [0, 3.5], yt: [0, 1, 2, 2.5, 3], yf: function(v){ return v === 2.5 ? '2,5' : String(v); },
+    xt: niceTicks(0, xEnd, 7), xf: function(v){ return 'J+' + fmt(v, 0); },
+    bands: [{from: 0, to: 1, c: 'rgba(239,68,68,.07)'}, {from: 1, to: 2.5, c: 'rgba(245,165,36,.06)'}],
+    vlines: [{x: days(s, NBASE - 1), c: C.dim, label: 'fin calibration'}],
+    series: series, cursor: days(s, S.step),
+    dots: (function(){ var v = smoothPred(s, b, S.step, false); return v == null ? [] : [{x: days(s, S.step), y: v, c: ST[statusOf(v)].col}]; })(),
+    tip: function(xv){ var i = nearestIdx(s, xv); if(i > S.step) return null; var v = smoothPred(s, b, i, false), r = s.pred[b][i];
+      return '<div class="mono">' + dateStr(s.times[i]) + '</div>' + (v == null ? 'calibration' : 'RUL lissée <b class="mono">' + fmt(v, 2) + ' j</b><br>brute <span class="mono">' + fmt(Math.max(0, r || 0), 2) + ' j</span>') +
+        (s.real && s.real[b] ? '<br>réelle <span class="mono">' + fmt((s.failure - s.times[i]) / 864e5, 2) + ' j</span>' : ''); }};
+}});
+var chHealth = new Chart2($('chHealth'), {data: function(){
+  var s = SRC[S.mode]; if(!s) return null; var b = S.sel, rows = s.rows[b], ref = s.ref[b], rp = [], kp = [], ymax = 1.6, kmax = 4, xEnd = days(s, s.n - 1);
+  for(var i = 0; i < s.n; i++){ if(rows[i][0] < 0.01) continue; var r = rows[i][0] / ref[0]; ymax = Math.max(ymax, r); kmax = Math.max(kmax, rows[i][3]); }
+  for(var j = 0; j <= S.step; j++){ if(rows[j][0] < 0.01){ rp.push([days(s, j), null]); kp.push([days(s, j), null]); continue; }
+    rp.push([days(s, j), rows[j][0] / ref[0]]); kp.push([days(s, j), rows[j][3]]); }
+  ymax = Math.ceil(ymax * 1.08); kmax = Math.ceil(kmax * 1.1);
+  return {x: [0, xEnd], y: [0, ymax], yt: niceTicks(0, ymax, 5), yf: function(v){ return '×' + v; },
+    y2: [-2, kmax], y2t: niceTicks(0, kmax, 4), y2f: function(v){ return String(v); },
+    xt: niceTicks(0, xEnd, 7), xf: function(v){ return 'J+' + fmt(v, 0); },
+    bands: [{from: .97, to: 1.03, c: 'rgba(139,152,165,.12)'}],
+    series: [{pts: kp, c: C.warn, w: 1.1, a: .8, ax: [-2, kmax]}, {pts: rp, c: C.cyan, w: 2, area: 'rgba(34,211,238,.08)'}],
+    cursor: days(s, S.step),
+    tip: function(xv){ var i = nearestIdx(s, xv); if(i > S.step || rows[i][0] < 0.01) return null;
+      return '<div class="mono">' + dateStr(s.times[i]) + '</div>RMS ×<b class="mono">' + fmt(rows[i][0] / ref[0], 2) + '</b> · kurtosis <b class="mono">' + fmt(rows[i][3], 2) + '</b>'; }};
+}});
+var SPEC = null;
+var chSpec = new Chart2($('chSpec'), {data: function(){
+  if(!SPEC) return null; var amax = 0; SPEC.a.forEach(function(a, i){ if(SPEC.f[i] > 20) amax = Math.max(amax, a); }); amax *= 1.15;
+  var vl = []; [['BPFO', C.crit], ['BPFI', C.warn], ['BSF', C.acc2]].forEach(function(t){ for(var h = 1; h <= 3; h++) vl.push({x: h * GEOM[t[0]], c: t[1], a: .55, label: h === 1 ? t[0] : (h + '×'), dash: [3, 4]}); });
+  return {x: [0, 800], y: [0, amax], yt: niceTicks(0, amax, 4), yf: function(v){ return fmt(v * 1e3, v * 1e3 < 10 ? 1 : 0); },
+    xt: [0, 100, 200, 300, 400, 500, 600, 700, 800], xf: function(v){ return v + ' Hz'; }, vlines: vl,
+    series: [{pts: SPEC.f.map(function(f, i){ return [f, SPEC.a[i]]; }), c: C.txt, w: 1.1, a: .9}],
+    tip: function(xv){ var i = Math.round(xv / (SPEC.f[1] || 1)); if(!SPEC.a[i]) return null; return '<span class="mono">' + fmt(SPEC.f[i], 1) + ' Hz</span> · amplitude <span class="mono">' + SPEC.a[i].toExponential(2) + '</span>'; }};
+}});
+
+/* ---- machine ---- */
+var BX = {1: 300, 2: 455, 3: 610, 4: 765};
+function buildRig(){
+  var g = $('brgs'), h = '';
+  [1, 2, 3, 4].forEach(function(b){ var x = BX[b];
+    h += '<g class="brg" id="brg' + b + '" data-b="' + b + '" tabindex="0" role="button" aria-label="Roulement B' + b + '">' +
+      '<circle class="halo" id="halo' + b + '" cx="' + x + '" cy="143" r="40" fill="none" stroke-width="3"/>' +
+      '<rect class="selring" x="' + (x - 48) + '" y="72" width="96" height="150" rx="14" fill="none" stroke="#4c9aff" stroke-width="2" stroke-dasharray="5 4"/>' +
+      '<rect x="' + (x - 30) + '" y="196" width="60" height="18" rx="3" fill="#1b2430" stroke="#2d3a4a"/>' +
+      '<path class="housing" id="hs' + b + '" d="M' + (x - 34) + ' 196 L' + (x - 34) + ' 140 A34 34 0 0 1 ' + (x + 34) + ' 140 L' + (x + 34) + ' 196 Z" fill="#2a3646" stroke="#3a4757" stroke-width="1.5"/>' +
+      '<circle cx="' + x + '" cy="143" r="21" fill="#141b24" stroke="#3a4757"/>' +
+      '<circle cx="' + x + '" cy="143" r="12" fill="#2d3a4a"/>' +
+      '<rect x="' + (x - 7) + '" y="96" width="14" height="12" rx="2" fill="#8b98a5"/><line x1="' + x + '" y1="96" x2="' + x + '" y2="84" stroke="#8b98a5" stroke-width="1.5"/>' +
+      '<text x="' + x + '" y="252" text-anchor="middle" fill="#e6edf3" font-size="14" font-weight="800">B' + b + '</text>' +
+      '<text id="rt' + b + '" x="' + x + '" y="268" text-anchor="middle" fill="#8b98a5" font-size="11.5" font-family="JetBrains Mono,monospace">—</text></g>';
+  });
+  g.innerHTML = h;
+  [1, 2, 3, 4].forEach(function(b){ var el = $('brg' + b);
+    var pick = function(){ var s = SRC[S.mode]; if(s && s.bearings.indexOf(b) >= 0){ S.sel = b; render(true); } };
+    el.addEventListener('click', pick); el.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); pick(); } }); });
+}
+function paintFleet(s){
+  $('fleet').innerHTML = [1, 2, 3, 4].map(function(b){
+    var act = s.bearings.indexOf(b) >= 0, v = act ? smoothPred(s, b, S.step, true) : null, st = act ? statusOf(v) : 'calib', row = act ? s.rows[b][S.step] : null;
+    var col = act ? (st === 'calib' ? C.mut : ST[st].col) : C.dim;
+    return '<button class="fl' + (b === S.sel ? ' sel' : '') + '" data-b="' + b + '"' + (act ? '' : ' disabled style="opacity:.45;cursor:default"') + '>' +
+      '<div class="h"><i style="background:' + col + '"></i>B' + b + '</div>' +
+      '<div class="s" style="color:' + col + '">' + (act ? ST[st].t : 'NON ANALYSÉ') + '</div>' +
+      '<div class="m">' + (act && row[0] >= 0.01 ? 'vib ×' + fmt(row[0] / s.ref[b][0], 2) : '—') + '</div></button>';
+  }).join('');
+  $('fleet').querySelectorAll('.fl').forEach(function(el){ el.onclick = function(){ var b = +el.dataset.b; if(s.bearings.indexOf(b) >= 0){ S.sel = b; render(true); } }; });
+}
+function paintRig(s){
+  [1, 2, 3, 4].forEach(function(b){
+    var active = s.bearings.indexOf(b) >= 0, v = active ? smoothPred(s, b, S.step, true) : null, st = active ? statusOf(v) : 'calib';
+    var fill = !active ? '#1f2832' : st === 'crit' ? '#5a1d1d' : st === 'warn' ? '#5a4214' : '#2a3646';
+    var stroke = !active ? '#2d3a4a' : st === 'crit' ? C.crit : st === 'warn' ? C.warn : '#3a4757';
+    $('hs' + b).setAttribute('fill', fill); $('hs' + b).setAttribute('stroke', stroke);
+    var halo = $('halo' + b); halo.setAttribute('stroke', st === 'crit' ? C.crit : C.warn); halo.classList.toggle('on', active && (st === 'crit' || st === 'warn'));
+    $('brg' + b).classList.toggle('sel', b === S.sel);
+    $('brg' + b).style.opacity = active ? 1 : .45;
+    $('rt' + b).textContent = !active ? 'non analysé' : v == null ? 'calibration' : v >= 2.5 ? 'RUL > 2,5 j' : 'RUL ' + fmt(v, 1) + ' j';
+    $('rt' + b).setAttribute('fill', !active ? C.dim : ST[st].col === C.idle ? C.mut : ST[st].col);
+  });
+}
+/* ---- jauge ---- */
+function paintGauge(v){
+  var cx = 120, cy = 112, R = 88, max = 3.5, ang = function(x){ return Math.PI * (1 - Math.min(x, max) / max); };
+  var arc = function(a, b, col, w){ var p1 = [cx + R * Math.cos(ang(a)), cy - R * Math.sin(ang(a))], p2 = [cx + R * Math.cos(ang(b)), cy - R * Math.sin(ang(b))];
+    return '<path d="M' + p1[0] + ' ' + p1[1] + ' A' + R + ' ' + R + ' 0 0 1 ' + p2[0] + ' ' + p2[1] + '" stroke="' + col + '" stroke-width="' + w + '" fill="none" stroke-linecap="butt"/>'; };
+  var h = arc(0, 1, 'rgba(239,68,68,.55)', 14) + arc(1, 2.5, 'rgba(245,165,36,.5)', 14) + arc(2.5, 3.5, 'rgba(63,182,139,.45)', 14);
+  [0, 1, 2.5, 3.5].forEach(function(t){ var a = ang(t); h += '<text x="' + (cx + (R + 16) * Math.cos(a)) + '" y="' + (cy - (R + 16) * Math.sin(a) + 4) + '" text-anchor="middle" fill="#5d6b7a" font-size="10" font-family="JetBrains Mono,monospace">' + (t === 3.5 ? '3+' : fmt(t, t === 2.5 ? 1 : 0)) + '</text>'; });
+  if(v != null){ var a = ang(v), col = ST[statusOf(v)].col;
+    h += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + (R - 22) * Math.cos(a)) + '" y2="' + (cy - (R - 22) * Math.sin(a)) + '" stroke="' + col + '" stroke-width="4" stroke-linecap="round"/>';
+    h += '<circle cx="' + cx + '" cy="' + cy + '" r="7" fill="' + col + '"/>'; }
+  h += '<text x="' + cx + '" y="' + (cy + 36) + '" text-anchor="middle" fill="#e6edf3" font-size="26" font-weight="800" font-family="JetBrains Mono,monospace">' + (v == null ? '—' : v >= 2.5 ? '> 2,5' : fmt(v, 1)) + '</text>';
+  h += '<text x="' + cx + '" y="' + (cy + 54) + '" text-anchor="middle" fill="#8b98a5" font-size="11">jours de vie restante</text>';
+  $('gauge').innerHTML = h;
+}
+/* ---- bande de statut sous la timeline ---- */
+function paintStrip(s){
+  var cv = $('strip'), W = cv.clientWidth, dpr = window.devicePixelRatio || 1; if(!W) return;
+  cv.width = W * dpr; cv.height = 10 * dpr; var g = cv.getContext('2d'); g.scale(dpr, dpr);
+  g.fillStyle = '#1b2430'; g.fillRect(0, 0, W, 10);
+  for(var i = 0; i < s.n; i++){
+    var x0 = i / s.n * W, x1 = (i + 1) / s.n * W, v = i < NBASE - 1 ? null : smoothPred(s, S.sel, i, false);
+    if(i < NBASE - 1){ g.fillStyle = '#2d3a4a'; } else if(v == null){ continue; } else g.fillStyle = ST[statusOf(v)].col;
+    g.globalAlpha = i <= S.step ? .9 : .35; g.fillRect(x0, 0, x1 - x0 + .6, 10);
+  }
+  g.globalAlpha = 1;
+}
+/* ---- journal ---- */
+function paintLog(s){
+  var ev = [];
+  s.bearings.forEach(function(b){ var prev = null;
+    for(var i = NBASE - 1; i <= S.step; i++){ var v = smoothPred(s, b, i, false); if(v == null) continue; var st = statusOf(v);
+      if(prev !== null && st !== prev && (st === 'warn' || st === 'crit' || prev === 'warn' || prev === 'crit')) ev.push({i: i, b: b, st: st, from: prev});
+      prev = st; } });
+  ev.sort(function(a, b){ return b.i - a.i; });
+  $('log').innerHTML = ev.length ? ev.slice(0, 40).map(function(e){
+    var txt = e.st === 'ok' ? 'retour à la normale' : (e.st === 'crit' ? 'passage en <b style="color:' + C.crit + '">ARRÊT RECOMMANDÉ</b>' : 'passage en <b style="color:' + C.warn + '">SURVEILLANCE</b>');
+    return '<li><span class="dot" style="background:' + ST[e.st].col + '"></span><time>' + dateStr(s.times[e.i]) + '</time><span><b>B' + e.b + '</b> · ' + txt + '</span></li>'; }).join('')
+    : '<li class="empty">Aucune alerte pour l’instant.' + (s.complete ? '' : ' Calcul des prédictions en cours…') + '</li>';
+}
+/* ---- spectre ---- */
+var specKey = null;
+function paintSpectrum(s){
+  var cands = s.raw.filter(function(r){ return r.bearing === S.sel && r.idx <= S.step; });
+  var r = cands.length ? cands[cands.length - 1] : null, key = r ? S.mode + r.idx + '_' + r.bearing : 'none';
+  if(key === specKey) return; specKey = key;
+  var vd = $('verdict');
+  if(!r){ SPEC = null; chSpec.draw(); $('specHint').textContent = ''; vd.children[0].style.background = C.dim;
+    vd.children[1].innerHTML = S.mode === 'replay' && S.sel !== 1 ? 'Dans cette démo, les signaux bruts complets ne sont embarqués que pour B1 (le roulement qui casse).' : 'Pas encore de signal brut disponible à cet instant.';
+    return; }
+  SPEC = envelopeSpectrum(r.sig, 800);
+  var dg = diagnose(SPEC), top = dg[0];
+  $('specHint').textContent = 'acquisition du ' + dateStr(s.times[r.idx]);
+  if(top.score >= 8){ vd.children[0].style.background = top.color;
+    vd.children[1].innerHTML = '<b>Signature de défaut de ' + top.name + '</b> : pics à ' + top.peaks.filter(function(p){ return p[1] > 0; }).map(function(p){ return fmt(p[0], 0); }).join(' · ') + ' Hz (' + top.key + ' théorique ' + fmt(GEOM[top.key], 1) + ' Hz) · émergence ×' + fmt(top.score, 0); }
+  else if(top.score >= 4){ vd.children[0].style.background = C.warn; vd.children[1].innerHTML = 'Signature faible compatible avec un défaut de ' + top.name + ' (émergence ×' + fmt(top.score, 1) + ') : à surveiller.'; }
+  else { vd.children[0].style.background = C.ok; vd.children[1].innerHTML = 'Aucune fréquence de défaut ne ressort du bruit (émergence max ×' + fmt(top.score, 1) + ').'; }
+  chSpec.draw();
+}
+/* ---- rendu principal ---- */
+var drawPending = false;
+function scheduleDraw(){ if(drawPending) return; drawPending = true; requestAnimationFrame(function(){ drawPending = false; render(false); }); }
+function render(full){
+  var s = SRC[S.mode]; if(!s) return;
+  var b = S.sel, v = smoothPred(s, b, S.step, true), st = statusOf(v), row = s.rows[b][S.step];
+  $('selName').textContent = 'B' + b + (S.mode === 'files' ? ' · colonne ' + (s.col + 1) : '');
+  var box = $('status'); box.className = 'status ' + st; $('stIc').textContent = ST[st].ic; $('stT').textContent = ST[st].t;
+  $('stD').textContent = st === 'calib' ? 'Référence : ' + (S.step + 1) + ' / ' + NBASE + ' acquisitions' : 'Estimation sur les 5 dernières heures';
+  paintGauge(st === 'calib' ? null : v);
+  var ok = row[0] >= 0.01;
+  $('kRms').textContent = ok ? '×' + fmt(row[0] / s.ref[b][0], 2) : 'capteur ?';
+  $('kKur').textContent = ok ? fmt(row[3], 2) : '—';
+  if(s.real && s.real[b]){ $('kReal').textContent = fmt(Math.max(0, (s.failure - s.times[S.step]) / 864e5), 2) + ' j'; $('kRealU').textContent = 'connue après la panne'; $('lgReal').style.display = ''; }
+  else { $('kReal').textContent = 'inconnue'; $('kRealU').textContent = S.mode === 'replay' ? 'ce roulement n’a pas cassé' : 'données réelles'; $('lgReal').style.display = 'none'; }
+  $('reco').innerHTML = '<b>' + ST[st].reco[0] + '</b>' + ST[st].reco[1];
+  var cl = s.times[S.step]; $('clock').innerHTML = '<b>J+' + fmt(days(s, S.step), 2) + '</b><br>' + cl.toLocaleDateString('fr-FR') + ' ' + pad(cl.getHours()) + ':' + pad(cl.getMinutes());
+  $('slider').value = S.step;
+  paintRig(s); paintFleet(s); paintStrip(s); chRul.draw(); chHealth.draw(); paintSpectrum(s); paintLog(s);
+  var stage = S.playing ? S.step % 5 : -1;
+  document.querySelectorAll('#pipe .st').forEach(function(e){ var k = +e.dataset.s; e.classList.toggle('act', S.playing ? k === stage : (st === 'calib' ? k <= 2 : true)); });
+}
+
+/* ======================= Lecture ======================= */
+var timer = null;
+function setPlaying(p){
+  S.playing = p; $('btnPlay').textContent = p ? '❚❚' : '▶'; $('btnPlay').setAttribute('aria-label', p ? 'Pause' : 'Lecture');
+  $('rig').classList.toggle('paused', !p);
+  clearInterval(timer);
+  if(p){ timer = setInterval(function(){ var s = SRC[S.mode]; if(S.step >= s.n - 1){ setPlaying(false); return; } S.step++; render(false); }, 1000 / (2.5 * S.speed)); }
+  render(false);
+}
+$('btnPlay').onclick = function(){ var s = SRC[S.mode]; if(!s) return; if(S.step >= s.n - 1) S.step = s.startStep; setPlaying(!S.playing); };
+$('btnBack').onclick = function(){ var s = SRC[S.mode]; if(!s) return; S.step = 0; render(false); };
+$('slider').oninput = function(e){ S.step = +e.target.value; render(false); };
+document.querySelectorAll('#speed button').forEach(function(bt){ bt.onclick = function(){
+  document.querySelectorAll('#speed button').forEach(function(x){ x.classList.remove('on'); }); bt.classList.add('on'); S.speed = +bt.dataset.v; if(S.playing) setPlaying(true); }; });
+document.addEventListener('keydown', function(e){
+  if(e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; var s = SRC[S.mode]; if(!s) return;
+  if(e.code === 'Space'){ e.preventDefault(); $('btnPlay').click(); }
+  if(e.key === 'ArrowRight'){ S.step = Math.min(s.n - 1, S.step + (e.shiftKey ? 30 : 1)); render(false); }
+  if(e.key === 'ArrowLeft'){ S.step = Math.max(0, S.step - (e.shiftKey ? 30 : 1)); render(false); }
+});
+window.addEventListener('resize', function(){ var s = SRC[S.mode]; if(s) paintStrip(s); });
+
+/* ======================= Mode fichiers ======================= */
+function setMode(m){
+  S.mode = m; setPlaying(false); specKey = null;
+  $('tabReplay').classList.toggle('on', m === 'replay'); $('tabFiles').classList.toggle('on', m === 'files');
+  $('filesPanel').classList.toggle('hidden', m !== 'files');
+  $('rigHint').textContent = m === 'replay' ? 'Cliquez sur un roulement pour l’inspecter' : 'Roulement analysé mis en évidence';
+  var s = SRC[m];
+  document.querySelectorAll('main > section:not(#filesPanel)').forEach(function(el){ el.classList.toggle('hidden', m === 'files' && !s); });
+  if(s){ $('slider').max = s.n - 1; S.sel = s.bearings.indexOf(S.sel) >= 0 ? S.sel : s.bearings[0]; S.step = Math.min(S.step, s.n - 1); if(m === 'files') S.step = s.lastIdx; render(true); }
+  paintModelCard();
+}
+$('tabReplay').onclick = function(){ setMode('replay'); };
+$('tabFiles').onclick = function(){ setMode('files'); };
+$('pickFolder').onclick = function(){ $('inFolder').click(); };
+$('pickFiles').onclick = function(){ $('inFiles').click(); };
+$('inFolder').onchange = function(e){ analyse(e.target.files); };
+$('inFiles').onchange = function(e){ analyse(e.target.files); };
+var drop = $('drop');
+['dragenter', 'dragover'].forEach(function(t){ drop.addEventListener(t, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
+['dragleave', 'drop'].forEach(function(t){ drop.addEventListener(t, function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
+drop.addEventListener('drop', function(e){
+  var items = e.dataTransfer.items, files = [], pending = 0;
+  function walk(entry){ pending++;
+    if(entry.isFile) entry.file(function(f){ files.push(f); if(--pending === 0) analyse(files); });
+    else entry.createReader().readEntries(function(es){ es.forEach(walk); if(--pending === 0) analyse(files); }); }
+  if(items && items.length && items[0].webkitGetAsEntry){ for(var i = 0; i < items.length; i++){ var en = items[i].webkitGetAsEntry(); if(en) walk(en); } }
+  else analyse(e.dataTransfer.files);
+});
+function readText(f){ return new Promise(function(ok, ko){ var r = new FileReader(); r.onload = function(){ ok(r.result); }; r.onerror = ko; r.readAsText(f, 'latin1'); }); }
+function parseCol(txt, col){
+  var lines = txt.split(/\r?\n/), out = [];
+  for(var i = 0; i < lines.length; i++){ var s = lines[i].trim(); if(!s) continue; var p = s.split(/[\t,; ]+/);
+    if(col >= p.length) throw new Error('la colonne ' + (col + 1) + ' n’existe pas dans ' + lines.length + ' lignes lues');
+    var v = parseFloat(p[col]); if(isFinite(v)) out.push(v); }
+  return out;
+}
+function fileDate(name, k){ var m = /^(\d{4})\.(\d{2})\.(\d{2})\.(\d{2})\.(\d{2})\.(\d{2})/.exec(name);
+  return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) : new Date(2000, 0, 1, 0, 10 * k); }
+function msg(t, err){ $('msg').textContent = t; $('msg').className = 'msg' + (err ? ' err' : ''); }
+function progress(p){ $('prog').style.display = p == null ? 'none' : 'block'; $('prog').firstElementChild.style.width = (p * 100) + '%'; }
+async function analyse(fileList){
+  var col = +$('col').value, TAIL = 90;
+  var list = Array.prototype.slice.call(fileList).filter(function(f){ return f.size > 0 && f.name[0] !== '.'; })
+    .sort(function(a, b){ return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; });
+  if(list.length < NBASE + WIN){ msg('⚠️ ' + list.length + ' acquisition(s) seulement : il en faut au moins ' + (NBASE + WIN) + ' (' + NBASE + ' pour la référence « roulement neuf » + ' + WIN + ' pour la fenêtre analysée). Sans référence, la RUL ne peut pas être estimée de façon fiable.', true); return; }
+  var pick = list.slice(0, NBASE).concat(list.slice(Math.max(NBASE, list.length - TAIL)));
+  var rows = [], times = [], lastSig = null, lastIdx = -1, t0 = performance.now();
+  try {
+    for(var i = 0; i < pick.length; i++){
+      var sig = parseCol(await readText(pick[i]), col);
+      if(sig.length < 4096) throw new Error(pick[i].name + ' ne contient que ' + sig.length + ' points');
+      rows.push(sampleFeatures(sig)); times.push(fileDate(pick[i].name, list.indexOf(pick[i])));
+      if(i >= NBASE && rows[rows.length - 1][0] >= 0.01){ lastSig = sig; lastIdx = rows.length - 1; }  // dernière acquisition valide
+      if(i % 8 === 0){ progress(i / pick.length); msg('Calcul des indicateurs · ' + (i + 1) + ' / ' + pick.length + ' fichiers'); await new Promise(function(r){ setTimeout(r, 0); }); }
+    }
+  } catch(err){ progress(null); msg('⚠️ Lecture impossible : ' + err.message, true); return; }
+  progress(null);
+  var refRows = rows.slice(0, NBASE).filter(function(r){ return r[0] >= 0.01; });
+  if(refRows.length < NBASE / 2){ msg('⚠️ La période de référence contient trop de signaux plats (capteur arrêté ?).', true); return; }
+  var b = Math.min(col + 1, 4), s = {bearings: [b], rows: {}, ref: {}, pred: {}, W: MODEL.weights, n: rows.length, times: times, col: col, complete: true, raw: lastSig ? [{idx: lastIdx, bearing: b, sig: lastSig}] : [], startStep: NBASE};
+  s.lastIdx = S.step = lastIdx >= 0 ? lastIdx : rows.length - 1;
+  s.rows[b] = rows; s.ref[b] = reference(refRows); s.pred[b] = new Array(rows.length).fill(undefined);
+  for(var k = NBASE + WIN - 1; k < rows.length; k++) rawPred(s, b, k);   // fenêtres entièrement après la référence
+  for(k = NBASE - 1; k < NBASE + WIN - 1; k++) s.pred[b][k] = null;
+  SRC.files = s; S.sel = b; S.step = lastIdx >= 0 ? lastIdx : rows.length - 1;
+  msg('✅ ' + list.length + ' acquisitions · référence ' + pick[0].name + ' → ' + pick[NBASE - 1].name + ' · ' + (pick.length - NBASE) + ' dernières analysées · ' + fmt((performance.now() - t0) / 1000, 1) + ' s');
+  setMode('files');
+}
+
+/* ======================= Fiche modèle ======================= */
+function paintModelCard(){
+  var l = MODEL.lofo, cards = l.map(function(r){ return '<div class="kpi"><div class="l">' + r['Modèle'] + '</div><div class="v">' + fmt(r['MAE dégradation (j)'], 2) + ' j</div><div class="u">erreur moyenne en dégradation</div></div>'; }).join('');
+  $('mcard').innerHTML = cards;
+  $('mnote').innerHTML = 'Évaluation <b>sur un roulement jamais vu</b> : entraînement sur 3 des 4 pannes du dataset IMS, test sur la 4e, en tournant. ' +
+    (S.mode === 'replay' ? 'Le rejeu utilise un CNN-LSTM entraîné <b>sans le 2nd test</b> : ce que vous voyez est une vraie prédiction, pas une restitution des données d’entraînement. ' : 'L’analyse de vos fichiers utilise le CNN-LSTM entraîné sur les 4 pannes. ') +
+    'La RUL est fiable à ± 1 jour environ : elle sert à déclencher la surveillance puis l’arrêt. Limites : modèle appris sur un banc d’essai (2000 tr/min, 6000 lbs) ; une hausse de vibration de toute la machine (ex. casse d’un roulement voisin) peut déclencher une alerte sur un roulement sain.';
+}
+
+/* ======================= Démarrage ======================= */
+buildRig();
+SRC.replay = buildReplaySource();
+$('slider').max = SRC.replay.n - 1; S.step = SRC.replay.startStep;
+(function(){ var h = new URLSearchParams(location.hash.slice(1));
+  if(h.has('t')) S.step = Math.max(0, Math.min(SRC.replay.n - 1, +h.get('t')));
+  if(h.has('b')) S.sel = Math.max(1, Math.min(4, +h.get('b'))); })();
+startWorker(SRC.replay);
+setMode('replay');
+if(/play/.test(location.hash)) setPlaying(true);
+</script>
+</body>
+</html>
