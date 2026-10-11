@@ -3,281 +3,310 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BearingTwin — Jumeau numérique</title>
+<title>Surveillance vibratoire — Pronostic RUL</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0c1117; --bg2:#0f151d; --panel:#141b24; --panel2:#18212c; --line:#232e3b; --line2:#2d3a4a;
-  --txt:#e6edf3; --mut:#8b98a5; --dim:#5d6b7a;
-  --ok:#3fb68b; --warn:#f5a524; --crit:#ef4444; --acc:#4c9aff; --acc2:#a78bfa;
-  --ok-bg:rgba(63,182,139,.12); --warn-bg:rgba(245,165,36,.13); --crit-bg:rgba(239,68,68,.14);
-  --r:14px; --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --bg:#eef1f4; --panel:#ffffff; --sub:#f6f7f9; --line:#d8dde3; --line2:#c3cad3;
+  --txt:#1c2733; --mut:#5b6773; --dim:#8a95a1;
+  --pri:#0b5394; --pri2:#e8f0f8;
+  --ok:#2e7d32; --warn:#c77700; --crit:#c62828; --off:#9aa5b1;
+  --warn-bg:#fff4e0; --crit-bg:#fdecec; --ok-bg:#edf6ee;
+  --mono:'IBM Plex Mono',Consolas,monospace;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.45 Inter,system-ui,'Segoe UI',sans-serif}
-button{font:inherit;color:inherit;cursor:pointer}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:13.5px/1.45 'IBM Plex Sans','Segoe UI',system-ui,sans-serif}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
 .mono{font-family:var(--mono)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-/* ---------- barre du haut ---------- */
-.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;padding:12px 24px;
-  background:rgba(12,17,23,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:12px;min-width:0}
-.brand svg{flex:none}
-.brand h1{margin:0;font-size:16px;font-weight:800;letter-spacing:.2px;white-space:nowrap}
-.brand .sub{color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.seg{margin-left:auto;display:flex;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:3px}
-.seg button{border:0;background:none;padding:8px 14px;border-radius:8px;color:var(--mut);font-weight:600;font-size:13px;white-space:nowrap}
-.seg button.on{background:var(--panel2);color:var(--txt);box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 0 0 1px var(--line2)}
+/* ---------- en-tête ---------- */
+.hdr{display:flex;align-items:center;gap:18px;height:56px;padding:0 20px;background:#fff;border-bottom:1px solid var(--line)}
+.hdr .app{display:flex;flex-direction:column;line-height:1.2;padding-right:18px;border-right:1px solid var(--line)}
+.hdr .app b{font-size:15px;font-weight:700;letter-spacing:.1px}
+.hdr .app span{font-size:11.5px;color:var(--mut)}
+.crumb{color:var(--mut);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.crumb b{color:var(--txt);font-weight:600}
+.hdr .sp{flex:1}
+.tabs{display:flex;border:1px solid var(--line2);border-radius:4px;overflow:hidden}
+.tabs button{border:0;background:#fff;padding:7px 14px;font-weight:600;font-size:12.5px;color:var(--mut);border-right:1px solid var(--line2)}
+.tabs button:last-child{border-right:0}
+.tabs button.on{background:var(--pri);color:#fff}
+.clockh{font-family:var(--mono);font-size:12.5px;color:var(--mut);text-align:right;line-height:1.25;white-space:nowrap}
+.clockh b{color:var(--txt);font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);background:#fff;padding:7px 12px;border-radius:4px;font-weight:600;font-size:12.5px;white-space:nowrap}
+.btn:hover{background:var(--sub)}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.pri:hover{background:#094479}
+.btn:focus-visible,.tabs button:focus-visible,.tree button:focus-visible{outline:2px solid var(--pri);outline-offset:1px}
 
-/* ---------- chaîne de traitement ---------- */
-.pipe{display:flex;gap:6px;align-items:center;padding:10px 24px;border-bottom:1px solid var(--line);background:var(--bg2);overflow-x:auto}
-.pipe .st{display:flex;align-items:center;gap:8px;padding:6px 11px;border:1px solid var(--line);border-radius:999px;color:var(--mut);font-size:12px;white-space:nowrap;transition:.3s}
-.pipe .st b{color:var(--txt);font-weight:600}
-.pipe .st.act{border-color:var(--acc);color:var(--txt);box-shadow:0 0 0 3px rgba(76,154,255,.12)}
-.pipe .ar{color:var(--dim);flex:none}
+/* ---------- bandeau démonstration ---------- */
+.demo{display:flex;align-items:center;gap:14px;padding:8px 20px;background:var(--pri2);border-bottom:1px solid #c9d9ea;flex-wrap:wrap}
+.demo .lbl{font-size:11.5px;font-weight:700;letter-spacing:.8px;color:var(--pri);white-space:nowrap}
+.demo .src{font-size:12px;color:var(--mut);white-space:nowrap}
+.demo .ctl{display:flex;gap:4px}
+.demo .ctl button{width:32px;height:30px;display:grid;place-items:center;border:1px solid #b7cbe0;background:#fff;border-radius:4px;color:var(--pri)}
+.demo .ctl button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.demo select{border:1px solid #b7cbe0;border-radius:4px;background:#fff;padding:5px 6px;font-size:12px}
+.demo .tl{flex:1;min-width:240px;display:flex;flex-direction:column;gap:3px}
+.demo canvas{width:100%;height:6px;display:block;border-radius:2px}
+.demo input[type=range]{width:100%;margin:0;accent-color:var(--pri)}
+.demo .t{font-family:var(--mono);font-size:12px;color:var(--txt);white-space:nowrap;min-width:150px;text-align:right}
 
-/* ---------- grille ---------- */
-main{padding:18px 24px 40px;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;max-width:1500px;margin:0 auto}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;min-width:0}
-.card h2{margin:0 0 12px;font-size:12px;letter-spacing:1.1px;text-transform:uppercase;color:var(--mut);font-weight:700;display:flex;align-items:center;gap:8px}
-.card h2 .hint{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:500;color:var(--dim)}
-.c7{grid-column:span 7}.c5{grid-column:span 5}.c6{grid-column:span 6}.c8{grid-column:span 8}.c4{grid-column:span 4}.c12{grid-column:span 12}
-@media(max-width:1100px){.c7,.c5,.c6,.c8,.c4{grid-column:span 12}}
-@media(max-width:640px){main{padding:12px 12px 32px;gap:12px}.top{padding:10px 14px;flex-wrap:wrap}.seg{margin-left:0;width:100%}.seg button{flex:1}.pipe{padding:8px 12px}.brand .sub{display:none}}
+/* ---------- mise en page ---------- */
+.layout{display:grid;grid-template-columns:232px minmax(0,1fr) 300px;gap:14px;padding:14px 20px 28px;max-width:1680px;margin:0 auto}
+@media(max-width:1280px){.layout{grid-template-columns:220px minmax(0,1fr)}.side-r{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}}
+@media(max-width:860px){.layout{grid-template-columns:1fr;padding:10px 12px 24px}.hdr{height:auto;flex-wrap:wrap;padding:10px 12px;gap:10px}.hdr .app{border:0}.crumb{display:none}.demo{padding:8px 12px}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.pn{background:var(--panel);border:1px solid var(--line);border-radius:4px;min-width:0}
+.pn > h3{margin:0;padding:9px 14px;border-bottom:1px solid var(--line);font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--mut);display:flex;align-items:center;gap:8px}
+.pn > h3 .r{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:500;color:var(--dim)}
+.pb{padding:12px 14px}
 
-/* ---------- machine ---------- */
-#rig{width:100%;height:auto;display:block}
-.brg{cursor:pointer}
-.brg .housing{transition:fill .4s,stroke .4s}
-.brg:hover .housing{stroke:var(--acc)}
-.brg.sel .selring{opacity:1}
-.selring{opacity:0;transition:.2s}
-@keyframes pulse{0%{opacity:.75;transform:scale(1)}100%{opacity:0;transform:scale(1.55)}}
-.halo{transform-box:fill-box;transform-origin:center;opacity:0}
-.halo.on{animation:pulse 1.4s ease-out infinite}
-@keyframes spin{to{transform:translateX(-24px)}}
-.shaftpat{animation:spin .35s linear infinite}
-.paused .shaftpat{animation-play-state:paused}
+/* ---------- arborescence ---------- */
+.tree{list-style:none;margin:0;padding:6px 0}
+.tree .grp{padding:6px 14px;font-size:12px;color:var(--mut);font-weight:600}
+.tree button{width:100%;display:grid;grid-template-columns:12px 1fr auto;gap:9px;align-items:center;border:0;background:none;padding:8px 14px 8px 22px;text-align:left;border-left:3px solid transparent}
+.tree button:hover{background:var(--sub)}
+.tree button.sel{background:var(--pri2);border-left-color:var(--pri)}
+.tree button[disabled]{opacity:.45;cursor:default}
+.tree .tg{font-weight:600}
+.tree .ds{display:block;font-size:11.5px;color:var(--mut);font-weight:400}
+.tree .v{font-family:var(--mono);font-size:11.5px;color:var(--mut)}
+.sq{width:10px;height:10px;border-radius:2px;display:inline-block;flex:none}
+.sq.ok{background:var(--ok)}.sq.warn{background:var(--warn)}.sq.crit{background:var(--crit)}.sq.off{background:var(--off)}
+.sum{display:grid;grid-template-columns:1fr auto;gap:6px 10px;font-size:12.5px}
+.sum .num{font-weight:600;text-align:right}
 
-/* ---------- lecture ---------- */
-.player{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
-.pbtn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line2);background:var(--panel2);display:grid;place-items:center;flex:none}
-.pbtn.main{background:var(--acc);border-color:var(--acc);color:#04111f}
-.pbtn:focus-visible,.seg button:focus-visible,.speed button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.tl{flex:1;min-width:220px;position:relative}
-.tl canvas{display:block;width:100%;height:10px;border-radius:5px}
-.tl input{width:100%;margin:6px 0 0;accent-color:var(--acc)}
-.clock{font-family:var(--mono);font-size:13px;color:var(--mut);min-width:150px;text-align:right}
-.clock b{color:var(--txt);font-size:15px}
-.speed{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
-.speed button{border:0;background:none;padding:7px 10px;color:var(--mut);font-size:12px;font-weight:600}
-.speed button.on{background:var(--panel2);color:var(--txt)}
+/* ---------- titre équipement + indicateurs ---------- */
+.eqh{display:flex;align-items:center;gap:14px;padding:12px 14px;flex-wrap:wrap}
+.eqh h2{margin:0;font-size:18px;font-weight:700}
+.eqh .meta{color:var(--mut);font-size:12.5px}
+.badge{display:inline-flex;align-items:center;gap:7px;padding:4px 10px;border-radius:3px;font-weight:700;font-size:12px;letter-spacing:.6px;border:1px solid}
+.badge.ok{color:var(--ok);background:var(--ok-bg);border-color:#b9d9bb}
+.badge.warn{color:var(--warn);background:var(--warn-bg);border-color:#f0cf95}
+.badge.crit{color:#fff;background:var(--crit);border-color:var(--crit)}
+.badge.off{color:var(--mut);background:var(--sub);border-color:var(--line2)}
+.eqh .acts{margin-left:auto;display:flex;gap:8px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line)}
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{padding:12px 14px;border-right:1px solid var(--line);min-width:0}
+.kpi:last-child{border-right:0}
+.kpi .l{font-size:11.5px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.kpi .v{font-family:var(--mono);font-size:24px;font-weight:600;margin-top:4px;white-space:nowrap}
+.kpi .v small{font-size:13px;color:var(--mut);font-weight:500}
+.kpi .s{font-size:12px;color:var(--mut);margin-top:2px}
+.kpi.warn .v{color:var(--warn)}.kpi.crit .v{color:var(--crit)}
 
-.fleet{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px}
-.fl{background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:10px 12px;cursor:pointer;transition:.2s;text-align:left}
-.fl:hover{border-color:var(--line2)}.fl.sel{border-color:var(--acc);box-shadow:0 0 0 3px rgba(76,154,255,.12)}
-.fl .h{display:flex;align-items:center;gap:7px;font-weight:800}
-.fl .h i{width:9px;height:9px;border-radius:50%;display:inline-block}
-.fl .s{font-size:11.5px;font-weight:700;letter-spacing:.4px;margin-top:4px}
-.fl .m{font-family:var(--mono);font-size:12px;color:var(--mut);margin-top:2px}
-@media(max-width:640px){.fleet{grid-template-columns:repeat(2,minmax(0,1fr))}}
-/* ---------- état ---------- */
-.status{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;border:1px solid var(--line2);background:var(--panel2);transition:.4s}
-.status .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.04)}
-.status .t{font-size:20px;font-weight:800;letter-spacing:.4px}
-.status .d{color:var(--mut);font-size:13px}
-.status.ok{border-color:rgba(63,182,139,.45);background:var(--ok-bg)}.status.ok .t{color:var(--ok)}
-.status.warn{border-color:rgba(245,165,36,.5);background:var(--warn-bg)}.status.warn .t{color:var(--warn)}
-.status.crit{border-color:rgba(239,68,68,.55);background:var(--crit-bg)}.status.crit .t{color:var(--crit)}
-.status.calib .t{color:var(--mut)}
-.gaugewrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;align-items:center;margin-top:14px}
-@media(max-width:520px){.gaugewrap{grid-template-columns:1fr}}
-#gauge{width:100%;height:auto;display:block}
-.kpis{display:grid;gap:10px}
-.kpi{background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
-.kpi .l{color:var(--mut);font-size:12px}
-.kpi .v{font-family:var(--mono);font-size:20px;font-weight:700;margin-top:2px}
-.kpi .u{color:var(--dim);font-size:11.5px}
-.reco{margin-top:14px;padding:12px 14px;border-radius:11px;background:var(--bg2);border:1px solid var(--line);font-size:13.5px}
-.reco b{display:block;margin-bottom:3px}
+/* ---------- synoptique ---------- */
+#syn{width:100%;height:auto;display:block}
+.syn-b{cursor:pointer}
+.syn-b:hover rect.body{stroke:var(--pri)}
 
 /* ---------- graphiques ---------- */
-.chart{position:relative;width:100%;height:260px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media(max-width:1100px){.g2{grid-template-columns:1fr}}
+.chart{position:relative;height:230px}
 .chart canvas{position:absolute;inset:0;width:100%;height:100%}
-.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;color:var(--mut);font-size:12px}
-.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
-.tip{position:absolute;pointer-events:none;background:rgba(10,14,19,.95);border:1px solid var(--line2);border-radius:9px;padding:8px 10px;font-size:12px;white-space:nowrap;display:none;z-index:5}
-.tip .mono{font-size:12px}
-.verdict{display:flex;gap:10px;align-items:center;margin-bottom:10px;padding:10px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);font-size:13.5px}
-.verdict .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.leg{display:flex;gap:14px;flex-wrap:wrap;padding:0 14px 10px;font-size:11.5px;color:var(--mut)}
+.leg i{display:inline-block;width:16px;height:0;border-top:2px solid;margin-right:6px;vertical-align:middle}
+.tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line2);box-shadow:0 2px 8px rgba(0,0,0,.08);border-radius:3px;padding:6px 9px;font-size:12px;white-space:nowrap;display:none;z-index:5}
 
-/* ---------- journal / fiche modèle ---------- */
-.log{list-style:none;margin:0;padding:0;max-height:250px;overflow:auto}
-.log li{display:grid;grid-template-columns:12px auto 1fr;gap:10px;align-items:start;padding:9px 2px;border-bottom:1px solid var(--line);font-size:13px}
-.log li:last-child{border-bottom:0}
-.log .dot{width:10px;height:10px;border-radius:50%;margin-top:4px}
-.log time{font-family:var(--mono);color:var(--mut);font-size:12px;white-space:nowrap}
-.empty{color:var(--dim);font-size:13px;padding:8px 0}
-.log li.empty{display:block;border:0}
-.mcard{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-.mcard .kpi .v{font-size:17px}
-.note{color:var(--mut);font-size:12.5px;margin-top:10px;line-height:1.55}
+/* ---------- tableaux ---------- */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-weight:600;color:var(--mut);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;padding:7px 10px;border-bottom:1px solid var(--line);background:var(--sub);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.kv td:first-child{color:var(--mut);width:46%}
+.kv td{padding:6px 14px}
+.pri1{color:var(--crit);font-weight:700}.pri2{color:var(--warn);font-weight:700}
+.alm-active td{background:#fffaf2}
+.alm-active.p1 td{background:#fff5f5}
+.ack{border:1px solid var(--line2);background:#fff;border-radius:3px;padding:2px 8px;font-size:11.5px;font-weight:600}
+.ack:hover{background:var(--sub)}
+.tbl-wrap{max-height:260px;overflow:auto}
+.diag{display:flex;gap:12px;align-items:flex-start;padding:10px 14px;border-bottom:1px solid var(--line)}
+.diag .sq{margin-top:4px}
+.txt p{margin:0 0 8px}
+.txt p:last-child{margin:0}
+.note{font-size:12px;color:var(--mut);line-height:1.5}
 
-/* ---------- mode fichiers ---------- */
-.drop{border:1.5px dashed var(--line2);border-radius:14px;padding:26px;text-align:center;transition:.2s;background:var(--bg2)}
-.drop.over{border-color:var(--acc);background:rgba(76,154,255,.06)}
-.drop h3{margin:8px 0 4px;font-size:17px}
-.drop p{color:var(--mut);margin:0 0 14px;font-size:13px}
-.btn{border:1px solid var(--line2);background:var(--panel2);padding:10px 16px;border-radius:10px;font-weight:600}
-.btn.pri{background:var(--acc);border-color:var(--acc);color:#04111f}
-.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center}
-select{background:var(--panel2);color:var(--txt);border:1px solid var(--line2);border-radius:9px;padding:9px 10px;font:inherit}
-.prog{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:14px;display:none}
-.prog i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
-.msg{margin-top:12px;font-size:13px;color:var(--mut)}
-.msg.err{color:#ff8a80}
+/* ---------- import ---------- */
+.drop{border:1.5px dashed var(--line2);border-radius:4px;padding:22px;text-align:center;background:var(--sub)}
+.drop.over{border-color:var(--pri);background:var(--pri2)}
+.drop h4{margin:6px 0 4px;font-size:14px}
+.drop p{margin:0 0 12px;color:var(--mut);font-size:12.5px}
+.drop .row{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
+.drop select{border:1px solid var(--line2);border-radius:4px;padding:6px 8px;background:#fff}
+.prog{height:4px;background:var(--line);margin-top:12px;display:none}
+.prog i{display:block;height:100%;width:0;background:var(--pri)}
+.msg{margin-top:10px;font-size:12.5px;color:var(--mut)}
+.msg.err{color:var(--crit)}
 .hidden{display:none!important}
-footer{grid-column:span 12;color:var(--dim);font-size:12px;text-align:center;padding-top:6px}
+.foot{grid-column:1/-1;color:var(--dim);font-size:11.5px;text-align:center}
+
+/* ---------- impression : rapport de diagnostic ---------- */
+.print-only{display:none}
+@media print{
+  @page{size:A4;margin:14mm}
+  body{background:#fff;font-size:11.5px}
+  .hdr,.demo,.side-l,.no-print,.ack,.eqh .acts{display:none!important}
+  .print-only{display:block}
+  .layout{display:block;padding:0}
+  .col{gap:10px}
+  .pn{break-inside:avoid;border-color:#bbb;margin-bottom:10px}
+  .side-r{display:block}
+  .chart{height:200px}
+  .tbl-wrap{max-height:none}
+}
 </style>
 </head>
 <body>
-<header class="top">
-  <div class="brand">
-    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="none" stroke="#4c9aff" stroke-width="2.5"/><circle cx="17" cy="17" r="7" fill="none" stroke="#4c9aff" stroke-width="2.5"/><g fill="#4c9aff"><circle cx="17" cy="6.5" r="2.2"/><circle cx="27.5" cy="17" r="2.2"/><circle cx="17" cy="27.5" r="2.2"/><circle cx="6.5" cy="17" r="2.2"/><circle cx="24.4" cy="9.6" r="2.2"/><circle cx="24.4" cy="24.4" r="2.2"/><circle cx="9.6" cy="24.4" r="2.2"/><circle cx="9.6" cy="9.6" r="2.2"/></g></svg>
-    <div><h1>BearingTwin</h1><div class="sub">Jumeau numérique de roulement · maintenance prédictive · NASA IMS</div></div>
-  </div>
-  <nav class="seg" role="tablist">
-    <button id="tabReplay" class="on" role="tab">▶ Rejeu du 2nd test</button>
-    <button id="tabFiles" role="tab">📂 Analyser mes fichiers</button>
-  </nav>
+<header class="hdr">
+  <div class="app"><b>Surveillance vibratoire</b><span>Module de pronostic de durée de vie résiduelle</span></div>
+  <div class="crumb" id="crumb"></div>
+  <div class="sp"></div>
+  <div class="tabs" role="tablist"><button id="tabReplay" class="on" role="tab">Supervision</button><button id="tabFiles" role="tab">Import de mesures</button></div>
+  <div class="clockh" id="clockh"></div>
 </header>
 
-<div class="pipe" id="pipe">
-  <span class="st" data-s="0">📡 <b>Vibration brute</b> 20 kHz · 1 s / 10 min</span><span class="ar">→</span>
-  <span class="st" data-s="1">🧮 <b>4 indicateurs</b> RMS · Énergie · Entropie · Kurtosis</span><span class="ar">→</span>
-  <span class="st" data-s="2">⚖️ <b>Référence</b> roulement neuf</span><span class="ar">→</span>
-  <span class="st" data-s="3">🧠 <b>CNN-LSTM</b> fenêtre 5 h</span><span class="ar">→</span>
-  <span class="st" data-s="4">⏱️ <b>RUL</b> + décision</span>
+<div class="demo" id="demo">
+  <span class="lbl">MODE DÉMONSTRATION</span>
+  <span class="src">Rejeu des mesures NASA IMS — 2nd test (12/02/2004 → 19/02/2004)</span>
+  <div class="ctl">
+    <button id="bStart" title="Revenir au début" aria-label="Revenir au début"><svg class="i" viewBox="0 0 24 24"><path d="M6 5v14M18 6l-9 6 9 6z"/></svg></button>
+    <button id="bPlay" title="Lecture / pause (Espace)" aria-label="Lecture"><svg class="i" viewBox="0 0 24 24" id="playIc"><path d="M7 5l12 7-12 7z"/></svg></button>
+  </div>
+  <select id="speed" aria-label="Vitesse de rejeu"><option value="1">×1</option><option value="4" selected>×4</option><option value="16">×16</option></select>
+  <div class="tl"><canvas id="strip" height="6"></canvas><input type="range" id="slider" min="0" max="983" value="230" aria-label="Instant du rejeu"></div>
+  <span class="t" id="tnow"></span>
 </div>
 
-<main>
-  <!-- Mode fichiers : dépôt -->
-  <section class="card c12 hidden" id="filesPanel">
-    <h2>Analyser les acquisitions d'un roulement</h2>
-    <div class="drop" id="drop">
-      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#4c9aff" stroke-width="1.6" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 10v6m-3-3 3-3 3 3"/></svg>
-      <h3>Déposez ici le dossier d'acquisitions</h3>
-      <p>Fichiers bruts IMS (1 fichier = 1 s de vibration, nommé par date). Au moins <b>230 fichiers</b> depuis la mise en service : les 200 premiers servent de référence « roulement neuf ».</p>
-      <div class="row">
-        <label for="col" style="color:var(--mut)">Roulement (colonne)</label>
-        <select id="col"><option value="0">Colonne 1</option><option value="1">Colonne 2</option><option value="2">Colonne 3</option><option value="3">Colonne 4</option><option value="4">Colonne 5</option><option value="5">Colonne 6</option><option value="6">Colonne 7</option><option value="7">Colonne 8</option></select>
-        <button class="btn pri" id="pickFolder">📁 Choisir le dossier</button>
-        <button class="btn" id="pickFiles">Choisir des fichiers</button>
+<div class="layout">
+  <!-- ===== Colonne gauche : équipements ===== -->
+  <aside class="col side-l">
+    <section class="pn">
+      <h3>Équipements</h3>
+      <ul class="tree" id="tree"></ul>
+    </section>
+    <section class="pn">
+      <h3>Synthèse des alarmes</h3>
+      <div class="pb sum" id="almSum"></div>
+    </section>
+    <section class="pn no-print">
+      <h3>Seuils de décision</h3>
+      <div class="pb note">
+        <b style="color:var(--txt)">RUL</b> : alerte &lt; 2,5 j · alarme &lt; 1 j<br>
+        <b style="color:var(--txt)">Niveau RMS</b> : alerte +6 dB (×2) · alarme +12 dB (×4) par rapport à la référence<br>
+        <b style="color:var(--txt)">Référence</b> : médiane des 200 premières acquisitions (≈ 33 h)
       </div>
-      <input type="file" id="inFolder" webkitdirectory multiple class="hidden">
-      <input type="file" id="inFiles" multiple class="hidden">
-      <div class="prog" id="prog"><i></i></div>
-      <div class="msg" id="msg"></div>
-    </div>
-  </section>
+    </section>
+  </aside>
 
-  <!-- Machine + lecture -->
-  <section class="card c7" id="rigCard">
-    <h2>Banc d'essai <span class="hint" id="rigHint">Cliquez sur un roulement pour l'inspecter</span></h2>
-    <svg id="rig" viewBox="0 0 900 270" role="img" aria-label="Schéma du banc d'essai : moteur, arbre et 4 roulements">
-      <defs>
-        <pattern id="stripes" width="24" height="24" patternUnits="userSpaceOnUse">
-          <g class="shaftpat"><rect width="48" height="24" fill="#3a4757"/><path d="M0 24 L12 0 M12 24 L24 0 M24 24 L36 0 M36 24 L48 0" stroke="#4b5a6c" stroke-width="5"/></g>
-        </pattern>
-        <linearGradient id="motorG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a3646"/><stop offset="1" stop-color="#1b2430"/></linearGradient>
-      </defs>
-      <!-- socle -->
-      <rect x="20" y="214" width="860" height="16" rx="4" fill="#1b2430" stroke="#2d3a4a"/>
-      <!-- moteur -->
-      <g>
-        <rect x="34" y="92" width="132" height="102" rx="12" fill="url(#motorG)" stroke="#2d3a4a"/>
-        <g stroke="#2d3a4a" stroke-width="3">
-          <line x1="52" y1="104" x2="52" y2="182"/><line x1="68" y1="104" x2="68" y2="182"/><line x1="84" y1="104" x2="84" y2="182"/><line x1="100" y1="104" x2="100" y2="182"/><line x1="116" y1="104" x2="116" y2="182"/>
-        </g>
-        <rect x="56" y="194" width="88" height="20" rx="3" fill="#1b2430" stroke="#2d3a4a"/>
-        <text x="100" y="86" text-anchor="middle" fill="#8b98a5" font-size="12" font-weight="600">MOTEUR AC · 2000 tr/min</text>
-      </g>
-      <!-- accouplement -->
-      <rect x="166" y="128" width="30" height="30" rx="5" fill="#2a3646" stroke="#3a4757"/>
-      <!-- arbre -->
-      <rect x="196" y="134" width="660" height="18" rx="9" fill="url(#stripes)" stroke="#2d3a4a"/>
-      <!-- charge radiale -->
-      <g>
-        <line x1="530" y1="36" x2="530" y2="96" stroke="#a78bfa" stroke-width="2.5"/>
-        <path d="M522 90 L530 104 L538 90 Z" fill="#a78bfa"/>
-        <line x1="380" y1="36" x2="380" y2="96" stroke="#a78bfa" stroke-width="2.5"/>
-        <path d="M372 90 L380 104 L388 90 Z" fill="#a78bfa"/>
-        <text x="455" y="30" text-anchor="middle" fill="#a78bfa" font-size="12" font-weight="600">Charge radiale 6000 lbs (B2 et B3)</text>
-      </g>
-      <g id="brgs"></g>
-    </svg>
-    <div class="player" id="player">
-      <button class="pbtn" id="btnBack" aria-label="Revenir au début">⏮</button>
-      <button class="pbtn main" id="btnPlay" aria-label="Lecture">▶</button>
-      <div class="speed" id="speed"><button data-v="1">×1</button><button data-v="4" class="on">×4</button><button data-v="16">×16</button></div>
-      <div class="tl"><canvas id="strip" height="10"></canvas><input type="range" id="slider" min="0" max="983" value="230" aria-label="Instant de l'essai"></div>
-      <div class="clock" id="clock"></div>
-    </div>
-    <div class="fleet" id="fleet"></div>
-  </section>
+  <!-- ===== Colonne centrale ===== -->
+  <main class="col">
+    <section class="pn hidden" id="importPn">
+      <h3>Import de mesures brutes</h3>
+      <div class="pb">
+        <div class="drop" id="drop">
+          <svg class="i" viewBox="0 0 24 24" style="width:30px;height:30px;color:var(--pri)"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+          <h4>Déposer le dossier d'acquisitions d'un roulement</h4>
+          <p>Format IMS : 1 fichier texte par acquisition (20 480 points à 20 kHz), nommé AAAA.MM.JJ.hh.mm.ss.<br>Minimum 230 acquisitions : les 200 premières constituent la référence de l'état neuf.</p>
+          <div class="row">
+            <label for="col">Voie de mesure</label>
+            <select id="col"><option value="0">Voie 1</option><option value="1">Voie 2</option><option value="2">Voie 3</option><option value="3">Voie 4</option><option value="4">Voie 5</option><option value="5">Voie 6</option><option value="6">Voie 7</option><option value="7">Voie 8</option></select>
+            <button class="btn pri" id="pickFolder">Sélectionner un dossier</button>
+            <button class="btn" id="pickFiles">Sélectionner des fichiers</button>
+          </div>
+          <input type="file" id="inFolder" webkitdirectory multiple class="hidden">
+          <input type="file" id="inFiles" multiple class="hidden">
+          <div class="prog" id="prog"><i></i></div>
+          <div class="msg" id="msg"></div>
+        </div>
+      </div>
+    </section>
 
-  <!-- État -->
-  <section class="card c5">
-    <h2>État du roulement <span class="hint" id="selName">B1</span></h2>
-    <div class="status" id="status"><div class="ic" id="stIc">⏳</div><div><div class="t" id="stT">—</div><div class="d" id="stD"></div></div></div>
-    <div class="gaugewrap">
-      <svg id="gauge" viewBox="0 0 240 170" aria-label="Jauge de durée de vie résiduelle"></svg>
+    <div class="print-only" id="printHead"></div>
+
+    <section class="pn" id="eqPn">
+      <div class="eqh">
+        <h2 id="eqTitle">—</h2>
+        <span class="badge off" id="eqBadge">—</span>
+        <span class="meta" id="eqMeta"></span>
+        <div class="acts"><button class="btn" id="btnPrint"><svg class="i" viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H4v-7h16v7h-3M7 14h10v7H7z"/></svg>Rapport PDF</button></div>
+      </div>
       <div class="kpis">
-        <div class="kpi"><div class="l">Vibration vs neuf</div><div class="v" id="kRms">—</div><div class="u">RMS · 1,00 = comme neuf</div></div>
-        <div class="kpi"><div class="l">Impulsivité (kurtosis)</div><div class="v" id="kKur">—</div><div class="u">≈ 0 si sain · chocs si élevé</div></div>
-        <div class="kpi"><div class="l">RUL réelle</div><div class="v" id="kReal">—</div><div class="u" id="kRealU">connue après la panne</div></div>
+        <div class="kpi" id="kState"><div class="l">État</div><div class="v" id="kStateV">—</div><div class="s" id="kStateS">—</div></div>
+        <div class="kpi" id="kRul"><div class="l">RUL estimée</div><div class="v" id="kRulV">—</div><div class="s" id="kRulS">—</div></div>
+        <div class="kpi" id="kRms"><div class="l">Niveau RMS</div><div class="v" id="kRmsV">—</div><div class="s" id="kRmsS">—</div></div>
+        <div class="kpi" id="kKur"><div class="l">Kurtosis</div><div class="v" id="kKurV">—</div><div class="s" id="kKurS">—</div></div>
       </div>
+    </section>
+
+    <section class="pn no-print" id="synPn">
+      <h3>Synoptique — banc d'essai <span class="r">sélection d'un palier par clic</span></h3>
+      <div class="pb" style="padding:6px 14px 10px"><svg id="syn" viewBox="0 0 900 150" role="img" aria-label="Synoptique du banc : moteur, arbre, 4 paliers"></svg></div>
+    </section>
+
+    <div class="g2">
+      <section class="pn">
+        <h3>Tendance — durée de vie résiduelle <span class="r">jours</span></h3>
+        <div class="chart" id="chRul"></div>
+        <div class="leg"><span><i style="border-color:var(--pri)"></i>RUL estimée (médiane 1 h)</span><span><i style="border-color:#b8cde3;border-top-width:8px"></i>Incertitude ± MAE</span><span id="lgReal"><i style="border-color:var(--txt);border-top-style:dashed"></i>RUL réelle</span></div>
+      </section>
+      <section class="pn">
+        <h3>Tendance — niveau vibratoire <span class="r">accélération RMS, g</span></h3>
+        <div class="chart" id="chRms"></div>
+        <div class="leg"><span><i style="border-color:var(--pri)"></i>RMS</span><span><i style="border-color:#a7b0ba"></i>Kurtosis (axe droit)</span><span><i style="border-color:var(--warn);border-top-style:dashed"></i>Alerte +6 dB</span><span><i style="border-color:var(--crit);border-top-style:dashed"></i>Alarme +12 dB</span></div>
+      </section>
     </div>
-    <div class="reco" id="reco"></div>
-  </section>
 
-  <!-- RUL -->
-  <section class="card c6">
-    <h2>Durée de vie résiduelle <span class="hint">jours avant la panne</span></h2>
-    <div class="chart" id="chRul"></div>
-    <div class="legend"><span><i style="background:var(--acc)"></i>RUL prédite (lissée 1 h)</span><span><i style="background:rgba(76,154,255,.35)"></i>Prédiction brute</span><span id="lgReal"><i style="background:#e6edf3"></i>RUL réelle</span></div>
-  </section>
+    <section class="pn">
+      <h3>Analyse spectrale — spectre d'enveloppe <span class="r" id="specInfo">démodulation 2–8 kHz</span></h3>
+      <div class="diag" id="diag"><span class="sq off"></span><div id="diagT">—</div></div>
+      <div class="g2" style="gap:0">
+        <div><div class="chart" id="chSpec" style="height:220px"></div></div>
+        <div style="border-left:1px solid var(--line)">
+          <table id="faultTbl"><thead><tr><th>Défaut</th><th class="n">Théorique</th><th class="n">Pic mesuré</th><th class="n">Émergence</th><th>Verdict</th></tr></thead><tbody></tbody></table>
+          <div class="pb note">Fréquences en Hz ; spectre en mg. Émergence : amplitude moyenne des 3 premières harmoniques rapportée au bruit de fond médian du spectre. Seuils : ≥ 4 signature faible, ≥ 8 défaut confirmé.</div>
+        </div>
+      </div>
+    </section>
 
-  <!-- Indicateurs -->
-  <section class="card c6">
-    <h2>Indicateurs de santé <span class="hint">calculés sur la vibration brute</span></h2>
-    <div class="chart" id="chHealth"></div>
-    <div class="legend"><span><i style="background:#22d3ee"></i>RMS / RMS neuf</span><span><i style="background:var(--warn)"></i>Kurtosis (axe droit)</span><span><i style="background:var(--line2)"></i>Référence roulement neuf</span></div>
-  </section>
+    <section class="pn">
+      <h3>Journal des alarmes et événements <span class="r" id="almCount"></span></h3>
+      <div class="tbl-wrap">
+        <table><thead><tr><th>Horodatage</th><th>Équipement</th><th>Priorité</th><th>Message</th><th class="n">Valeur</th><th>État</th><th class="no-print"></th></tr></thead><tbody id="almBody"></tbody></table>
+      </div>
+    </section>
+  </main>
 
-  <!-- Spectre -->
-  <section class="card c8">
-    <h2>Diagnostic fréquentiel · spectre d'enveloppe (amplitude ×10⁻³ g) <span class="hint" id="specHint"></span></h2>
-    <div class="verdict" id="verdict"><span class="dot"></span><span></span></div>
-    <div class="chart" id="chSpec" style="height:240px"></div>
-    <div class="legend"><span><i style="background:var(--crit)"></i>BPFO bague extérieure</span><span><i style="background:var(--warn)"></i>BPFI bague intérieure</span><span><i style="background:var(--acc2)"></i>BSF élément roulant</span></div>
-  </section>
-
-  <!-- Journal -->
-  <section class="card c4">
-    <h2>Journal des alertes <span class="hint">4 roulements</span></h2>
-    <ul class="log" id="log"></ul>
-  </section>
-
-  <!-- Fiche modèle -->
-  <section class="card c12">
-    <h2>Fiabilité du modèle</h2>
-    <div class="mcard" id="mcard"></div>
-    <div class="note" id="mnote"></div>
-  </section>
-  <footer>BearingTwin · PFA génie industriel · données NASA IMS (University of Cincinnati) · inférence CNN-LSTM exécutée dans le navigateur, aucune donnée envoyée</footer>
-</main>
+  <!-- ===== Colonne droite : diagnostic, fiche technique, modèle ===== -->
+  <aside class="col side-r">
+    <section class="pn">
+      <h3>Diagnostic et recommandation</h3>
+      <div class="pb txt" id="reco"></div>
+    </section>
+    <section class="pn">
+      <h3>Fiche équipement</h3>
+      <table class="kv" id="spec"></table>
+    </section>
+    <section class="pn">
+      <h3>Fréquences caractéristiques</h3>
+      <table><thead><tr><th>Désignation</th><th class="n">Hz</th><th class="n">Ordre</th></tr></thead><tbody id="freqTbl"></tbody></table>
+    </section>
+    <section class="pn">
+      <h3>Modèle de pronostic</h3>
+      <table class="kv" id="mdl"></table>
+      <div class="pb note" id="mdlNote"></div>
+    </section>
+  </aside>
+  <div class="foot">Données : NASA Prognostics Data Repository — IMS Bearing Dataset, University of Cincinnati. Calculs exécutés localement dans le navigateur ; aucune donnée transmise.</div>
+</div>
 
 <script id="model-data" type="application/json">__MODEL_DATA__</script>
 <script id="replay-data" type="application/json">__REPLAY_DATA__</script>
@@ -350,19 +379,25 @@ function predictAt(rows, ref, i, W, win){
 }
 </script>
 <script>
-/* ======================= Données ======================= */
+/* ======================= Données et constantes ======================= */
 var MODEL = JSON.parse(document.getElementById('model-data').textContent);
 var REPLAY = JSON.parse(document.getElementById('replay-data').textContent);
 var WIN = MODEL.window, NBASE = MODEL.n_base, FS = 20000;
+var MAE = (MODEL.lofo.filter(function(r){ return r['Modèle'] === 'CNN-LSTM'; })[0] || {})['MAE dégradation (j)'] || 1;
 var GEOM = (function(){ var n = 16, d = .331, D = 2.815, a = 15.17 * Math.PI / 180, fr = 2000 / 60, q = d / D * Math.cos(a);
-  return {BPFO: n/2*fr*(1-q), BPFI: n/2*fr*(1+q), BSF: D/(2*d)*fr*(1-q*q), FR: fr}; })();
-var CSS = getComputedStyle(document.documentElement);
-var C = {ok: '#3fb68b', warn: '#f5a524', crit: '#ef4444', acc: '#4c9aff', acc2: '#a78bfa', mut: '#8b98a5', dim: '#5d6b7a', line: '#232e3b', line2: '#2d3a4a', txt: '#e6edf3', cyan: '#22d3ee', idle: '#3a4757'};
+  return {BPFO: n/2*fr*(1-q), BPFI: n/2*fr*(1+q), BSF: D/(2*d)*fr*(1-q*q), FTF: fr/2*(1-q), FR: fr}; })();
+var C = {pri: '#0b5394', priL: 'rgba(11,83,148,.16)', ok: '#2e7d32', warn: '#c77700', crit: '#c62828', off: '#9aa5b1', txt: '#1c2733', mut: '#5b6773', dim: '#8a95a1', line: '#e3e7ec', line2: '#c3cad3'};
+var TAGS = {1: 'BRG-01', 2: 'BRG-02', 3: 'BRG-03', 4: 'BRG-04'};
+var DESC = {1: 'Palier 1', 2: 'Palier 2 · chargé', 3: 'Palier 3 · chargé', 4: 'Palier 4'};
+var DB_ALERT = 6, DB_ALARM = 12;
 var $ = function(id){ return document.getElementById(id); };
-function fmt(v, d){ return v.toFixed(d).replace('.', ','); }
+function fmt(v, d){ return (v < 0 && v > -Math.pow(10, -d) / 2 ? 0 : v).toFixed(d).replace('.', ','); }
 function pad(n){ return (n < 10 ? '0' : '') + n; }
+function dstr(d, sec){ return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + (sec ? ':' + pad(d.getSeconds()) : ''); }
+function dshort(d){ return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; }); }
 
-/* ======================= FFT (taille quelconque = 2^k × p) ======================= */
+/* ======================= FFT, indicateurs, enveloppe ======================= */
 function fft2(re, im){
   var n = re.length, i, j = 0, t;
   for(i = 1; i < n; i++){ var bit = n >> 1; for(; j & bit; bit >>= 1) j ^= bit; j ^= bit;
@@ -398,14 +433,11 @@ function sampleFeatures(sig){
   var m2 = 0, m4 = 0; for(i = 0; i < n; i++){ var d = sig[i] - mean; m2 += d*d; m4 += d*d*d*d; } m2 /= n; m4 /= n;
   return [Math.sqrt(s2/n), s2, ent, m4 / (m2*m2 + 1e-12) - 3];
 }
-/* Spectre d'enveloppe : passe-bande 2–8 kHz + signal analytique (Hilbert) par FFT, puis FFT de l'enveloppe */
 function envelopeSpectrum(sig, fmax){
   var n = sig.length, mean = 0, i; for(i = 0; i < n; i++) mean += sig[i]; mean /= n;
   var xr = new Float64Array(n); for(i = 0; i < n; i++) xr[i] = sig[i] - mean;
-  var X = fftC(xr, new Float64Array(n)), df = FS / n;
-  var zr = new Float64Array(n), zi = new Float64Array(n);
-  for(i = 1; i < n / 2; i++){ var f = i * df; if(f >= 2000 && f <= 8000){ zr[i] = 2 * X[0][i]; zi[i] = 2 * X[1][i]; } }
-  for(i = 0; i < n; i++) zi[i] = -zi[i];                          // IFFT par conjugaison
+  var X = fftC(xr, new Float64Array(n)), df = FS / n, zr = new Float64Array(n), zi = new Float64Array(n);
+  for(i = 1; i < n / 2; i++){ var f = i * df; if(f >= 2000 && f <= 8000){ zr[i] = 2 * X[0][i]; zi[i] = -2 * X[1][i]; } }
   var Z = fftC(zr, zi), env = new Float64Array(n), em = 0;
   for(i = 0; i < n; i++){ env[i] = Math.hypot(Z[0][i], Z[1][i]) / n; em += env[i]; }
   em /= n; for(i = 0; i < n; i++) env[i] -= em;
@@ -413,66 +445,63 @@ function envelopeSpectrum(sig, fmax){
   for(i = 0; i <= kmax; i++){ out.f.push(i * df); out.a.push(Math.hypot(E[0][i], E[1][i]) / n); }
   return out;
 }
+var FAULTS = [['BPFO', 'Bague extérieure'], ['BPFI', 'Bague intérieure'], ['BSF', 'Élément roulant']];
 function diagnose(spec){
-  var noise = median(spec.a.filter(function(_, i){ return spec.f[i] > 20; })) + 1e-12, res = [];
-  [['BPFO', 'bague extérieure', C.crit], ['BPFI', 'bague intérieure', C.warn], ['BSF', 'élément roulant', C.acc2]].forEach(function(t){
+  var noise = median(spec.a.filter(function(_, i){ return spec.f[i] > 20; })) + 1e-12;
+  return FAULTS.map(function(t){
     var F = GEOM[t[0]], s = 0, peaks = [];
     for(var h = 1; h <= 3; h++){
       var best = 0, bf = 0;
       spec.f.forEach(function(f, i){ if(Math.abs(f - h * F) <= 0.03 * h * F && spec.a[i] > best){ best = spec.a[i]; bf = f; } });
-      s += best / noise / 3; peaks.push([bf, best]);
+      s += best / noise / 3; peaks.push(bf);
     }
-    res.push({key: t[0], name: t[1], color: t[2], score: s, peaks: peaks});
+    return {key: t[0], name: t[1], score: s, peak: peaks[0], peaks: peaks};
   });
-  res.sort(function(a, b){ return b.score - a.score; });
-  return res;
 }
 function decodeF32(b64){ var bin = atob(b64), u = new Uint8Array(bin.length); for(var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Float32Array(u.buffer); }
 
-/* ======================= État de l'application ======================= */
-var S = {mode: 'replay', sel: 1, step: 230, playing: false, speed: 4, src: null};
-var SRC = {};   // sources par mode : {rows{b}, ref{b}, times[], pred{b}[], real{b}, raw[], W, n, bearings[]}
-
-function buildReplaySource(){
-  var s = {bearings: [1, 2, 3, 4], rows: {}, ref: {}, pred: {}, W: REPLAY.weights, n: REPLAY.minutes.length, label: 'replay'};
+/* ======================= Sources de données ======================= */
+var S = {mode: 'replay', sel: 1, step: 230, playing: false, speed: 4};
+var SRC = {}, ACK = {};
+function buildReplay(){
+  var s = {id: 'replay', bearings: [1, 2, 3, 4], rows: {}, ref: {}, pred: {}, W: REPLAY.weights, n: REPLAY.minutes.length, real: {1: true}};
   var t0 = new Date(REPLAY.start.replace(' ', 'T'));
   s.times = REPLAY.minutes.map(function(m){ return new Date(t0.getTime() + m * 60000); });
   s.failure = new Date(REPLAY.failure.replace(' ', 'T'));
   s.bearings.forEach(function(b){ s.rows[b] = REPLAY.bearings[b]; s.ref[b] = reference(s.rows[b].slice(0, NBASE)); s.pred[b] = new Array(s.n).fill(undefined); });
-  s.real = {1: true};
   s.raw = REPLAY.raw_b1.map(function(r){ return {idx: r.idx, bearing: 1, sig: decodeF32(r.f32)}; });
-  s.minStep = NBASE - 1 + 0; s.startStep = 230;
+  s.site = ['Banc d’essai IMS n°2', 'Arbre principal'];
   return s;
 }
-function statusOf(rul){ if(rul == null) return 'calib'; if(rul < 1) return 'crit'; if(rul < 2.5) return 'warn'; return 'ok'; }
-var ST = {
-  ok: {t: 'NORMAL', ic: '✅', col: C.ok, reco: ['Fonctionnement normal', 'Aucune dégradation détectée. Poursuivre la surveillance habituelle.']},
-  warn: {t: 'SURVEILLANCE', ic: '⚠️', col: C.warn, reco: ['Dégradation en cours', 'Rapprocher les contrôles, commander la pièce de rechange et planifier l’intervention.']},
-  crit: {t: 'ARRÊT RECOMMANDÉ', ic: '🛑', col: C.crit, reco: ['Risque de casse imminent', 'Planifier l’arrêt et le remplacement du roulement dès que possible.']},
-  calib: {t: 'CALIBRATION', ic: '⏳', col: C.idle, reco: ['Apprentissage de la référence', 'Les 200 premières acquisitions (≈ 33 h) définissent l’état « roulement neuf ».']}
-};
 function rawPred(s, b, i){
   if(i < NBASE - 1) return null;
   if(s.pred[b][i] === undefined) s.pred[b][i] = predictAt(s.rows[b], s.ref[b], i, s.W, WIN);
   return s.pred[b][i];
 }
-function smoothPred(s, b, i, compute){  // médiane des 6 dernières prédictions (1 h)
+function smoothPred(s, b, i, compute){
   var v = [];
-  for(var k = i; k >= Math.max(NBASE - 1, i - 5); k--){
-    var p = compute ? rawPred(s, b, k) : s.pred[b][k];
-    if(p != null && p !== undefined) v.push(Math.max(0, p));
-  }
+  for(var k = i; k >= Math.max(NBASE - 1, i - 5); k--){ var p = compute ? rawPred(s, b, k) : s.pred[b][k]; if(p != null) v.push(Math.max(0, p)); }
   return v.length ? median(v) : null;
 }
+function valid(s, b, i){ return s.rows[b][i][0] >= 0.01; }
+function dbOf(s, b, i){ return 20 * Math.log10(s.rows[b][i][0] / s.ref[b][0]); }
+function dbSmooth(s, b, i){ var v = []; for(var k = i; k >= Math.max(0, i - 5); k--) if(valid(s, b, k)) v.push(dbOf(s, b, k)); return v.length ? median(v) : null; }
+var HYST = {vib: 1, rul: 0.25};   // hystérésis de retour à la normale : 1 dB, 0,25 j
+/* État combiné : le plus sévère entre le pronostic RUL et le niveau vibratoire */
+function stateAt(s, b, i, compute){
+  if(i < NBASE - 1) return {st: 'off', rul: null, db: null};
+  var rul = smoothPred(s, b, i, compute), db = dbSmooth(s, b, i);
+  var sr = rul == null ? 'ok' : rul < 1 ? 'crit' : rul < 2.5 ? 'warn' : 'ok';
+  var sv = db == null ? 'ok' : db >= DB_ALARM ? 'crit' : db >= DB_ALERT ? 'warn' : 'ok';
+  var rank = {ok: 0, warn: 1, crit: 2}, st = rank[sr] >= rank[sv] ? sr : sv;
+  return {st: st, rul: rul, db: db, sr: sr, sv: sv};
+}
+var LABEL = {ok: 'NORMAL', warn: 'ALERTE', crit: 'ALARME', off: 'CALIBRATION'};
 
-/* ======================= Web Worker : précalcul de toutes les prédictions ======================= */
+/* ======================= Précalcul (Web Worker, repli par lots) ======================= */
 function startWorker(s){
-  if(s.worker) s.worker.terminate();
-  var code = document.getElementById('engine').textContent + '\nonmessage=function(e){var d=e.data;' +
-    'for(var q=0;q<d.order.length;q++){var b=d.order[q],out=[];for(var i=d.from;i<d.n;i++){out.push(predictAt(d.rows[b],d.ref[b],i,d.W,d.win));' +
-    'if(out.length===40||i===d.n-1){postMessage({b:b,start:i-out.length+1,vals:out});out=[];}}}postMessage({done:true});};';
   var order = [S.sel].concat(s.bearings.filter(function(b){ return b !== S.sel; }));
-  function fallback(){  // repli sans Worker : calcul par petits lots dans la page
+  function fallback(){
     if(s.worker){ s.worker.terminate(); s.worker = null; }
     var q = 0, i = NBASE - 1;
     (function chunk(){
@@ -481,13 +510,16 @@ function startWorker(s){
       scheduleDraw(); if(q < order.length) setTimeout(chunk, 0); else { s.complete = true; scheduleDraw(); }
     })();
   }
+  var code = document.getElementById('engine').textContent + '\nonmessage=function(e){var d=e.data;' +
+    'for(var q=0;q<d.order.length;q++){var b=d.order[q],out=[];for(var i=d.from;i<d.n;i++){out.push(predictAt(d.rows[b],d.ref[b],i,d.W,d.win));' +
+    'if(out.length===40||i===d.n-1){postMessage({b:b,start:i-out.length+1,vals:out});out=[];}}}postMessage({done:true});};';
   try {
     s.worker = new Worker(URL.createObjectURL(new Blob([code], {type: 'text/javascript'})));
-    var alive = false, watchdog = setTimeout(function(){ if(!alive) fallback(); }, 2000);
-    s.worker.onerror = function(){ clearTimeout(watchdog); fallback(); };
+    var alive = false, wd = setTimeout(function(){ if(!alive) fallback(); }, 2000);
+    s.worker.onerror = function(){ clearTimeout(wd); fallback(); };
     s.worker.onmessage = function(e){
-      alive = true;
-      var d = e.data; if(d.done){ s.complete = true; document.body.dataset.worker = 'ok'; scheduleDraw(); return; }
+      alive = true; var d = e.data;
+      if(d.done){ s.complete = true; scheduleDraw(); return; }
       for(var k = 0; k < d.vals.length; k++) if(s.pred[d.b][d.start + k] === undefined) s.pred[d.b][d.start + k] = d.vals[k];
       scheduleDraw();
     };
@@ -495,265 +527,282 @@ function startWorker(s){
   } catch(err){ fallback(); }
 }
 
-/* ======================= Graphiques canvas ======================= */
+/* ======================= Alarmes ======================= */
+/* Une alarme naît quand une condition devient vraie ; elle reste active tant que la condition l'est. */
+function computeAlarms(s){
+  var out = [];
+  s.bearings.forEach(function(b){
+    var cur = {rul: null, vib: null};
+    for(var i = NBASE - 1; i <= S.step; i++){
+      if(!valid(s, b, i)) continue;
+      var rul = smoothPred(s, b, i, false), db = dbSmooth(s, b, i);
+      var lvR = function(h){ return rul == null ? 0 : rul < 1 + h ? 2 : rul < 2.5 + h ? 1 : 0; };
+      var lvV = function(h){ return db >= DB_ALARM - h ? 2 : db >= DB_ALERT - h ? 1 : 0; };
+      // une alarme active ne retombe que si la grandeur repasse le seuil avec une marge (hystérésis)
+      var lv = {rul: cur.rul ? Math.max(lvR(0), Math.min(cur.rul.level, lvR(HYST.rul))) : lvR(0),
+                vib: cur.vib ? Math.max(lvV(0), Math.min(cur.vib.level, lvV(HYST.vib))) : lvV(0)};
+      ['rul', 'vib'].forEach(function(k){
+        var a = cur[k];
+        if(a && lv[k] < a.level){ a.end = i; cur[k] = null; a = null; }
+        if(lv[k] > 0 && (!a || lv[k] > a.level)){
+          if(a) a.end = i;
+          var msg = k === 'rul' ? (lv[k] === 2 ? 'Durée de vie résiduelle < 1 j' : 'Durée de vie résiduelle < 2,5 j')
+                                : (lv[k] === 2 ? 'Niveau vibratoire ≥ +12 dB' : 'Niveau vibratoire ≥ +6 dB');
+          var val = k === 'rul' ? fmt(rul, 2) + ' j' : (db >= 0 ? '+' : '') + fmt(db, 1) + ' dB';
+          cur[k] = {id: s.id + '|' + b + '|' + k + '|' + i, b: b, i: i, kind: k, level: lv[k], msg: msg, val: val, end: null};
+          out.push(cur[k]);
+        }
+      });
+    }
+  });
+  out.sort(function(a, c){ return c.i - a.i || c.level - a.level; });
+  return out;
+}
+
+/* ======================= Graphiques ======================= */
 function Chart2(host, opt){
   this.host = host; this.opt = opt; this.cv = document.createElement('canvas'); host.appendChild(this.cv);
   this.tip = document.createElement('div'); this.tip.className = 'tip'; host.appendChild(this.tip);
   var me = this; this.hx = null;
-  this.cv.addEventListener('mousemove', function(e){ var r = me.cv.getBoundingClientRect(); me.hx = e.clientX - r.left; me.draw(); });
+  this.cv.addEventListener('mousemove', function(e){ me.hx = e.clientX - me.cv.getBoundingClientRect().left; me.draw(); });
   this.cv.addEventListener('mouseleave', function(){ me.hx = null; me.tip.style.display = 'none'; me.draw(); });
-  new ResizeObserver(function(){ me.draw(); }).observe(host);
+  if(window.ResizeObserver) new ResizeObserver(function(){ me.draw(); }).observe(host);
 }
 Chart2.prototype.draw = function(){
-  var o = this.opt, cv = this.cv, dpr = window.devicePixelRatio || 1, W = this.host.clientWidth, H = this.host.clientHeight;
+  var cv = this.cv, dpr = window.devicePixelRatio || 1, W = this.host.clientWidth, H = this.host.clientHeight;
   if(!W) return;
   cv.width = W * dpr; cv.height = H * dpr; var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
-  var d = o.data(); if(!d){ this.tip.style.display = 'none'; return; }
-  var P = {l: 44, r: d.y2 ? 44 : 14, t: 12, b: 26}, iw = W - P.l - P.r, ih = H - P.t - P.b;
+  var d = this.opt.data(); if(!d){ this.tip.style.display = 'none';
+    g.fillStyle = C.dim; g.font = '12.5px "IBM Plex Sans",sans-serif'; g.textAlign = 'center'; g.fillText(this.opt.empty || 'Aucune donnée', W / 2, H / 2); return; }
+  var P = {l: 48, r: d.y2 ? 40 : 14, t: 14, b: 26}, iw = W - P.l - P.r, ih = H - P.t - P.b;
   var X = function(v){ return P.l + (v - d.x[0]) / (d.x[1] - d.x[0]) * iw; };
   var Y = function(v, ax){ var a = ax || d.y; return P.t + ih - (Math.min(Math.max(v, a[0]), a[1]) - a[0]) / (a[1] - a[0]) * ih; };
-  g.font = '11px Inter,system-ui,sans-serif'; g.textBaseline = 'middle';
-  (d.bands || []).forEach(function(b){ g.fillStyle = b.c; g.fillRect(P.l, Y(b.to), iw, Y(b.from) - Y(b.to)); });
-  g.strokeStyle = C.line; g.lineWidth = 1; g.fillStyle = C.dim; g.textAlign = 'right';
-  d.yt.forEach(function(v){ var y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(P.l, y); g.lineTo(W - P.r, y); g.stroke(); g.fillText(d.yf(v), P.l - 8, y); });
-  if(d.y2){ g.textAlign = 'left'; d.y2t.forEach(function(v){ g.fillText(d.y2f(v), W - P.r + 8, Y(v, d.y2)); }); }
+  g.font = '11px "IBM Plex Mono",monospace'; g.textBaseline = 'middle'; g.lineWidth = 1;
+  g.strokeStyle = C.line; g.fillStyle = C.dim; g.textAlign = 'right';
+  d.yt.forEach(function(v){ var y = Math.round(Y(v)) + .5; g.beginPath(); g.moveTo(P.l, y); g.lineTo(W - P.r, y); g.stroke(); g.fillText(d.yf(v), P.l - 7, y); });
+  if(d.y2){ g.textAlign = 'left'; d.y2t.forEach(function(v){ g.fillText(d.y2f(v), W - P.r + 7, Y(v, d.y2)); }); }
   g.textAlign = 'center'; g.textBaseline = 'top';
-  d.xt.forEach(function(v){ g.fillText(d.xf(v), X(v), H - P.b + 8); });
-  (d.vlines || []).forEach(function(l){
-    g.strokeStyle = l.c; g.globalAlpha = l.a || .75; g.setLineDash(l.dash || [4, 4]); g.lineWidth = l.w || 1.2;
-    g.beginPath(); g.moveTo(X(l.x), P.t); g.lineTo(X(l.x), P.t + ih); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
-    if(l.label){ g.fillStyle = l.c; g.textBaseline = 'top'; g.font = '600 10.5px Inter,system-ui'; g.fillText(l.label, X(l.x), P.t + 1); g.font = '11px Inter,system-ui'; }
-  });
+  d.xt.forEach(function(v){ var x = Math.round(X(v)) + .5; g.strokeStyle = C.line; g.beginPath(); g.moveTo(x, P.t); g.lineTo(x, P.t + ih); g.stroke(); g.fillText(d.xf(v), x, H - P.b + 7); });
+  g.strokeStyle = C.line2; g.strokeRect(P.l + .5, P.t + .5, iw, ih);
+  (d.hlines || []).forEach(function(l){ var y = Math.round(Y(l.y, l.ax)) + .5; g.strokeStyle = l.c; g.setLineDash([5, 4]); g.lineWidth = 1.2;
+    g.beginPath(); g.moveTo(P.l, y); g.lineTo(W - P.r, y); g.stroke(); g.setLineDash([]); g.lineWidth = 1;
+    if(l.label){ g.fillStyle = l.c; g.textAlign = 'left'; g.textBaseline = 'bottom'; g.font = '600 10.5px "IBM Plex Sans",sans-serif'; g.fillText(l.label, P.l + 6, y - 2); g.font = '11px "IBM Plex Mono",monospace'; } });
+  (d.vlines || []).forEach(function(l){ var x = Math.round(X(l.x)) + .5; g.strokeStyle = l.c; g.globalAlpha = l.a || 1; g.setLineDash(l.dash || [3, 3]);
+    g.beginPath(); g.moveTo(x, P.t); g.lineTo(x, P.t + ih); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+    if(l.label){ g.fillStyle = l.c; g.textAlign = 'left'; g.textBaseline = 'top'; g.font = '600 10px "IBM Plex Sans",sans-serif'; g.fillText(l.label, x + 3, P.t + 3 + (l.row || 0) * 12); g.font = '11px "IBM Plex Mono",monospace'; } });
+  g.save(); g.beginPath(); g.rect(P.l, P.t, iw, ih); g.clip();
+  (d.ranges || []).forEach(function(r){ var pts = r.pts.filter(function(p){ return p[1] != null; }); if(!pts.length) return;
+    g.fillStyle = r.c; g.beginPath(); pts.forEach(function(p, k){ var x = X(p[0]), y = Y(p[2]); if(k) g.lineTo(x, y); else g.moveTo(x, y); });
+    for(var k = pts.length - 1; k >= 0; k--) g.lineTo(X(pts[k][0]), Y(pts[k][1])); g.closePath(); g.fill(); });
   d.series.forEach(function(s){
-    if(s.area){ g.beginPath(); var first = true, lastx = null;
-      s.pts.forEach(function(p){ if(p[1] == null) return; var x = X(p[0]), y = Y(p[1], s.ax); if(first){ g.moveTo(x, Y(s.ax ? s.ax[0] : d.y[0], s.ax)); g.lineTo(x, y); first = false; } else g.lineTo(x, y); lastx = x; });
-      if(lastx != null){ g.lineTo(lastx, Y(s.ax ? s.ax[0] : d.y[0], s.ax)); g.closePath(); g.fillStyle = s.area; g.fill(); } }
-    g.strokeStyle = s.c; g.lineWidth = s.w || 1.6; g.globalAlpha = s.a || 1; g.setLineDash(s.dash || []); g.lineJoin = 'round';
-    g.beginPath(); var pen = false;
+    g.strokeStyle = s.c; g.lineWidth = s.w || 1.5; g.setLineDash(s.dash || []); g.lineJoin = 'round'; g.beginPath(); var pen = false;
     s.pts.forEach(function(p){ if(p[1] == null){ pen = false; return; } var x = X(p[0]), y = Y(p[1], s.ax); if(pen) g.lineTo(x, y); else { g.moveTo(x, y); pen = true; } });
-    g.stroke(); g.globalAlpha = 1; g.setLineDash([]);
-  });
-  if(d.cursor != null){ var cx = X(d.cursor); g.fillStyle = 'rgba(12,17,23,.55)'; g.fillRect(cx, P.t, W - P.r - cx, ih);
-    g.strokeStyle = C.txt; g.lineWidth = 1.2; g.beginPath(); g.moveTo(cx, P.t); g.lineTo(cx, P.t + ih); g.stroke(); }
-  (d.dots || []).forEach(function(p){ g.fillStyle = p.c; g.beginPath(); g.arc(X(p.x), Y(p.y, p.ax), 4.5, 0, 7); g.fill(); g.strokeStyle = '#0c1117'; g.lineWidth = 2; g.stroke(); });
+    g.stroke(); g.setLineDash([]); });
+  g.restore();
+  if(d.cursor != null){ var cx = Math.round(X(d.cursor)) + .5; g.strokeStyle = C.txt; g.lineWidth = 1; g.beginPath(); g.moveTo(cx, P.t); g.lineTo(cx, P.t + ih); g.stroke(); }
   if(this.hx != null && this.hx >= P.l && this.hx <= W - P.r && d.tip){
-    var xv = d.x[0] + (this.hx - P.l) / iw * (d.x[1] - d.x[0]), html = d.tip(xv);
-    if(html){ g.strokeStyle = C.mut; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(this.hx, P.t); g.lineTo(this.hx, P.t + ih); g.stroke(); g.setLineDash([]);
-      this.tip.innerHTML = html; this.tip.style.display = 'block';
-      var tw = this.tip.offsetWidth; this.tip.style.left = Math.min(this.hx + 12, W - tw - 4) + 'px'; this.tip.style.top = '8px'; }
+    var html = d.tip(d.x[0] + (this.hx - P.l) / iw * (d.x[1] - d.x[0]));
+    if(html){ g.strokeStyle = C.dim; g.setLineDash([2, 3]); g.beginPath(); g.moveTo(this.hx, P.t); g.lineTo(this.hx, P.t + ih); g.stroke(); g.setLineDash([]);
+      this.tip.innerHTML = html; this.tip.style.display = 'block'; this.tip.style.left = Math.min(this.hx + 12, W - this.tip.offsetWidth - 4) + 'px'; this.tip.style.top = '6px'; }
     else this.tip.style.display = 'none';
   }
 };
-function niceTicks(a, b, n){ var span = b - a, step = Math.pow(10, Math.floor(Math.log10(span / n))), err = span / n / step;
-  if(err >= 7.5) step *= 10; else if(err >= 3.5) step *= 5; else if(err >= 1.5) step *= 2;
+function ticks(a, b, n){ var span = b - a || 1, step = Math.pow(10, Math.floor(Math.log10(span / n))), e = span / n / step;
+  if(e >= 7.5) step *= 10; else if(e >= 3.5) step *= 5; else if(e >= 1.5) step *= 2;
   var out = []; for(var v = Math.ceil(a / step) * step; v <= b + 1e-9; v += step) out.push(+v.toFixed(10)); return out; }
-
-/* ======================= Rendu ======================= */
 function days(s, i){ return (s.times[i] - s.times[0]) / 864e5; }
-function dateStr(d){ return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
-function nearestIdx(s, xv){ var lo = 0, hi = s.n - 1; while(hi - lo > 1){ var m = (lo + hi) >> 1; if(days(s, m) < xv) lo = m; else hi = m; } return Math.abs(days(s, lo) - xv) < Math.abs(days(s, hi) - xv) ? lo : hi; }
+function nearest(s, xv){ var lo = 0, hi = s.n - 1; while(hi - lo > 1){ var m = (lo + hi) >> 1; if(days(s, m) < xv) lo = m; else hi = m; } return Math.abs(days(s, lo) - xv) < Math.abs(days(s, hi) - xv) ? lo : hi; }
+function xAxis(s){ var e = days(s, s.n - 1); return {x: [0, e], xt: ticks(0, e, 7), xf: function(v){ var d = new Date(s.times[0].getTime() + v * 864e5); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1); }}; }
 
 var chRul = new Chart2($('chRul'), {data: function(){
-  var s = SRC[S.mode]; if(!s) return null; var b = S.sel, pts = [], sm = [], xEnd = days(s, s.n - 1);
-  for(var i = NBASE - 1; i <= S.step; i++){ var p = s.pred[b][i]; pts.push([days(s, i), p == null ? null : Math.max(0, p)]); }
-  for(var j = NBASE - 1; j <= S.step; j++) sm.push([days(s, j), smoothPred(s, b, j, false)]);
-  var series = [{pts: pts, c: C.acc, w: 1, a: .35}, {pts: sm, c: C.acc, w: 2.4, area: 'rgba(76,154,255,.10)'}];
-  if(s.real && s.real[b]){  // RUL réelle linéaire (écrêtée à 3,5 j pour l'affichage)
-    var fd = (s.failure - s.times[0]) / 864e5;
-    series.unshift({pts: [[0, Math.min(3.5, fd)], [Math.max(0, fd - 3.5), 3.5], [fd, 0]], c: C.txt, w: 1.4, dash: [6, 5], a: .8}); }
-  return {x: [0, xEnd], y: [0, 3.5], yt: [0, 1, 2, 2.5, 3], yf: function(v){ return v === 2.5 ? '2,5' : String(v); },
-    xt: niceTicks(0, xEnd, 7), xf: function(v){ return 'J+' + fmt(v, 0); },
-    bands: [{from: 0, to: 1, c: 'rgba(239,68,68,.07)'}, {from: 1, to: 2.5, c: 'rgba(245,165,36,.06)'}],
-    vlines: [{x: days(s, NBASE - 1), c: C.dim, label: 'fin calibration'}],
-    series: series, cursor: days(s, S.step),
-    dots: (function(){ var v = smoothPred(s, b, S.step, false); return v == null ? [] : [{x: days(s, S.step), y: v, c: ST[statusOf(v)].col}]; })(),
-    tip: function(xv){ var i = nearestIdx(s, xv); if(i > S.step) return null; var v = smoothPred(s, b, i, false), r = s.pred[b][i];
-      return '<div class="mono">' + dateStr(s.times[i]) + '</div>' + (v == null ? 'calibration' : 'RUL lissée <b class="mono">' + fmt(v, 2) + ' j</b><br>brute <span class="mono">' + fmt(Math.max(0, r || 0), 2) + ' j</span>') +
-        (s.real && s.real[b] ? '<br>réelle <span class="mono">' + fmt((s.failure - s.times[i]) / 864e5, 2) + ' j</span>' : ''); }};
-}});
-var chHealth = new Chart2($('chHealth'), {data: function(){
-  var s = SRC[S.mode]; if(!s) return null; var b = S.sel, rows = s.rows[b], ref = s.ref[b], rp = [], kp = [], ymax = 1.6, kmax = 4, xEnd = days(s, s.n - 1);
-  for(var i = 0; i < s.n; i++){ if(rows[i][0] < 0.01) continue; var r = rows[i][0] / ref[0]; ymax = Math.max(ymax, r); kmax = Math.max(kmax, rows[i][3]); }
-  for(var j = 0; j <= S.step; j++){ if(rows[j][0] < 0.01){ rp.push([days(s, j), null]); kp.push([days(s, j), null]); continue; }
-    rp.push([days(s, j), rows[j][0] / ref[0]]); kp.push([days(s, j), rows[j][3]]); }
-  ymax = Math.ceil(ymax * 1.08); kmax = Math.ceil(kmax * 1.1);
-  return {x: [0, xEnd], y: [0, ymax], yt: niceTicks(0, ymax, 5), yf: function(v){ return '×' + v; },
-    y2: [-2, kmax], y2t: niceTicks(0, kmax, 4), y2f: function(v){ return String(v); },
-    xt: niceTicks(0, xEnd, 7), xf: function(v){ return 'J+' + fmt(v, 0); },
-    bands: [{from: .97, to: 1.03, c: 'rgba(139,152,165,.12)'}],
-    series: [{pts: kp, c: C.warn, w: 1.1, a: .8, ax: [-2, kmax]}, {pts: rp, c: C.cyan, w: 2, area: 'rgba(34,211,238,.08)'}],
-    cursor: days(s, S.step),
-    tip: function(xv){ var i = nearestIdx(s, xv); if(i > S.step || rows[i][0] < 0.01) return null;
-      return '<div class="mono">' + dateStr(s.times[i]) + '</div>RMS ×<b class="mono">' + fmt(rows[i][0] / ref[0], 2) + '</b> · kurtosis <b class="mono">' + fmt(rows[i][3], 2) + '</b>'; }};
+  var s = SRC[S.mode]; if(!s) return null; var b = S.sel, sm = [], rg = [], o = xAxis(s);
+  for(var i = NBASE - 1; i <= S.step; i++){ var v = smoothPred(s, b, i, false), x = days(s, i); sm.push([x, v]); rg.push([x, v == null ? null : Math.max(0, v - MAE), v == null ? null : v + MAE]); }
+  var series = [{pts: sm, c: C.pri, w: 2}];
+  if(s.real && s.real[b]){ var fd = (s.failure - s.times[0]) / 864e5; series.unshift({pts: [[0, Math.min(3.5, fd)], [Math.max(0, fd - 3.5), 3.5], [fd, 0]], c: C.txt, w: 1.2, dash: [6, 4]}); }
+  return {x: o.x, xt: o.xt, xf: o.xf, y: [0, 3.5], yt: [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5], yf: function(v){ return fmt(v, 1); },
+    hlines: [{y: 2.5, c: C.warn, label: 'Alerte 2,5 j'}, {y: 1, c: C.crit, label: 'Alarme 1 j'}],
+    vlines: [{x: days(s, NBASE - 1), c: C.dim, label: 'fin de calibration'}],
+    ranges: [{pts: rg, c: C.priL}], series: series, cursor: days(s, S.step),
+    tip: function(xv){ var i = nearest(s, xv); if(i > S.step || i < NBASE - 1) return null; var v = smoothPred(s, b, i, false); if(v == null) return null;
+      return '<span class="mono">' + dstr(s.times[i]) + '</span><br>RUL estimée <b class="mono">' + fmt(v, 2) + ' j</b> (± ' + fmt(MAE, 2) + ')' +
+        (s.real && s.real[b] ? '<br>RUL réelle <span class="mono">' + fmt((s.failure - s.times[i]) / 864e5, 2) + ' j</span>' : ''); }};
+}, empty: 'Calcul en cours…'});
+var chRms = new Chart2($('chRms'), {data: function(){
+  var s = SRC[S.mode]; if(!s) return null; var b = S.sel, rows = s.rows[b], ref = s.ref[b], rp = [], kp = [], o = xAxis(s), ymax = ref[0] * 4.4, kmax = 4;
+  for(var i = 0; i < s.n; i++){ if(rows[i][0] < 0.01) continue; ymax = Math.max(ymax, rows[i][0]); kmax = Math.max(kmax, rows[i][3]); }
+  for(var j = 0; j <= S.step; j++){ var ok = rows[j][0] >= 0.01; rp.push([days(s, j), ok ? rows[j][0] : null]); kp.push([days(s, j), ok ? rows[j][3] : null]); }
+  ymax *= 1.08; kmax = Math.ceil(kmax * 1.1);
+  return {x: o.x, xt: o.xt, xf: o.xf, y: [0, ymax], yt: ticks(0, ymax, 5), yf: function(v){ return fmt(v, 2); },
+    y2: [-2, kmax], y2t: ticks(0, kmax, 4), y2f: function(v){ return String(v); },
+    hlines: [{y: ref[0] * 2, c: C.warn, label: 'Alerte +6 dB'}, {y: ref[0] * 4, c: C.crit, label: 'Alarme +12 dB'}],
+    series: [{pts: kp, c: '#a7b0ba', w: 1, ax: [-2, kmax]}, {pts: rp, c: C.pri, w: 1.6}], cursor: days(s, S.step),
+    tip: function(xv){ var i = nearest(s, xv); if(i > S.step || rows[i][0] < 0.01) return null;
+      return '<span class="mono">' + dstr(s.times[i]) + '</span><br>RMS <b class="mono">' + fmt(rows[i][0], 3) + ' g</b> (' + (dbOf(s, b, i) >= 0 ? '+' : '') + fmt(dbOf(s, b, i), 1) + ' dB)<br>Kurtosis <span class="mono">' + fmt(rows[i][3], 2) + '</span>'; }};
 }});
 var SPEC = null;
 var chSpec = new Chart2($('chSpec'), {data: function(){
-  if(!SPEC) return null; var amax = 0; SPEC.a.forEach(function(a, i){ if(SPEC.f[i] > 20) amax = Math.max(amax, a); }); amax *= 1.15;
-  var vl = []; [['BPFO', C.crit], ['BPFI', C.warn], ['BSF', C.acc2]].forEach(function(t){ for(var h = 1; h <= 3; h++) vl.push({x: h * GEOM[t[0]], c: t[1], a: .55, label: h === 1 ? t[0] : (h + '×'), dash: [3, 4]}); });
-  return {x: [0, 800], y: [0, amax], yt: niceTicks(0, amax, 4), yf: function(v){ return fmt(v * 1e3, v * 1e3 < 10 ? 1 : 0); },
-    xt: [0, 100, 200, 300, 400, 500, 600, 700, 800], xf: function(v){ return v + ' Hz'; }, vlines: vl,
-    series: [{pts: SPEC.f.map(function(f, i){ return [f, SPEC.a[i]]; }), c: C.txt, w: 1.1, a: .9}],
-    tip: function(xv){ var i = Math.round(xv / (SPEC.f[1] || 1)); if(!SPEC.a[i]) return null; return '<span class="mono">' + fmt(SPEC.f[i], 1) + ' Hz</span> · amplitude <span class="mono">' + SPEC.a[i].toExponential(2) + '</span>'; }};
-}});
+  if(!SPEC) return null; var amax = 0; SPEC.a.forEach(function(a, i){ if(SPEC.f[i] > 20) amax = Math.max(amax, a); }); amax = amax * 1e3 * 1.12;
+  var vl = []; [['BPFO', C.crit, 0], ['BPFI', C.warn, 1], ['BSF', '#6a4c93', 2]].forEach(function(t){ for(var h = 1; h <= 3; h++) vl.push({x: h * GEOM[t[0]], c: t[1], a: .7, row: t[2], label: h === 1 ? t[0] : h + '×' + t[0]}); });
+  return {x: [0, 800], xt: [0, 100, 200, 300, 400, 500, 600, 700, 800], xf: function(v){ return v + ''; }, y: [0, amax], yt: ticks(0, amax, 4), yf: function(v){ return fmt(v, v < 10 ? 1 : 0); },
+    vlines: vl, series: [{pts: SPEC.f.map(function(f, i){ return [f, SPEC.a[i] * 1e3]; }), c: C.txt, w: 1}],
+    tip: function(xv){ var i = Math.round(xv / SPEC.f[1]); if(SPEC.a[i] == null) return null; return '<span class="mono">' + fmt(SPEC.f[i], 1) + ' Hz · ' + fmt(SPEC.a[i] * 1e3, 2) + ' mg</span>'; }};
+}, empty: 'Signal brut non disponible pour cet équipement à cet instant'});
 
-/* ---- machine ---- */
-var BX = {1: 300, 2: 455, 3: 610, 4: 765};
-function buildRig(){
-  var g = $('brgs'), h = '';
+/* ======================= Synoptique ======================= */
+var BX = {1: 330, 2: 470, 3: 610, 4: 750};
+function buildSyn(){
+  var h = '<rect x="10" y="118" width="880" height="8" fill="#e3e7ec"/>' +
+    '<rect x="40" y="48" width="140" height="62" rx="2" fill="#f6f7f9" stroke="#8a95a1" stroke-width="1.2"/>' +
+    '<text x="110" y="76" text-anchor="middle" font-size="12" font-weight="600" fill="#1c2733">MOTEUR AC</text>' +
+    '<text x="110" y="93" text-anchor="middle" font-size="11" fill="#5b6773" font-family="IBM Plex Mono,monospace">2000 tr/min</text>' +
+    '<rect x="180" y="70" width="34" height="18" fill="#f6f7f9" stroke="#8a95a1" stroke-width="1.2"/>' +
+    '<text x="197" y="104" text-anchor="middle" font-size="9.5" fill="#8a95a1">accoupl.</text>' +
+    '<line x1="214" y1="79" x2="830" y2="79" stroke="#5b6773" stroke-width="5"/>' +
+    '<g stroke="#6a4c93" stroke-width="1.4" fill="#6a4c93"><line x1="470" y1="14" x2="470" y2="34"/><path d="M465 30 L470 40 L475 30Z"/><line x1="610" y1="14" x2="610" y2="34"/><path d="M605 30 L610 40 L615 30Z"/></g>' +
+    '<text x="540" y="20" text-anchor="middle" font-size="10.5" fill="#6a4c93">charge radiale 26,7 kN</text>';
   [1, 2, 3, 4].forEach(function(b){ var x = BX[b];
-    h += '<g class="brg" id="brg' + b + '" data-b="' + b + '" tabindex="0" role="button" aria-label="Roulement B' + b + '">' +
-      '<circle class="halo" id="halo' + b + '" cx="' + x + '" cy="143" r="40" fill="none" stroke-width="3"/>' +
-      '<rect class="selring" x="' + (x - 48) + '" y="72" width="96" height="150" rx="14" fill="none" stroke="#4c9aff" stroke-width="2" stroke-dasharray="5 4"/>' +
-      '<rect x="' + (x - 30) + '" y="196" width="60" height="18" rx="3" fill="#1b2430" stroke="#2d3a4a"/>' +
-      '<path class="housing" id="hs' + b + '" d="M' + (x - 34) + ' 196 L' + (x - 34) + ' 140 A34 34 0 0 1 ' + (x + 34) + ' 140 L' + (x + 34) + ' 196 Z" fill="#2a3646" stroke="#3a4757" stroke-width="1.5"/>' +
-      '<circle cx="' + x + '" cy="143" r="21" fill="#141b24" stroke="#3a4757"/>' +
-      '<circle cx="' + x + '" cy="143" r="12" fill="#2d3a4a"/>' +
-      '<rect x="' + (x - 7) + '" y="96" width="14" height="12" rx="2" fill="#8b98a5"/><line x1="' + x + '" y1="96" x2="' + x + '" y2="84" stroke="#8b98a5" stroke-width="1.5"/>' +
-      '<text x="' + x + '" y="252" text-anchor="middle" fill="#e6edf3" font-size="14" font-weight="800">B' + b + '</text>' +
-      '<text id="rt' + b + '" x="' + x + '" y="268" text-anchor="middle" fill="#8b98a5" font-size="11.5" font-family="JetBrains Mono,monospace">—</text></g>';
+    h += '<g class="syn-b" data-b="' + b + '" tabindex="0" role="button" aria-label="' + TAGS[b] + '">' +
+      '<rect id="synSel' + b + '" x="' + (x - 44) + '" y="44" width="88" height="102" fill="none" stroke="#0b5394" stroke-width="1.5" stroke-dasharray="4 3" opacity="0"/>' +
+      '<rect class="body" x="' + (x - 22) + '" y="60" width="44" height="58" rx="2" fill="#fff" stroke="#8a95a1" stroke-width="1.2"/>' +
+      '<circle cx="' + x + '" cy="79" r="9" fill="#fff" stroke="#5b6773" stroke-width="1.2"/>' +
+      '<rect x="' + (x - 4) + '" y="50" width="8" height="10" fill="#5b6773"/>' +
+      '<rect id="synSt' + b + '" x="' + (x + 12) + '" y="96" width="9" height="9" rx="1" fill="#9aa5b1"/>' +
+      '<text x="' + x + '" y="138" text-anchor="middle" font-size="11.5" font-weight="600" fill="#1c2733" font-family="IBM Plex Mono,monospace">' + TAGS[b] + '</text></g>';
   });
-  g.innerHTML = h;
-  [1, 2, 3, 4].forEach(function(b){ var el = $('brg' + b);
-    var pick = function(){ var s = SRC[S.mode]; if(s && s.bearings.indexOf(b) >= 0){ S.sel = b; render(true); } };
+  $('syn').innerHTML = h;
+  document.querySelectorAll('.syn-b').forEach(function(el){ var pick = function(){ selectBearing(+el.dataset.b); };
     el.addEventListener('click', pick); el.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); pick(); } }); });
 }
-function paintFleet(s){
-  $('fleet').innerHTML = [1, 2, 3, 4].map(function(b){
-    var act = s.bearings.indexOf(b) >= 0, v = act ? smoothPred(s, b, S.step, true) : null, st = act ? statusOf(v) : 'calib', row = act ? s.rows[b][S.step] : null;
-    var col = act ? (st === 'calib' ? C.mut : ST[st].col) : C.dim;
-    return '<button class="fl' + (b === S.sel ? ' sel' : '') + '" data-b="' + b + '"' + (act ? '' : ' disabled style="opacity:.45;cursor:default"') + '>' +
-      '<div class="h"><i style="background:' + col + '"></i>B' + b + '</div>' +
-      '<div class="s" style="color:' + col + '">' + (act ? ST[st].t : 'NON ANALYSÉ') + '</div>' +
-      '<div class="m">' + (act && row[0] >= 0.01 ? 'vib ×' + fmt(row[0] / s.ref[b][0], 2) : '—') + '</div></button>';
-  }).join('');
-  $('fleet').querySelectorAll('.fl').forEach(function(el){ el.onclick = function(){ var b = +el.dataset.b; if(s.bearings.indexOf(b) >= 0){ S.sel = b; render(true); } }; });
-}
-function paintRig(s){
-  [1, 2, 3, 4].forEach(function(b){
-    var active = s.bearings.indexOf(b) >= 0, v = active ? smoothPred(s, b, S.step, true) : null, st = active ? statusOf(v) : 'calib';
-    var fill = !active ? '#1f2832' : st === 'crit' ? '#5a1d1d' : st === 'warn' ? '#5a4214' : '#2a3646';
-    var stroke = !active ? '#2d3a4a' : st === 'crit' ? C.crit : st === 'warn' ? C.warn : '#3a4757';
-    $('hs' + b).setAttribute('fill', fill); $('hs' + b).setAttribute('stroke', stroke);
-    var halo = $('halo' + b); halo.setAttribute('stroke', st === 'crit' ? C.crit : C.warn); halo.classList.toggle('on', active && (st === 'crit' || st === 'warn'));
-    $('brg' + b).classList.toggle('sel', b === S.sel);
-    $('brg' + b).style.opacity = active ? 1 : .45;
-    $('rt' + b).textContent = !active ? 'non analysé' : v == null ? 'calibration' : v >= 2.5 ? 'RUL > 2,5 j' : 'RUL ' + fmt(v, 1) + ' j';
-    $('rt' + b).setAttribute('fill', !active ? C.dim : ST[st].col === C.idle ? C.mut : ST[st].col);
-  });
-}
-/* ---- jauge ---- */
-function paintGauge(v){
-  var cx = 120, cy = 112, R = 88, max = 3.5, ang = function(x){ return Math.PI * (1 - Math.min(x, max) / max); };
-  var arc = function(a, b, col, w){ var p1 = [cx + R * Math.cos(ang(a)), cy - R * Math.sin(ang(a))], p2 = [cx + R * Math.cos(ang(b)), cy - R * Math.sin(ang(b))];
-    return '<path d="M' + p1[0] + ' ' + p1[1] + ' A' + R + ' ' + R + ' 0 0 1 ' + p2[0] + ' ' + p2[1] + '" stroke="' + col + '" stroke-width="' + w + '" fill="none" stroke-linecap="butt"/>'; };
-  var h = arc(0, 1, 'rgba(239,68,68,.55)', 14) + arc(1, 2.5, 'rgba(245,165,36,.5)', 14) + arc(2.5, 3.5, 'rgba(63,182,139,.45)', 14);
-  [0, 1, 2.5, 3.5].forEach(function(t){ var a = ang(t); h += '<text x="' + (cx + (R + 16) * Math.cos(a)) + '" y="' + (cy - (R + 16) * Math.sin(a) + 4) + '" text-anchor="middle" fill="#5d6b7a" font-size="10" font-family="JetBrains Mono,monospace">' + (t === 3.5 ? '3+' : fmt(t, t === 2.5 ? 1 : 0)) + '</text>'; });
-  if(v != null){ var a = ang(v), col = ST[statusOf(v)].col;
-    h += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + (R - 22) * Math.cos(a)) + '" y2="' + (cy - (R - 22) * Math.sin(a)) + '" stroke="' + col + '" stroke-width="4" stroke-linecap="round"/>';
-    h += '<circle cx="' + cx + '" cy="' + cy + '" r="7" fill="' + col + '"/>'; }
-  h += '<text x="' + cx + '" y="' + (cy + 36) + '" text-anchor="middle" fill="#e6edf3" font-size="26" font-weight="800" font-family="JetBrains Mono,monospace">' + (v == null ? '—' : v >= 2.5 ? '> 2,5' : fmt(v, 1)) + '</text>';
-  h += '<text x="' + cx + '" y="' + (cy + 54) + '" text-anchor="middle" fill="#8b98a5" font-size="11">jours de vie restante</text>';
-  $('gauge').innerHTML = h;
-}
-/* ---- bande de statut sous la timeline ---- */
-function paintStrip(s){
-  var cv = $('strip'), W = cv.clientWidth, dpr = window.devicePixelRatio || 1; if(!W) return;
-  cv.width = W * dpr; cv.height = 10 * dpr; var g = cv.getContext('2d'); g.scale(dpr, dpr);
-  g.fillStyle = '#1b2430'; g.fillRect(0, 0, W, 10);
-  for(var i = 0; i < s.n; i++){
-    var x0 = i / s.n * W, x1 = (i + 1) / s.n * W, v = i < NBASE - 1 ? null : smoothPred(s, S.sel, i, false);
-    if(i < NBASE - 1){ g.fillStyle = '#2d3a4a'; } else if(v == null){ continue; } else g.fillStyle = ST[statusOf(v)].col;
-    g.globalAlpha = i <= S.step ? .9 : .35; g.fillRect(x0, 0, x1 - x0 + .6, 10);
-  }
-  g.globalAlpha = 1;
-}
-/* ---- journal ---- */
-function paintLog(s){
-  var ev = [];
-  s.bearings.forEach(function(b){ var prev = null;
-    for(var i = NBASE - 1; i <= S.step; i++){ var v = smoothPred(s, b, i, false); if(v == null) continue; var st = statusOf(v);
-      if(prev !== null && st !== prev && (st === 'warn' || st === 'crit' || prev === 'warn' || prev === 'crit')) ev.push({i: i, b: b, st: st, from: prev});
-      prev = st; } });
-  ev.sort(function(a, b){ return b.i - a.i; });
-  $('log').innerHTML = ev.length ? ev.slice(0, 40).map(function(e){
-    var txt = e.st === 'ok' ? 'retour à la normale' : (e.st === 'crit' ? 'passage en <b style="color:' + C.crit + '">ARRÊT RECOMMANDÉ</b>' : 'passage en <b style="color:' + C.warn + '">SURVEILLANCE</b>');
-    return '<li><span class="dot" style="background:' + ST[e.st].col + '"></span><time>' + dateStr(s.times[e.i]) + '</time><span><b>B' + e.b + '</b> · ' + txt + '</span></li>'; }).join('')
-    : '<li class="empty">Aucune alerte pour l’instant.' + (s.complete ? '' : ' Calcul des prédictions en cours…') + '</li>';
-}
-/* ---- spectre ---- */
+function selectBearing(b){ var s = SRC[S.mode]; if(s && s.bearings.indexOf(b) >= 0){ S.sel = b; specKey = null; render(); } }
+
+/* ======================= Rendu ======================= */
 var specKey = null;
 function paintSpectrum(s){
   var cands = s.raw.filter(function(r){ return r.bearing === S.sel && r.idx <= S.step; });
-  var r = cands.length ? cands[cands.length - 1] : null, key = r ? S.mode + r.idx + '_' + r.bearing : 'none';
+  var r = cands.length ? cands[cands.length - 1] : null, key = r ? s.id + r.idx + '_' + r.bearing : 'none' + S.sel;
   if(key === specKey) return; specKey = key;
-  var vd = $('verdict');
-  if(!r){ SPEC = null; chSpec.draw(); $('specHint').textContent = ''; vd.children[0].style.background = C.dim;
-    vd.children[1].innerHTML = S.mode === 'replay' && S.sel !== 1 ? 'Dans cette démo, les signaux bruts complets ne sont embarqués que pour B1 (le roulement qui casse).' : 'Pas encore de signal brut disponible à cet instant.';
-    return; }
+  var body = $('faultTbl').tBodies[0];
+  if(!r){ SPEC = null; chSpec.draw(); $('specInfo').textContent = 'démodulation 2–8 kHz';
+    $('diag').firstElementChild.className = 'sq off';
+    $('diagT').innerHTML = S.mode === 'replay' ? 'Dans cette démonstration, le signal brut complet n’est embarqué que pour BRG-01 (début, milieu et fin d’essai).' : '—';
+    body.innerHTML = FAULTS.map(function(t){ return '<tr><td>' + t[1] + ' (' + t[0] + ')</td><td class="n">' + fmt(GEOM[t[0]], 1) + '</td><td class="n">—</td><td class="n">—</td><td>—</td></tr>'; }).join(''); return; }
   SPEC = envelopeSpectrum(r.sig, 800);
-  var dg = diagnose(SPEC), top = dg[0];
-  $('specHint').textContent = 'acquisition du ' + dateStr(s.times[r.idx]);
-  if(top.score >= 8){ vd.children[0].style.background = top.color;
-    vd.children[1].innerHTML = '<b>Signature de défaut de ' + top.name + '</b> : pics à ' + top.peaks.filter(function(p){ return p[1] > 0; }).map(function(p){ return fmt(p[0], 0); }).join(' · ') + ' Hz (' + top.key + ' théorique ' + fmt(GEOM[top.key], 1) + ' Hz) · émergence ×' + fmt(top.score, 0); }
-  else if(top.score >= 4){ vd.children[0].style.background = C.warn; vd.children[1].innerHTML = 'Signature faible compatible avec un défaut de ' + top.name + ' (émergence ×' + fmt(top.score, 1) + ') : à surveiller.'; }
-  else { vd.children[0].style.background = C.ok; vd.children[1].innerHTML = 'Aucune fréquence de défaut ne ressort du bruit (émergence max ×' + fmt(top.score, 1) + ').'; }
+  var dg = diagnose(SPEC), top = dg.slice().sort(function(a, c){ return c.score - a.score; })[0];
+  $('specInfo').textContent = 'acquisition du ' + dstr(s.times[r.idx]) + ' · démodulation 2–8 kHz';
+  body.innerHTML = dg.map(function(d){ var v = d.score >= 8 ? '<span class="pri1">Défaut confirmé</span>' : d.score >= 4 ? '<span class="pri2">Signature faible</span>' : 'Non détecté';
+    return '<tr><td>' + d.name + ' (' + d.key + ')</td><td class="n">' + fmt(GEOM[d.key], 1) + '</td><td class="n">' + (d.score >= 4 ? fmt(d.peak, 1) : '—') + '</td><td class="n">×' + fmt(d.score, 1) + '</td><td>' + v + '</td></tr>'; }).join('');
+  if(top.score >= 8){ $('diag').firstElementChild.className = 'sq crit';
+    $('diagT').innerHTML = '<b>Défaut de ' + top.name.toLowerCase() + ' identifié</b> — pics à ' + top.peaks.map(function(p){ return fmt(p, 1); }).join(' / ') + ' Hz : ' + top.key + ' (' + fmt(GEOM[top.key], 1) + ' Hz théorique) et ses harmoniques ; l’écart provient du glissement des éléments roulants.'; }
+  else if(top.score >= 4){ $('diag').firstElementChild.className = 'sq warn'; $('diagT').innerHTML = '<b>Signature faible</b> compatible avec un défaut de ' + top.name.toLowerCase() + ' (émergence ×' + fmt(top.score, 1) + ') — à confirmer sur les mesures suivantes.'; }
+  else { $('diag').firstElementChild.className = 'sq ok'; $('diagT').innerHTML = '<b>Aucune fréquence de défaut</b> ne se dégage du bruit de fond (émergence maximale ×' + fmt(top.score, 1) + ').'; }
   chSpec.draw();
 }
-/* ---- rendu principal ---- */
-var drawPending = false;
-function scheduleDraw(){ if(drawPending) return; drawPending = true; requestAnimationFrame(function(){ drawPending = false; render(false); }); }
-function render(full){
-  var s = SRC[S.mode]; if(!s) return;
-  var b = S.sel, v = smoothPred(s, b, S.step, true), st = statusOf(v), row = s.rows[b][S.step];
-  $('selName').textContent = 'B' + b + (S.mode === 'files' ? ' · colonne ' + (s.col + 1) : '');
-  var box = $('status'); box.className = 'status ' + st; $('stIc').textContent = ST[st].ic; $('stT').textContent = ST[st].t;
-  $('stD').textContent = st === 'calib' ? 'Référence : ' + (S.step + 1) + ' / ' + NBASE + ' acquisitions' : 'Estimation sur les 5 dernières heures';
-  paintGauge(st === 'calib' ? null : v);
-  var ok = row[0] >= 0.01;
-  $('kRms').textContent = ok ? '×' + fmt(row[0] / s.ref[b][0], 2) : 'capteur ?';
-  $('kKur').textContent = ok ? fmt(row[3], 2) : '—';
-  if(s.real && s.real[b]){ $('kReal').textContent = fmt(Math.max(0, (s.failure - s.times[S.step]) / 864e5), 2) + ' j'; $('kRealU').textContent = 'connue après la panne'; $('lgReal').style.display = ''; }
-  else { $('kReal').textContent = 'inconnue'; $('kRealU').textContent = S.mode === 'replay' ? 'ce roulement n’a pas cassé' : 'données réelles'; $('lgReal').style.display = 'none'; }
-  $('reco').innerHTML = '<b>' + ST[st].reco[0] + '</b>' + ST[st].reco[1];
-  var cl = s.times[S.step]; $('clock').innerHTML = '<b>J+' + fmt(days(s, S.step), 2) + '</b><br>' + cl.toLocaleDateString('fr-FR') + ' ' + pad(cl.getHours()) + ':' + pad(cl.getMinutes());
-  $('slider').value = S.step;
-  paintRig(s); paintFleet(s); paintStrip(s); chRul.draw(); chHealth.draw(); paintSpectrum(s); paintLog(s);
-  var stage = S.playing ? S.step % 5 : -1;
-  document.querySelectorAll('#pipe .st').forEach(function(e){ var k = +e.dataset.s; e.classList.toggle('act', S.playing ? k === stage : (st === 'calib' ? k <= 2 : true)); });
+function paintTree(s){
+  var h = '<li class="grp">' + esc(s.site[0]) + ' › ' + esc(s.site[1]) + '</li>';
+  [1, 2, 3, 4].forEach(function(b){
+    var act = s.bearings.indexOf(b) >= 0, st = act ? stateAt(s, b, S.step, true) : {st: 'off'};
+    var v = !act ? 'n/a' : st.st === 'off' ? 'calib.' : st.rul == null ? '—' : st.rul >= 2.5 ? '> 2,5 j' : fmt(st.rul, 1) + ' j';
+    h += '<li><button data-b="' + b + '" class="' + (b === S.sel ? 'sel' : '') + '"' + (act ? '' : ' disabled') + '><span class="sq ' + st.st + '"></span>' +
+      '<span><span class="tg mono">' + TAGS[b] + '</span><span class="ds">' + DESC[b] + '</span></span><span class="v">' + v + '</span></button></li>';
+    $('synSt' + b).setAttribute('fill', {ok: C.ok, warn: C.warn, crit: C.crit, off: C.off}[st.st]);
+    $('synSel' + b).setAttribute('opacity', b === S.sel ? 1 : 0);
+  });
+  $('tree').innerHTML = h;
+  $('tree').querySelectorAll('button').forEach(function(el){ el.onclick = function(){ selectBearing(+el.dataset.b); }; });
 }
+function paintAlarms(s){
+  var al = computeAlarms(s), active = al.filter(function(a){ return a.end == null; });
+  var p1 = active.filter(function(a){ return a.level === 2; }).length, p2 = active.length - p1, unack = active.filter(function(a){ return !ACK[a.id]; }).length;
+  $('almSum').innerHTML = '<span>Alarmes actives (priorité 1)</span><span class="num" style="color:' + (p1 ? C.crit : C.txt) + '">' + p1 + '</span>' +
+    '<span>Alertes actives (priorité 2)</span><span class="num" style="color:' + (p2 ? C.warn : C.txt) + '">' + p2 + '</span>' +
+    '<span>Non acquittées</span><span class="num">' + unack + '</span>' +
+    '<span>Événements sur la période</span><span class="num">' + al.length + '</span>';
+  $('almCount').textContent = active.length + ' active(s) · ' + al.length + ' événement(s)';
+  $('almBody').innerHTML = al.length ? al.slice(0, 60).map(function(a){
+    var act = a.end == null, state = act ? (ACK[a.id] ? 'Active · acquittée ' + ACK[a.id] : 'Active · non acquittée') : 'Terminée ' + dshort(s.times[a.end]);
+    return '<tr class="' + (act ? 'alm-active' + (a.level === 2 ? ' p1' : '') : '') + '"><td class="mono">' + dstr(s.times[a.i]) + '</td><td class="mono">' + TAGS[a.b] + '</td>' +
+      '<td class="' + (a.level === 2 ? 'pri1' : 'pri2') + '">' + (a.level === 2 ? '1 · Alarme' : '2 · Alerte') + '</td><td>' + a.msg + '</td><td class="n">' + a.val + '</td><td>' + state + '</td>' +
+      '<td class="no-print">' + (act && !ACK[a.id] ? '<button class="ack" data-id="' + esc(a.id) + '">Acquitter</button>' : '') + '</td></tr>'; }).join('')
+    : '<tr><td colspan="7" style="color:var(--dim)">Aucun événement sur la période' + (s.complete ? '' : ' (calcul du pronostic en cours)') + '.</td></tr>';
+  $('almBody').querySelectorAll('.ack').forEach(function(bt){ bt.onclick = function(){ ACK[bt.dataset.id] = dshort(SRC[S.mode].times[S.step]); render(); }; });
+}
+var RECO = {
+  off: ['Calibration en cours', 'Les 200 premières acquisitions (≈ 33 h de fonctionnement) établissent la référence de l’état neuf. Aucun pronostic n’est émis pendant cette phase.'],
+  ok: ['Fonctionnement normal', 'Aucune action. Maintenir la périodicité de surveillance.'],
+  warn: ['Dégradation en cours', 'Augmenter la fréquence de surveillance, approvisionner un roulement de rechange et planifier l’intervention à la prochaine fenêtre d’arrêt (sous 48 h).'],
+  crit: ['Risque de défaillance imminent', 'Programmer sans délai l’arrêt et le remplacement du roulement (sous 24 h). Contrôler la lubrification et l’alignement lors de l’intervention.']
+};
+function render(){
+  var s = SRC[S.mode]; if(!s) return;
+  var b = S.sel, st = stateAt(s, b, S.step, true), row = s.rows[b][S.step], ok = row[0] >= 0.01, t = s.times[S.step];
+  $('crumb').innerHTML = esc(s.site[0]) + ' › ' + esc(s.site[1]) + ' › <b>' + TAGS[b] + '</b>';
+  $('clockh').innerHTML = 'Dernière mesure<br><b>' + dstr(t, true) + '</b>';
+  $('tnow').textContent = dstr(t) + ' · J+' + fmt(days(s, S.step), 2);
+  $('eqTitle').textContent = TAGS[b] + ' — ' + DESC[b];
+  $('eqBadge').className = 'badge ' + st.st; $('eqBadge').textContent = LABEL[st.st];
+  $('eqMeta').textContent = (S.mode === 'files' ? 'Voie ' + (s.col + 1) + ' · ' : '') + 'Acquisition n° ' + (S.step + 1) + ' / ' + s.n;
+  $('kState').className = 'kpi ' + (st.st === 'off' ? '' : st.st); $('kStateV').textContent = LABEL[st.st];
+  $('kStateS').textContent = st.st === 'off' ? 'référence ' + (S.step + 1) + ' / ' + NBASE : st.st === 'ok' ? 'aucun seuil franchi' : 'cause : ' + [st.sr !== 'ok' ? 'pronostic RUL' : null, st.sv !== 'ok' ? 'niveau vibratoire' : null].filter(Boolean).join(' + ');
+  $('kRul').className = 'kpi ' + (st.sr && st.sr !== 'ok' ? st.sr : '');
+  if(st.rul == null){ $('kRulV').textContent = '—'; $('kRulS').textContent = st.st === 'off' ? 'disponible après calibration' : 'calcul en cours'; }
+  else { $('kRulV').innerHTML = (st.rul >= 2.5 ? '&gt; 2,5' : fmt(st.rul, 1)) + ' <small>j</small>'; $('kRulS').textContent = 'incertitude ± ' + fmt(MAE, 1) + ' j (MAE de validation)'; }
+  $('kRms').className = 'kpi ' + (st.sv && st.sv !== 'ok' ? st.sv : '');
+  $('kRmsV').innerHTML = ok ? fmt(row[0], 3) + ' <small>g</small>' : '—';
+  $('kRmsS').textContent = ok ? (dbOf(s, b, S.step) >= 0 ? '+' : '') + fmt(dbOf(s, b, S.step), 1) + ' dB / référence ' + fmt(s.ref[b][0], 3) + ' g (moy. 1 h : ' + (st.db >= 0 ? '+' : '') + fmt(st.db, 1) + ' dB)' : 'signal nul (capteur ?)';
+  $('kKurV').textContent = ok ? fmt(row[3], 2) : '—'; $('kKurS').textContent = 'référence ' + fmt(s.ref[b][3], 2) + ' · impulsivité si > 3';
+  $('lgReal').classList.toggle('hidden', !(s.real && s.real[b]));
+  var rc = RECO[st.st];
+  $('reco').innerHTML = '<p><span class="badge ' + st.st + '">' + LABEL[st.st] + '</span></p><p><b>' + rc[0] + '.</b> ' + rc[1] + '</p>' +
+    (s.real && s.real[b] ? '<p class="note">Rejeu : la défaillance réelle de ce roulement (défaut de bague extérieure) est survenue le ' + dstr(s.failure) + ', soit dans ' + fmt(Math.max(0, (s.failure - t) / 864e5), 2) + ' j.</p>' :
+     S.mode === 'replay' ? '<p class="note">Rejeu : ce roulement n’a pas été défaillant pendant l’essai. Les alertes de fin d’essai résultent de la hausse vibratoire générale de la machine.</p>' : '');
+  $('printHead').innerHTML = '<h1 style="font-size:18px;margin:0 0 4px">Rapport de diagnostic vibratoire — ' + TAGS[b] + '</h1><div class="note">' + esc(s.site[0]) + ' · ' + esc(s.site[1]) + ' · mesure du ' + dstr(t, true) + ' · édité le ' + dstr(new Date()) + '</div><hr>';
+  paintTree(s); paintStrip(s); chRul.draw(); chRms.draw(); paintSpectrum(s); paintAlarms(s);
+  $('slider').value = S.step;
+}
+function paintStrip(s){
+  var cv = $('strip'), W = cv.clientWidth, dpr = window.devicePixelRatio || 1; if(!W) return;
+  cv.width = W * dpr; cv.height = 6 * dpr; var g = cv.getContext('2d'); g.scale(dpr, dpr); g.fillStyle = '#d8dde3'; g.fillRect(0, 0, W, 6);
+  var col = {ok: '#7fb383', warn: '#e0a54a', crit: '#d36060', off: '#c3cad3'};
+  for(var i = 0; i < s.n; i++){
+    var st = i < NBASE - 1 ? 'off' : (s.pred[S.sel][i] === undefined ? null : stateAt(s, S.sel, i, false).st); if(!st) continue;
+    g.fillStyle = col[st]; g.globalAlpha = i <= S.step ? 1 : .35; g.fillRect(i / s.n * W, 0, W / s.n + .6, 6);
+  }
+  g.globalAlpha = 1;
+}
+var drawPending = false;
+function scheduleDraw(){ if(drawPending) return; drawPending = true; requestAnimationFrame(function(){ drawPending = false; render(); }); }
 
-/* ======================= Lecture ======================= */
+/* ======================= Rejeu ======================= */
 var timer = null;
 function setPlaying(p){
-  S.playing = p; $('btnPlay').textContent = p ? '❚❚' : '▶'; $('btnPlay').setAttribute('aria-label', p ? 'Pause' : 'Lecture');
-  $('rig').classList.toggle('paused', !p);
-  clearInterval(timer);
-  if(p){ timer = setInterval(function(){ var s = SRC[S.mode]; if(S.step >= s.n - 1){ setPlaying(false); return; } S.step++; render(false); }, 1000 / (2.5 * S.speed)); }
-  render(false);
+  S.playing = p; clearInterval(timer);
+  $('playIc').innerHTML = p ? '<path d="M8 5v14M16 5v14"/>' : '<path d="M7 5l12 7-12 7z"/>';
+  $('bPlay').classList.toggle('on', p); $('bPlay').setAttribute('aria-label', p ? 'Pause' : 'Lecture');
+  if(p) timer = setInterval(function(){ var s = SRC[S.mode]; if(S.step >= s.n - 1){ setPlaying(false); return; } S.step++; render(); }, 1000 / (2.5 * S.speed));
 }
-$('btnPlay').onclick = function(){ var s = SRC[S.mode]; if(!s) return; if(S.step >= s.n - 1) S.step = s.startStep; setPlaying(!S.playing); };
-$('btnBack').onclick = function(){ var s = SRC[S.mode]; if(!s) return; S.step = 0; render(false); };
-$('slider').oninput = function(e){ S.step = +e.target.value; render(false); };
-document.querySelectorAll('#speed button').forEach(function(bt){ bt.onclick = function(){
-  document.querySelectorAll('#speed button').forEach(function(x){ x.classList.remove('on'); }); bt.classList.add('on'); S.speed = +bt.dataset.v; if(S.playing) setPlaying(true); }; });
+$('bPlay').onclick = function(){ var s = SRC[S.mode]; if(S.step >= s.n - 1) S.step = NBASE; setPlaying(!S.playing); };
+$('bStart').onclick = function(){ S.step = 0; render(); };
+$('speed').onchange = function(e){ S.speed = +e.target.value; if(S.playing) setPlaying(true); };
+$('slider').oninput = function(e){ S.step = +e.target.value; render(); };
 document.addEventListener('keydown', function(e){
-  if(e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; var s = SRC[S.mode]; if(!s) return;
-  if(e.code === 'Space'){ e.preventDefault(); $('btnPlay').click(); }
-  if(e.key === 'ArrowRight'){ S.step = Math.min(s.n - 1, S.step + (e.shiftKey ? 30 : 1)); render(false); }
-  if(e.key === 'ArrowLeft'){ S.step = Math.max(0, S.step - (e.shiftKey ? 30 : 1)); render(false); }
+  if(/INPUT|SELECT|BUTTON/.test(e.target.tagName) && e.code !== 'Space') return; if(S.mode !== 'replay') return; var s = SRC.replay;
+  if(e.code === 'Space'){ e.preventDefault(); $('bPlay').click(); }
+  if(e.key === 'ArrowRight'){ S.step = Math.min(s.n - 1, S.step + (e.shiftKey ? 30 : 1)); render(); }
+  if(e.key === 'ArrowLeft'){ S.step = Math.max(0, S.step - (e.shiftKey ? 30 : 1)); render(); }
 });
 window.addEventListener('resize', function(){ var s = SRC[S.mode]; if(s) paintStrip(s); });
+$('btnPrint').onclick = function(){ window.print(); };
 
-/* ======================= Mode fichiers ======================= */
+/* ======================= Import de mesures ======================= */
 function setMode(m){
-  S.mode = m; setPlaying(false); specKey = null;
+  setPlaying(false); S.mode = m; specKey = null;
   $('tabReplay').classList.toggle('on', m === 'replay'); $('tabFiles').classList.toggle('on', m === 'files');
-  $('filesPanel').classList.toggle('hidden', m !== 'files');
-  $('rigHint').textContent = m === 'replay' ? 'Cliquez sur un roulement pour l’inspecter' : 'Roulement analysé mis en évidence';
+  $('demo').classList.toggle('hidden', m !== 'replay'); $('importPn').classList.toggle('hidden', m !== 'files');
   var s = SRC[m];
-  document.querySelectorAll('main > section:not(#filesPanel)').forEach(function(el){ el.classList.toggle('hidden', m === 'files' && !s); });
-  if(s){ $('slider').max = s.n - 1; S.sel = s.bearings.indexOf(S.sel) >= 0 ? S.sel : s.bearings[0]; S.step = Math.min(S.step, s.n - 1); if(m === 'files') S.step = s.lastIdx; render(true); }
-  paintModelCard();
+  document.querySelectorAll('#eqPn, #synPn, .g2, .side-r, main > section:not(#importPn):not(#eqPn):not(#synPn)').forEach(function(el){ el.classList.toggle('hidden', !s); });
+  if(s){ if(s.bearings.indexOf(S.sel) < 0) S.sel = s.bearings[0]; S.step = m === 'files' ? s.lastIdx : Math.min(S.step, s.n - 1); $('slider').max = s.n - 1; render(); }
+  else { $('tree').innerHTML = '<li class="grp">Aucune mesure importée</li>'; $('almSum').innerHTML = ''; $('crumb').textContent = ''; $('clockh').textContent = ''; }
+  paintModel();
 }
 $('tabReplay').onclick = function(){ setMode('replay'); };
 $('tabFiles').onclick = function(){ setMode('files'); };
@@ -761,22 +810,23 @@ $('pickFolder').onclick = function(){ $('inFolder').click(); };
 $('pickFiles').onclick = function(){ $('inFiles').click(); };
 $('inFolder').onchange = function(e){ analyse(e.target.files); };
 $('inFiles').onchange = function(e){ analyse(e.target.files); };
-var drop = $('drop');
-['dragenter', 'dragover'].forEach(function(t){ drop.addEventListener(t, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
-['dragleave', 'drop'].forEach(function(t){ drop.addEventListener(t, function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
-drop.addEventListener('drop', function(e){
-  var items = e.dataTransfer.items, files = [], pending = 0;
-  function walk(entry){ pending++;
-    if(entry.isFile) entry.file(function(f){ files.push(f); if(--pending === 0) analyse(files); });
-    else entry.createReader().readEntries(function(es){ es.forEach(walk); if(--pending === 0) analyse(files); }); }
-  if(items && items.length && items[0].webkitGetAsEntry){ for(var i = 0; i < items.length; i++){ var en = items[i].webkitGetAsEntry(); if(en) walk(en); } }
-  else analyse(e.dataTransfer.files);
-});
+(function(){ var drop = $('drop');
+  ['dragenter', 'dragover'].forEach(function(t){ drop.addEventListener(t, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
+  ['dragleave', 'drop'].forEach(function(t){ drop.addEventListener(t, function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
+  drop.addEventListener('drop', function(e){
+    var items = e.dataTransfer.items, files = [], pending = 0;
+    function walk(en){ pending++;
+      if(en.isFile) en.file(function(f){ files.push(f); if(--pending === 0) analyse(files); });
+      else en.createReader().readEntries(function(es){ es.forEach(walk); if(--pending === 0) analyse(files); }); }
+    if(items && items.length && items[0].webkitGetAsEntry){ for(var i = 0; i < items.length; i++){ var en = items[i].webkitGetAsEntry(); if(en) walk(en); } }
+    else analyse(e.dataTransfer.files);
+  });
+})();
 function readText(f){ return new Promise(function(ok, ko){ var r = new FileReader(); r.onload = function(){ ok(r.result); }; r.onerror = ko; r.readAsText(f, 'latin1'); }); }
 function parseCol(txt, col){
   var lines = txt.split(/\r?\n/), out = [];
-  for(var i = 0; i < lines.length; i++){ var s = lines[i].trim(); if(!s) continue; var p = s.split(/[\t,; ]+/);
-    if(col >= p.length) throw new Error('la colonne ' + (col + 1) + ' n’existe pas dans ' + lines.length + ' lignes lues');
+  for(var i = 0; i < lines.length; i++){ var t = lines[i].trim(); if(!t) continue; var p = t.split(/[\t,; ]+/);
+    if(col >= p.length) throw new Error('la voie ' + (col + 1) + ' est absente (' + p.length + ' colonne(s))');
     var v = parseFloat(p[col]); if(isFinite(v)) out.push(v); }
   return out;
 }
@@ -788,44 +838,54 @@ async function analyse(fileList){
   var col = +$('col').value, TAIL = 90;
   var list = Array.prototype.slice.call(fileList).filter(function(f){ return f.size > 0 && f.name[0] !== '.'; })
     .sort(function(a, b){ return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; });
-  if(list.length < NBASE + WIN){ msg('⚠️ ' + list.length + ' acquisition(s) seulement : il en faut au moins ' + (NBASE + WIN) + ' (' + NBASE + ' pour la référence « roulement neuf » + ' + WIN + ' pour la fenêtre analysée). Sans référence, la RUL ne peut pas être estimée de façon fiable.', true); return; }
+  if(list.length < NBASE + WIN){ msg(list.length + ' acquisition(s) reçue(s) : minimum requis ' + (NBASE + WIN) + ' (' + NBASE + ' pour la référence de l’état neuf + ' + WIN + ' pour la fenêtre d’analyse). Analyse non effectuée.', true); return; }
   var pick = list.slice(0, NBASE).concat(list.slice(Math.max(NBASE, list.length - TAIL)));
   var rows = [], times = [], lastSig = null, lastIdx = -1, t0 = performance.now();
   try {
     for(var i = 0; i < pick.length; i++){
       var sig = parseCol(await readText(pick[i]), col);
-      if(sig.length < 4096) throw new Error(pick[i].name + ' ne contient que ' + sig.length + ' points');
+      if(sig.length < 4096) throw new Error(pick[i].name + ' : ' + sig.length + ' points seulement');
       rows.push(sampleFeatures(sig)); times.push(fileDate(pick[i].name, list.indexOf(pick[i])));
-      if(i >= NBASE && rows[rows.length - 1][0] >= 0.01){ lastSig = sig; lastIdx = rows.length - 1; }  // dernière acquisition valide
-      if(i % 8 === 0){ progress(i / pick.length); msg('Calcul des indicateurs · ' + (i + 1) + ' / ' + pick.length + ' fichiers'); await new Promise(function(r){ setTimeout(r, 0); }); }
+      if(i >= NBASE && rows[rows.length - 1][0] >= 0.01){ lastSig = sig; lastIdx = rows.length - 1; }
+      if(i % 8 === 0){ progress(i / pick.length); msg('Calcul des indicateurs : ' + (i + 1) + ' / ' + pick.length + ' acquisitions'); await new Promise(function(r){ setTimeout(r, 0); }); }
     }
-  } catch(err){ progress(null); msg('⚠️ Lecture impossible : ' + err.message, true); return; }
+  } catch(err){ progress(null); msg('Lecture impossible — ' + err.message, true); return; }
   progress(null);
   var refRows = rows.slice(0, NBASE).filter(function(r){ return r[0] >= 0.01; });
-  if(refRows.length < NBASE / 2){ msg('⚠️ La période de référence contient trop de signaux plats (capteur arrêté ?).', true); return; }
-  var b = Math.min(col + 1, 4), s = {bearings: [b], rows: {}, ref: {}, pred: {}, W: MODEL.weights, n: rows.length, times: times, col: col, complete: true, raw: lastSig ? [{idx: lastIdx, bearing: b, sig: lastSig}] : [], startStep: NBASE};
-  s.lastIdx = S.step = lastIdx >= 0 ? lastIdx : rows.length - 1;
+  if(refRows.length < NBASE / 2 || lastIdx < 0){ msg('Trop de signaux nuls dans les mesures (capteur déconnecté ?). Analyse non effectuée.', true); return; }
+  var b = Math.min(col + 1, 4);
+  var s = {id: 'files', bearings: [b], rows: {}, ref: {}, pred: {}, W: MODEL.weights, n: rows.length, times: times, col: col, complete: true, lastIdx: lastIdx,
+    raw: [{idx: lastIdx, bearing: b, sig: lastSig}], site: ['Mesures importées', list.length + ' acquisitions']};
   s.rows[b] = rows; s.ref[b] = reference(refRows); s.pred[b] = new Array(rows.length).fill(undefined);
-  for(var k = NBASE + WIN - 1; k < rows.length; k++) rawPred(s, b, k);   // fenêtres entièrement après la référence
-  for(k = NBASE - 1; k < NBASE + WIN - 1; k++) s.pred[b][k] = null;
-  SRC.files = s; S.sel = b; S.step = lastIdx >= 0 ? lastIdx : rows.length - 1;
-  msg('✅ ' + list.length + ' acquisitions · référence ' + pick[0].name + ' → ' + pick[NBASE - 1].name + ' · ' + (pick.length - NBASE) + ' dernières analysées · ' + fmt((performance.now() - t0) / 1000, 1) + ' s');
+  for(var k = NBASE - 1; k < NBASE + WIN - 1; k++) s.pred[b][k] = null;        // fenêtres à cheval sur la référence : pas de pronostic
+  for(k = NBASE + WIN - 1; k < rows.length; k++) rawPred(s, b, k);
+  SRC.files = s; S.sel = b;
+  msg('Analyse terminée : ' + list.length + ' acquisitions · référence ' + pick[0].name + ' → ' + pick[NBASE - 1].name + ' · ' + (pick.length - NBASE) + ' dernières analysées · ' + fmt((performance.now() - t0) / 1000, 1) + ' s');
   setMode('files');
 }
 
-/* ======================= Fiche modèle ======================= */
-function paintModelCard(){
-  var l = MODEL.lofo, cards = l.map(function(r){ return '<div class="kpi"><div class="l">' + r['Modèle'] + '</div><div class="v">' + fmt(r['MAE dégradation (j)'], 2) + ' j</div><div class="u">erreur moyenne en dégradation</div></div>'; }).join('');
-  $('mcard').innerHTML = cards;
-  $('mnote').innerHTML = 'Évaluation <b>sur un roulement jamais vu</b> : entraînement sur 3 des 4 pannes du dataset IMS, test sur la 4e, en tournant. ' +
-    (S.mode === 'replay' ? 'Le rejeu utilise un CNN-LSTM entraîné <b>sans le 2nd test</b> : ce que vous voyez est une vraie prédiction, pas une restitution des données d’entraînement. ' : 'L’analyse de vos fichiers utilise le CNN-LSTM entraîné sur les 4 pannes. ') +
-    'La RUL est fiable à ± 1 jour environ : elle sert à déclencher la surveillance puis l’arrêt. Limites : modèle appris sur un banc d’essai (2000 tr/min, 6000 lbs) ; une hausse de vibration de toute la machine (ex. casse d’un roulement voisin) peut déclencher une alerte sur un roulement sain.';
+/* ======================= Fiches ======================= */
+function paintStatic(){
+  $('spec').innerHTML = [['Type', 'Roulement à rouleaux Rexnord ZA-2115'], ['Éléments roulants', '16 rouleaux'], ['Ø rouleau / Ø primitif', '8,41 mm / 71,50 mm'], ['Angle de contact', '15,17°'],
+    ['Vitesse de rotation', '2000 tr/min (33,3 Hz)'], ['Charge radiale', '26,7 kN (6000 lbs), paliers 2 et 3'], ['Lubrification', 'circuit d’huile forcée'],
+    ['Capteur', 'accéléromètre ICP PCB 353B33'], ['Acquisition', '20 kHz · 20 480 points · 1 mesure / 10 min']]
+    .map(function(r){ return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>'; }).join('');
+  $('freqTbl').innerHTML = [['Rotation arbre (fr)', GEOM.FR], ['Cage (FTF)', GEOM.FTF], ['Élément roulant (BSF)', GEOM.BSF], ['Bague extérieure (BPFO)', GEOM.BPFO], ['Bague intérieure (BPFI)', GEOM.BPFI]]
+    .map(function(r){ return '<tr><td>' + r[0] + '</td><td class="n">' + fmt(r[1], 1) + '</td><td class="n">' + fmt(r[1] / GEOM.FR, 2) + '</td></tr>'; }).join('');
+}
+function paintModel(){
+  var get = function(m){ var r = MODEL.lofo.filter(function(x){ return x['Modèle'] === m; })[0]; return r ? fmt(r['MAE dégradation (j)'], 2) + ' j' : '—'; };
+  $('mdl').innerHTML = [['Architecture', 'CNN-LSTM (Conv1D 128/64, LSTM 64)'], ['Entrées', 'RMS, énergie, entropie spectrale, kurtosis, relatifs à l’état neuf'], ['Fenêtre', WIN + ' acquisitions (5 h)'],
+    ['Cible', 'RUL linéaire par morceaux, plafond 3 j'], ['Validation', 'croisée par panne, 4 trajectoires IMS'], ['MAE CNN-LSTM', get('CNN-LSTM')], ['MAE référence constante', get('Constante (CAP)')],
+    ['Modèle actif', S.mode === 'replay' ? 'entraîné sans le 2nd test' : 'entraîné sur les 4 pannes']]
+    .map(function(r){ return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>'; }).join('');
+  $('mdlNote').innerHTML = 'MAE : erreur absolue moyenne pendant la phase de dégradation, sur un roulement jamais vu à l’entraînement. Domaine de validité : banc d’essai IMS (2000 tr/min, 26,7 kN) ; à requalifier sur toute autre machine. ' +
+    'La vitesse vibratoire (ISO 10816, 10–1000 Hz) n’est pas utilisée : elle réagit peu aux défauts de roulement, dont la signature est à haute fréquence.';
 }
 
 /* ======================= Démarrage ======================= */
-buildRig();
-SRC.replay = buildReplaySource();
-$('slider').max = SRC.replay.n - 1; S.step = SRC.replay.startStep;
+buildSyn(); paintStatic();
+SRC.replay = buildReplay();
 (function(){ var h = new URLSearchParams(location.hash.slice(1));
   if(h.has('t')) S.step = Math.max(0, Math.min(SRC.replay.n - 1, +h.get('t')));
   if(h.has('b')) S.sel = Math.max(1, Math.min(4, +h.get('b'))); })();

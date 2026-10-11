@@ -35,7 +35,7 @@ let main = html.slice(html.indexOf('<script>\n/* ======================= Donnée
 main = main.slice(0, main.indexOf('</script>'));
 main = main.replace('startWorker(SRC.replay);', '');  // pas de précalcul du rejeu dans ce test
 eval(main + `
-;globalThis.__analyse = analyse; globalThis.__S = S; globalThis.__SRC = SRC; globalThis.__statusOf = statusOf; globalThis.__smooth = smoothPred;`);
+;globalThis.__analyse = analyse; globalThis.__S = S; globalThis.__SRC = SRC; globalThis.__state = stateAt; globalThis.__smooth = smoothPred;`);
 
 const files = fs.readdirSync(dir).sort().map(n => ({ name: n, path: path.join(dir, n), size: fs.statSync(path.join(dir, n)).size }));
 const t0 = Date.now();
@@ -45,6 +45,6 @@ __analyse(files).then(() => {
   console.log('message :', els['msg'].textContent);
   if (!s) return;
   const v = __smooth(s, __S.sel, __S.step, true);
-  console.log(`mode=${__S.mode} · roulement B${__S.sel} · RUL lissée ${v == null ? '—' : v.toFixed(2)} j · état ${__statusOf(v)} · vib ×${(s.rows[__S.sel][__S.step][0] / s.ref[__S.sel][0]).toFixed(2)}`);
-  console.log('verdict spectre :', els['verdict'].children ? 'ok' : '(DOM factice)');
+  const st = __state(s, __S.sel, __S.step, true);
+  console.log(`mode=${__S.mode} · roulement B${__S.sel} · RUL lissée ${v == null ? '—' : v.toFixed(2)} j · état ${st.st} · niveau ${st.db.toFixed(1)} dB`);
 });

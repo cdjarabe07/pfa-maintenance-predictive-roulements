@@ -4,7 +4,7 @@
 |---|---|
 | `IMS_Bearing_Analysis_corrige.ipynb` | Notebook corrigé et exécuté (toutes les sorties sont enregistrées) |
 | `IMS_Bearing_Analysis.ipynb` | Notebook d'origine, conservé pour comparaison |
-| `jumeau_numerique.html` | **Tableau de bord BearingTwin** : rejeu animé du 2nd test, vue machine, jauge RUL, spectre d'enveloppe, journal d'alertes, analyse de vos fichiers |
+| `jumeau_numerique.html` | **Poste de surveillance vibratoire** : supervision des 4 paliers, pronostic RUL, tendances avec seuils, spectre d'enveloppe et diagnostic, journal d'alarmes à acquitter, rapport PDF, import de mesures brutes |
 | `rul_4feat.html` | Interface opérateur simple (version précédente) |
 | `rul_lib.py` | Fonctions RUL partagées (trajectoires, RUL par morceaux, fenêtres, modèles) |
 | `extract_features.py` | Calcule les features à partir des fichiers bruts IMS → `cache/` |
@@ -30,16 +30,21 @@ python make_twin_data.py      # modèle du rejeu (≈ 5 min)
 python build_interface.py
 ```
 
-## Tableau de bord `jumeau_numerique.html`
+## Poste de surveillance `jumeau_numerique.html`
 
-S'ouvre par double-clic (fonctionne hors ligne). Deux modes :
-- **Rejeu du 2nd test** : ▶ lance la lecture (×1, ×4, ×16), le curseur permet de se déplacer dans les 7 jours
-  d'essai, un clic sur un roulement l'inspecte. Raccourcis : `Espace` lecture/pause, `←` `→` (± 10 min),
-  `Maj` + flèches (± 5 h). Lien direct vers un instant : `jumeau_numerique.html#t=950&b=1` (`#play` pour lancer).
-- **Analyser mes fichiers** : glisser-déposer le dossier d'acquisitions d'un roulement.
+S'ouvre par double-clic (fonctionne hors ligne). Deux onglets :
+- **Supervision** (mode démonstration) : rejeu des mesures du 2nd test IMS. Lecture / pause, vitesse ×1 à ×16,
+  curseur temporel. Sélection d'un palier dans l'arborescence ou sur le synoptique. Raccourcis : `Espace`,
+  `←` `→` (± 10 min), `Maj` + flèches (± 5 h). Lien direct : `jumeau_numerique.html#t=950&b=1` (`#play` pour lancer).
+- **Import de mesures** : glisser-déposer le dossier d'acquisitions brutes d'un roulement (≥ 230 fichiers).
 
-Pour la soutenance : ouvrir `#t=500` (sain), lancer en ×16 et commenter la bascule SURVEILLANCE → ARRÊT,
-puis le spectre d'enveloppe à la fin (signature BPFO).
+Logique de décision : état = le plus sévère entre le pronostic RUL (alerte < 2,5 j, alarme < 1 j) et le niveau
+vibratoire RMS par rapport à la référence (alerte +6 dB, alarme +12 dB), mesures lissées sur 1 h, hystérésis
+de retour à la normale (0,25 j / 1 dB). Le bouton « Rapport PDF » imprime un rapport de diagnostic.
+
+Scénario de soutenance : ouvrir `#t=500` (état normal), lancer en ×16, commenter l'apparition des alertes puis
+des alarmes dans le journal, acquitter une alarme, puis montrer le spectre d'enveloppe en fin d'essai
+(défaut de bague extérieure identifié) et exporter le rapport PDF.
 
 ## Interface simple `rul_4feat.html`
 
