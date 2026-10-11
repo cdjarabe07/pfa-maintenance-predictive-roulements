@@ -152,7 +152,7 @@ function modelForward(win, W){
 }
 
 var MODEL = JSON.parse(document.getElementById('model-data').textContent);
-var W = MODEL.window, N_BASE = MODEL.n_base, CAP = MODEL.cap;
+var W = MODEL.window, N_BASE = MODEL.n_base;
 Chart.defaults.color = '#8B98A5';
 
 /* --- FFT exacte sur les 20 480 points (= 4096 x 5), comme numpy.fft.rfft côté Python :
@@ -261,7 +261,7 @@ function showResults(seq, ref, note){
   else { st = 'NORMAL'; cls = 'op-green'; ic = '✅';
     txt = 'Aucune dégradation détectée. Poursuivre la surveillance habituelle.'; }
   document.getElementById('opResults').style.display = 'block';
-  document.getElementById('opRul').textContent = rul >= 0.95 * CAP ? '> ' + fmt(CAP, 0) : fmt(rul, 1);
+  document.getElementById('opRul').textContent = rul >= 2.5 ? '> 2,5' : fmt(rul, 1);
   document.getElementById('opRms').textContent = '× ' + fmt(rmsRel, 2);
   document.getElementById('opStatus').className = 'op-status ' + cls;
   document.getElementById('opStatusIc').textContent = ic;
@@ -269,7 +269,7 @@ function showResults(seq, ref, note){
   document.getElementById('opRisk').textContent = st;
   document.getElementById('opRiskUnit').textContent = 'fenêtre des 5 dernières heures';
   document.getElementById('opRecoIc').textContent = ic;
-  document.getElementById('opRecoT').textContent = st + ' — RUL estimée ' + (rul >= 0.95 * CAP ? 'supérieure à ' + fmt(CAP, 0) : fmt(rul, 1)) + ' jour(s).';
+  document.getElementById('opRecoT').textContent = st + ' — RUL estimée ' + (rul >= 2.5 ? 'supérieure à 2,5' : fmt(rul, 1)) + ' jour(s).';
   document.getElementById('opRecoD').textContent = txt;
   var mi = document.getElementById('opMetaInfo'); mi.style.display = 'block'; mi.textContent = note;
 

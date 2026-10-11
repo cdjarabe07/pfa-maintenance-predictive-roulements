@@ -1,0 +1,25 @@
+Model,Bearing,Accuracy,Precision,Recall,F1,FP,FN
+Logistic Regression,Bearing_1,0.9909,0.9807,0.976,0.9783,4,5
+Logistic Regression,Bearing_2,0.9715,0.9811,0.8,0.8814,2,26
+Logistic Regression,Bearing_3,0.9665,0.964,0.7868,0.8664,4,29
+Logistic Regression,Bearing_4,0.9726,0.942,0.8725,0.9059,8,19
+Random Forest,Bearing_1,0.9939,0.9903,0.9808,0.9855,2,4
+Random Forest,Bearing_2,0.9929,0.9843,0.9615,0.9728,2,5
+Random Forest,Bearing_3,0.997,1.0,0.9779,0.9888,0,3
+Random Forest,Bearing_4,0.998,1.0,0.9866,0.9932,0,2
+Decision Tree,Bearing_1,0.9909,0.9761,0.9808,0.9784,5,4
+Decision Tree,Bearing_2,0.9949,0.9921,0.9692,0.9805,1,4
+Decision Tree,Bearing_3,0.998,1.0,0.9853,0.9926,0,2
+Decision Tree,Bearing_4,1.0,1.0,1.0,1.0,0,0
+SVM,Bearing_1,0.9919,0.9808,0.9808,0.9808,4,4
+SVM,Bearing_2,0.9797,0.9911,0.8538,0.9174,1,19
+SVM,Bearing_3,0.9756,0.9746,0.8456,0.9055,3,21
+SVM,Bearing_4,0.9675,0.9835,0.7987,0.8815,2,30
+KNN,Bearing_1,0.9888,0.9805,0.9663,0.9734,4,7
+KNN,Bearing_2,0.9787,0.991,0.8462,0.9129,1,20
+KNN,Bearing_3,0.9746,0.944,0.8676,0.9042,7,18
+KNN,Bearing_4,0.9705,0.9,0.906,0.903,15,14
+XGBoost,Bearing_1,0.997,1.0,0.9856,0.9927,0,3
+XGBoost,Bearing_2,0.9949,1.0,0.9615,0.9804,0,5
+XGBoost,Bearing_3,0.9929,0.985,0.9632,0.974,2,5
+XGBoost,Bearing_4,0.998,1.0,0.9866,0.9932,0,2
