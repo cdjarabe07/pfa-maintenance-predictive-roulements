@@ -40,6 +40,24 @@ def degradation_onset(b, feat='RMS', n_base=200, z=3, consec=5):
     return int(hit.idxmax() - consec + 1) if hit.any() else len(b) - 1
 
 
+N_BASE = 200  # acquisitions considérées comme saines en début de vie (≈ 33 h à 10 min)
+
+
+def healthy_reference(b, n_base=N_BASE):
+    """Valeurs de référence du roulement neuf (médiane du début de vie)."""
+    return b[FEATS].iloc[:n_base].median().to_numpy()
+
+
+def relative_features(X, ref):
+    """Features exprimées par rapport au roulement neuf : 1 = état sain.
+    Le kurtosis (Fisher, ~0 si sain) est pris en version Pearson (+3) pour rester positif."""
+    X = np.asarray(X, dtype=float).copy()
+    ref = np.asarray(ref, dtype=float).copy()
+    k = FEATS.index('Kurtosis')
+    X[..., k] += 3; ref[k] += 3
+    return X / ref
+
+
 def piecewise_rul(rul, cap):
     """RUL linéaire par morceaux : plafonnée à `cap` jours tant que le roulement est sain."""
     return np.minimum(rul, cap)

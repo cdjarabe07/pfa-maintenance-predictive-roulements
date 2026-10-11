@@ -1,4 +1,4 @@
 data/
-*.npz
+cache/pred_*.npz
 __pycache__/
 .ipynb_checkpoints/
