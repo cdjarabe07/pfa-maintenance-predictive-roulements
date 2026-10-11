@@ -40,7 +40,7 @@ def main(test_dir, test_name, n_channels):
     files = sorted(f for f in os.listdir(test_dir) if not f.startswith('.'))
     channels = [0, 2, 4, 6] if n_channels == 8 else [0, 1, 2, 3]
     rows, samples = [], {}
-    keep = {0, len(files) // 2, len(files) - 1}
+    keep = {0, len(files) // 2, len(files) - 10}
     for k, f in enumerate(files):
         data = pd.read_csv(os.path.join(test_dir, f), sep='\t', header=None).to_numpy()
         ts = pd.to_datetime(f, format='%Y.%m.%d.%H.%M.%S')

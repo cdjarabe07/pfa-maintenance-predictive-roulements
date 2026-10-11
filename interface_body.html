@@ -1,0 +1,356 @@
+<body>
+<header>
+  <span style="font-size:22px">&#127911;</span>
+  <div>
+    <h1>Jumeau num&eacute;rique &mdash; Diagnostic du roulement (RUL 4 features)</h1>
+    <div class="sub">Vibration <b>brute uniquement</b> &rarr; RMS, Energy, Entropy, Kurtosis calcul&eacute;s dans la page &rarr; CNN-LSTM (fen&ecirc;tre 30) &rarr; RUL en jours &middot; entra&icirc;n&eacute; sur les 4 pannes NASA IMS</div>
+  </div>
+</header>
+<main>
+<section class="page active">
+  <div class="op-hero">
+    <div class="op-hero-title">&#127917; JUMEAU NUM&Eacute;RIQUE &mdash; DIAGNOSTIC DU ROULEMENT</div>
+    <div class="op-hero-sub">Donnez seulement la vibration brute &middot; le code fait tous les calculs</div>
+  </div>
+  <div class="op-wrap">
+    <div class="op-panel">
+      <h3 class="op-h">&#128194; DONN&Eacute;ES DE VIBRATION BRUTE DU ROULEMENT</h3>
+      <div class="op-filebar">
+        <input type="file" id="files" class="op-fileinput" multiple accept=".txt,.csv,*">
+        <input type="file" id="folder" class="op-fileinput" webkitdirectory multiple>
+        <button class="btn op-filebtn" onclick="document.getElementById('folder').click()">&#128193; Charger le dossier d'acquisitions</button>
+        <button class="btn op-filebtn" onclick="document.getElementById('files').click()">&#128228; S&eacute;lectionner les fichiers</button>
+        <button class="btn" id="demoH">&#128994; D&eacute;mo sain</button>
+        <button class="btn" id="demoD">&#128993; D&eacute;mo d&eacute;grad&eacute;</button>
+      </div>
+      <div class="op-filebar" style="margin-top:12px">
+        <label class="op-hint" for="channel">Roulement / colonne du fichier&nbsp;:</label>
+        <select id="channel" style="background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px 10px">
+          <option value="0">Colonne 1</option><option value="1">Colonne 2</option>
+          <option value="2">Colonne 3</option><option value="3">Colonne 4</option>
+          <option value="4">Colonne 5</option><option value="5">Colonne 6</option>
+          <option value="6">Colonne 7</option><option value="7">Colonne 8</option>
+        </select>
+      </div>
+      <div class="op-delt" id="delt" style="display:none">
+        <div class="op-ok" id="deltNote"></div>
+      </div>
+      <div class="op-alert" id="opError" style="display:none"></div>
+      <div class="op-hint" style="text-align:center;margin-top:12px">1 fichier = 1 acquisition (20&nbsp;480 points &agrave; 20&nbsp;kHz, une toutes les 10&nbsp;min). Il faut <b>au moins 230 acquisitions</b> depuis la mise en service&nbsp;: les 200 premi&egrave;res servent de r&eacute;f&eacute;rence &laquo;&nbsp;roulement neuf&nbsp;&raquo;, les 30 plus r&eacute;centes sont analys&eacute;es.</div>
+    </div>
+    <div id="opResults">
+      <div class="op-panel">
+        <h3 class="op-h">&#128202; &Eacute;TAT ACTUEL</h3>
+        <div class="op-status op-idle" id="opStatus"><span class="op-status-ic" id="opStatusIc">&#9203;</span><span id="opStatusTxt">EN ATTENTE</span></div>
+        <div class="op-kpis">
+          <div class="okpi"><div class="okpi-lbl">RUL estim&eacute;e</div><div class="okpi-val" id="opRul">&mdash;</div><div class="okpi-unit">jour(s) avant la panne</div></div>
+          <div class="okpi"><div class="okpi-lbl">Vibration (RMS) vs neuf</div><div class="okpi-val" id="opRms">&mdash;</div><div class="okpi-unit">1,0 = comme neuf</div></div>
+          <div class="okpi"><div class="okpi-lbl">Niveau de risque</div><div class="okpi-val okpi-risk" id="opRisk">&mdash;</div><div class="okpi-unit" id="opRiskUnit">&mdash;</div></div>
+        </div>
+        <div class="op-threshold">Seuils&nbsp;: NORMAL si RUL &ge; 2,5&nbsp;j &middot; SURVEILLANCE entre 1 et 2,5&nbsp;j &middot; ARR&Ecirc;T RECOMMAND&Eacute; si RUL &lt; 1&nbsp;j</div>
+        <div class="op-metainfo" id="opMetaInfo" style="display:none"></div>
+      </div>
+      <div class="op-panel">
+        <h3 class="op-h">&#128295; RECOMMANDATION</h3>
+        <div class="op-reco"><div class="op-reco-ic" id="opRecoIc">&#9203;</div>
+          <div><div class="op-reco-t" id="opRecoT">En attente.</div><div class="op-reco-d" id="opRecoD"></div></div>
+        </div>
+      </div>
+      <div class="op-panel">
+        <h3 class="op-h">&#128201; &Eacute;VOLUTION SUR LES 30 DERNI&Egrave;RES ACQUISITIONS (5&nbsp;h)</h3>
+        <div class="op-chart"><canvas id="featChart"></canvas></div>
+      </div>
+      <div class="op-panel">
+        <h3 class="op-h">&#128200; CALCULS INTERM&Eacute;DIAIRES (faits par la page, rien &agrave; taper)</h3>
+        <div class="op-chart" style="height:auto;max-height:360px;overflow:auto"><table id="featTable" border="1" cellpadding="4" cellspacing="0" style="width:100%;font-size:12px;border-collapse:collapse"></table></div>
+      </div>
+      <div class="op-panel"><h3 class="op-h">Limite du mod&egrave;le</h3>
+        <div class="op-hint" id="opLimits"></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+<script id="model-data" type="application/json">__MODEL_DATA__</script>
+<script>
+/* CNN-LSTM 4 features : inférence exacte du modèle Keras (cnn_lstm_rul.keras), 100 % JS.
+   Entrée : fenêtre (30 x 4) = log(feature / feature du roulement neuf), ordre [RMS, Energy, Entropy, Kurtosis+3].
+   Couches : Conv1D(128,k5,relu,same) -> BN -> MaxPool2 -> Conv1D(64,k3,relu,same) -> BN -> MaxPool2
+             -> LSTM(64)[i,f,c,o] -> Dense(32,relu) -> Dense(1). */
+function modelForward(win, W){
+  function relu(v){ return v > 0 ? v : 0; }
+  function conv1d(x, ks, In, Out, kf, bf){
+    var T = x.length, lpad = (ks >> 1), res = new Array(T);
+    for(var t = 0; t < T; t++){
+      var o = new Array(Out);
+      for(var c = 0; c < Out; c++){
+        var s = bf[c];
+        for(var j = 0; j < ks; j++){
+          var ti = t + j - lpad;
+          if(ti < 0 || ti >= T) continue;
+          var row = x[ti], base = j * In * Out + c;
+          for(var i = 0; i < In; i++) s += row[i] * kf[base + i * Out];
+        }
+        o[c] = relu(s);
+      }
+      res[t] = o;
+    }
+    return res;
+  }
+  function batchnorm(x, nC, g, bb, mm, mv){
+    return x.map(function(r){
+      var o = new Array(nC);
+      for(var c = 0; c < nC; c++) o[c] = g[c] * (r[c] - mm[c]) / Math.sqrt(mv[c] + 1e-3) + bb[c];
+      return o;
+    });
+  }
+  function maxpool(x, nC, k, s){
+    var Tn = Math.floor((x.length - k) / s) + 1, res = new Array(Tn);
+    for(var t = 0; t < Tn; t++){
+      var o = new Array(nC), a = t * s;
+      for(var c = 0; c < nC; c++){
+        var best = -Infinity;
+        for(var j = 0; j < k; j++){ var v = x[a + j][c]; if(v > best) best = v; }
+        o[c] = best;
+      }
+      res[t] = o;
+    }
+    return res;
+  }
+  function sigmoid(v){ return 1 / (1 + Math.exp(-v)); }
+  function lstm(x, In, U, kf, uf, bf){
+    var W4 = 4 * U, h = new Array(U).fill(0), c = new Array(U).fill(0);
+    for(var t = 0; t < x.length; t++){
+      var xt = x[t], z = new Array(W4);
+      for(var g = 0; g < W4; g++){
+        var a = bf[g];
+        for(var i = 0; i < In; i++) a += xt[i] * kf[i * W4 + g];
+        for(var r = 0; r < U; r++) a += h[r] * uf[r * W4 + g];
+        z[g] = a;
+      }
+      var nh = new Array(U), nc = new Array(U);
+      for(var u = 0; u < U; u++){
+        nc[u] = sigmoid(z[U + u]) * c[u] + sigmoid(z[u]) * Math.tanh(z[2 * U + u]);
+        nh[u] = sigmoid(z[3 * U + u]) * Math.tanh(nc[u]);
+      }
+      h = nh; c = nc;
+    }
+    return h;
+  }
+  var x = conv1d(win, 5, 4, 128, W.conv1_k, W.conv1_b);
+  x = maxpool(batchnorm(x, 128, W.bn1_g, W.bn1_b, W.bn1_m, W.bn1_v), 128, 2, 2);
+  x = conv1d(x, 3, 128, 64, W.conv2_k, W.conv2_b);
+  x = maxpool(batchnorm(x, 64, W.bn2_g, W.bn2_b, W.bn2_m, W.bn2_v), 64, 2, 2);
+  var h = lstm(x, 64, 64, W.lstm_k, W.lstm_u, W.lstm_b);
+  var out = W.dense2_b[0];
+  for(var r = 0; r < 32; r++){
+    var acc = W.dense1_b[r];
+    for(var i = 0; i < 64; i++) acc += h[i] * W.dense1_w[i * 32 + r];
+    out += relu(acc) * W.dense2_w[r];
+  }
+  return out;
+}
+
+var MODEL = JSON.parse(document.getElementById('model-data').textContent);
+var W = MODEL.window, N_BASE = MODEL.n_base, CAP = MODEL.cap;
+Chart.defaults.color = '#8B98A5';
+
+/* --- FFT exacte sur les 20 480 points (= 4096 x 5), comme numpy.fft.rfft côté Python :
+       n = m x p avec m puissance de 2 -> p FFT radix-2 de taille m, puis recombinaison --- */
+function fft2(re, im){  // radix-2 itérative, en place (taille puissance de 2)
+  var n = re.length, i, j = 0, len, k, t;
+  for(i = 1; i < n; i++){
+    var bit = n >> 1;
+    for(; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if(i < j){ t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+  }
+  for(len = 2; len <= n; len <<= 1){
+    var ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang), h = len >> 1;
+    for(k = 0; k < n; k += len){
+      var cr = 1, ci = 0;
+      for(j = 0; j < h; j++){
+        var a = k + j, b = a + h;
+        var vr = re[b] * cr - im[b] * ci, vi = re[b] * ci + im[b] * cr;
+        re[b] = re[a] - vr; im[b] = im[a] - vi; re[a] += vr; im[a] += vi;
+        var nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr;
+      }
+    }
+  }
+}
+function fftReal(x){  // retourne [re, im] de la DFT complète de x (longueur quelconque)
+  var n = x.length, m = 1;
+  while(n % (m * 2) === 0) m *= 2;
+  var p = n / m, subs = [], r, j, k;
+  for(r = 0; r < p; r++){
+    var sr = new Float64Array(m), si = new Float64Array(m);
+    for(j = 0; j < m; j++) sr[j] = x[j * p + r];
+    fft2(sr, si); subs.push([sr, si]);
+  }
+  if(p === 1) return subs[0];
+  var cosT = new Float64Array(n), sinT = new Float64Array(n);
+  for(j = 0; j < n; j++){ cosT[j] = Math.cos(-2 * Math.PI * j / n); sinT[j] = Math.sin(-2 * Math.PI * j / n); }
+  var Or = new Float64Array(n), Oi = new Float64Array(n);
+  for(k = 0; k < n; k++){
+    var km = k % m, ar = 0, ai = 0;
+    for(r = 0; r < p; r++){
+      var w = (r * k) % n, xr = subs[r][0][km], xi = subs[r][1][km];
+      ar += xr * cosT[w] - xi * sinT[w]; ai += xr * sinT[w] + xi * cosT[w];
+    }
+    Or[k] = ar; Oi[k] = ai;
+  }
+  return [Or, Oi];
+}
+function sampleFeatures(sig){
+  var n = sig.length, s2 = 0, mean = 0, i;
+  for(i = 0; i < n; i++){ mean += sig[i]; s2 += sig[i] * sig[i]; }
+  mean /= n;
+  var centered = new Float64Array(n);
+  for(i = 0; i < n; i++) centered[i] = sig[i] - mean;
+  var F = fftReal(centered), half = Math.floor(n / 2), sm = 0, mags = new Float64Array(half + 1);
+  for(i = 0; i <= half; i++){ mags[i] = Math.hypot(F[0][i], F[1][i]); sm += mags[i]; }
+  var ent = 0;
+  for(i = 0; i <= half; i++){ var p = mags[i] / (sm + 1e-12); ent -= p * Math.log(p + 1e-12); }
+  var m2 = 0, m4 = 0;
+  for(i = 0; i < n; i++){ var d = sig[i] - mean; m2 += d * d; m4 += d * d * d * d; }
+  m2 /= n; m4 /= n;
+  return [Math.sqrt(s2 / n), s2, ent, m4 / (m2 * m2 + 1e-12) - 3.0];
+}
+function parseSignal(txt, col){
+  var lines = String(txt).split(/\r?\n/), vals = [];
+  for(var i = 0; i < lines.length; i++){
+    var s = lines[i].trim(); if(!s) continue;
+    var parts = s.split(/[\t,; ]+/);
+    if(col >= parts.length) throw new Error('colonne ' + (col + 1) + ' absente');
+    var v = parseFloat(parts[col]);
+    if(isFinite(v)) vals.push(v);
+  }
+  return vals;
+}
+function median(a){ var b = a.slice().sort(function(x, y){ return x - y; }), h = b.length >> 1; return b.length % 2 ? b[h] : (b[h - 1] + b[h]) / 2; }
+function reference(refFeats){
+  var ref = [];
+  for(var f = 0; f < 4; f++) ref.push(median(refFeats.map(function(r){ return r[f]; })));
+  return ref;
+}
+function relative(row, ref){  // ratio au roulement neuf (kurtosis pris en version Pearson = +3)
+  return [row[0] / ref[0], row[1] / ref[1], row[2] / ref[2], (row[3] + 3) / (ref[3] + 3)];
+}
+function predict(seq, ref){
+  var win = seq.map(function(r){ return relative(r, ref).map(Math.log); });
+  return Math.max(0, modelForward(win, MODEL.weights));
+}
+
+var chFeat = null;
+function fmt(v, d){ return v.toFixed(d).replace('.', ','); }
+function showError(msg){
+  var e = document.getElementById('opError');
+  e.style.display = msg ? 'flex' : 'none'; e.textContent = msg ? '⚠️ ' + msg : '';
+  if(msg){ document.getElementById('opResults').style.display = 'none'; }
+}
+function showResults(seq, ref, note){
+  showError('');
+  var rul = predict(seq, ref);
+  var rel = seq.map(function(r){ return relative(r, ref); });
+  var rmsRel = rel.slice(-6).reduce(function(a, r){ return a + r[0]; }, 0) / 6;
+  var st, cls, ic, txt;
+  if(rul < 1.0){ st = 'ARRÊT RECOMMANDÉ'; cls = 'op-red'; ic = '🛑';
+    txt = 'Planifier l’arrêt et le remplacement du roulement dès que possible.'; }
+  else if(rul < 2.5){ st = 'SURVEILLANCE'; cls = 'op-orange'; ic = '⚠️';
+    txt = 'Dégradation en cours : rapprocher les contrôles, préparer la pièce de rechange et l’intervention.'; }
+  else { st = 'NORMAL'; cls = 'op-green'; ic = '✅';
+    txt = 'Aucune dégradation détectée. Poursuivre la surveillance habituelle.'; }
+  document.getElementById('opResults').style.display = 'block';
+  document.getElementById('opRul').textContent = rul >= 0.95 * CAP ? '> ' + fmt(CAP, 0) : fmt(rul, 1);
+  document.getElementById('opRms').textContent = '× ' + fmt(rmsRel, 2);
+  document.getElementById('opStatus').className = 'op-status ' + cls;
+  document.getElementById('opStatusIc').textContent = ic;
+  document.getElementById('opStatusTxt').textContent = st;
+  document.getElementById('opRisk').textContent = st;
+  document.getElementById('opRiskUnit').textContent = 'fenêtre des 5 dernières heures';
+  document.getElementById('opRecoIc').textContent = ic;
+  document.getElementById('opRecoT').textContent = st + ' — RUL estimée ' + (rul >= 0.95 * CAP ? 'supérieure à ' + fmt(CAP, 0) : fmt(rul, 1)) + ' jour(s).';
+  document.getElementById('opRecoD').textContent = txt;
+  var mi = document.getElementById('opMetaInfo'); mi.style.display = 'block'; mi.textContent = note;
+
+  var ht = '<tr><th>#</th><th>RMS (g)</th><th>Energy</th><th>Entropy</th><th>Kurtosis</th><th>RMS / neuf</th></tr>';
+  ht += '<tr style="color:#8B98A5"><td>Réf. neuf</td><td>' + fmt(ref[0], 4) + '</td><td>' + fmt(ref[1], 1) + '</td><td>' + fmt(ref[2], 3) + '</td><td>' + fmt(ref[3], 3) + '</td><td>1,00</td></tr>';
+  seq.forEach(function(r, i){
+    ht += '<tr><td>' + (i + 1) + '</td><td>' + fmt(r[0], 4) + '</td><td>' + fmt(r[1], 1) + '</td><td>' + fmt(r[2], 3) + '</td><td>' + fmt(r[3], 3) + '</td><td>' + fmt(rel[i][0], 2) + '</td></tr>';
+  });
+  document.getElementById('featTable').innerHTML = ht;
+  if(chFeat) chFeat.destroy();
+  chFeat = new Chart(document.getElementById('featChart'), {type: 'line',
+    data: {labels: seq.map(function(_, k){ return k + 1; }), datasets: [
+      {label: 'RMS / RMS neuf', data: rel.map(function(r){ return r[0]; }), borderColor: '#00C6AE', pointRadius: 0, borderWidth: 2, yAxisID: 'y'},
+      {label: 'Kurtosis', data: seq.map(function(r){ return r[3]; }), borderColor: '#FFB300', pointRadius: 0, borderWidth: 1.5, yAxisID: 'y1'}]},
+    options: {responsive: true, maintainAspectRatio: false, scales: {
+      y: {title: {display: true, text: 'RMS / neuf'}}, y1: {position: 'right', grid: {drawOnChartArea: false}, title: {display: true, text: 'Kurtosis'}}}}});
+}
+
+/* --- Chargement des fichiers bruts --- */
+function readText(f){
+  return new Promise(function(ok, ko){ var rd = new FileReader(); rd.onload = function(){ ok(rd.result); }; rd.onerror = ko; rd.readAsText(f, 'latin1'); });
+}
+async function featuresOf(list, col, progress){
+  var out = [];
+  for(var i = 0; i < list.length; i++){
+    var sig = parseSignal(await readText(list[i]), col);
+    if(sig.length < 4096) throw new Error('fichier ' + list[i].name + ' trop court (' + sig.length + ' points)');
+    out.push(sampleFeatures(sig));
+    if(i % 10 === 0){ progress(i, list.length); await new Promise(function(r){ setTimeout(r, 0); }); }
+  }
+  return out;
+}
+async function handleChosen(fileList){
+  var col = parseInt(document.getElementById('channel').value, 10);
+  var list = Array.prototype.slice.call(fileList).filter(function(f){ return f.size > 0 && !/^\./.test(f.name); })
+    .sort(function(a, b){ return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; });  // noms = dates AAAA.MM.JJ.hh.mm.ss
+  var delt = document.getElementById('delt'), note = document.getElementById('deltNote');
+  if(list.length < N_BASE + W){
+    delt.style.display = 'none';
+    showError(list.length + ' acquisition(s) seulement. Il en faut au moins ' + (N_BASE + W) + ' : les ' + N_BASE +
+      ' premières depuis la mise en service (référence « roulement neuf ») et les ' + W +
+      ' plus récentes. Sans référence, la RUL ne peut pas être estimée de façon fiable.');
+    return;
+  }
+  delt.style.display = 'flex';
+  try {
+    var prog = function(i, n){ note.textContent = '⏳ Calcul des indicateurs : ' + i + ' / ' + n + ' fichiers…'; };
+    var refList = list.slice(0, N_BASE);
+    var refFeats = (await featuresOf(refList, col, prog)).filter(function(r){ return r[0] >= 0.01; });
+    // fenêtre : 30 dernières acquisitions valides (les fichiers plats = capteur arrêté sont écartés)
+    var seq = [], flats = 0, k = list.length - 1;
+    while(seq.length < W && k >= N_BASE){
+      var r = (await featuresOf([list[k]], col, function(){}))[0];
+      if(r[0] >= 0.01) seq.unshift(r); else flats++;
+      k--;
+    }
+    if(seq.length < W || refFeats.length < N_BASE / 2) throw new Error('pas assez d’acquisitions valides (signaux plats ?)');
+    var msg = list.length + ' acquisitions trouvées · référence : ' + refList[0].name + ' → ' + refList[N_BASE - 1].name +
+      ' · fenêtre analysée : ' + list[k + 1].name + ' → ' + list[list.length - 1].name + ' · colonne ' + (col + 1) +
+      (flats ? ' · ' + flats + ' acquisition(s) plate(s) ignorée(s) (capteur arrêté ?)' : '');
+    note.textContent = '✅ ' + msg;
+    showResults(seq, reference(refFeats), msg);
+  } catch(err){
+    delt.style.display = 'none';
+    showError('Lecture impossible : ' + err.message);
+  }
+}
+document.getElementById('files').addEventListener('change', function(e){ handleChosen(e.target.files); });
+document.getElementById('folder').addEventListener('change', function(e){ handleChosen(e.target.files); });
+document.getElementById('demoH').onclick = function(){
+  showResults(MODEL.demo.healthy, reference(MODEL.demo.ref), 'Démo : 2nd test IMS, Bearing 1, acquisitions 301 à 330 (roulement sain).');
+};
+document.getElementById('demoD').onclick = function(){
+  showResults(MODEL.demo.degraded, reference(MODEL.demo.ref), 'Démo : 2nd test IMS, Bearing 1, 30 dernières acquisitions avant la casse.');
+};
+(function(){
+  var l = MODEL.lofo, txt = 'Évaluation sur un roulement jamais vu (entraînement sur 3 pannes IMS, test sur la 4e, en tournant). Erreur moyenne pendant la phase de dégradation : ';
+  txt += l.map(function(r){ return r['Modèle'] + ' ' + fmt(r['MAE dégradation (j)'], 2) + ' j'; }).join(' · ');
+  txt += '. La RUL est une estimation à ± 1 jour environ : elle sert à déclencher la surveillance puis l’arrêt, pas à planifier à l’heure près. Modèle appris sur un banc d’essai (2000 tr/min, 6000 lbs) : à revalider sur une autre machine.';
+  document.getElementById('opLimits').textContent = txt;
+})();
+</script>
+</body>
+</html>
