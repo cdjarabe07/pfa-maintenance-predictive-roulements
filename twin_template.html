@@ -149,12 +149,32 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
 .hidden{display:none!important}
 .foot{grid-column:1/-1;color:var(--dim);font-size:11.5px;text-align:center}
 
+/* ---------- mode instantané ---------- */
+.layout.single{grid-template-columns:minmax(0,1fr)}
+.layout.single .side-l,.layout.single .side-r{display:none}
+.inst-sum{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-bottom:1px solid var(--line)}
+.inst-sum .sq{margin-top:5px}
+#instTbl tbody tr{cursor:pointer}
+#instTbl tbody tr:hover td{background:var(--sub)}
+#instTbl tbody tr.sel td{background:var(--pri2)}
+.ex{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+
+/* ---------- visite guidée ---------- */
+#tourHole{position:absolute;z-index:60;border:2px solid var(--pri);border-radius:5px;box-shadow:0 0 0 9999px rgba(16,24,34,.55);pointer-events:none;transition:all .25s ease}
+#tourPop{position:absolute;z-index:61;width:min(380px,calc(100vw - 24px));background:#fff;border:1px solid var(--line2);border-radius:5px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:14px 16px}
+#tourPop .st{font-size:11px;font-weight:700;letter-spacing:.7px;color:var(--pri);text-transform:uppercase}
+#tourPop h4{margin:4px 0 6px;font-size:15px}
+#tourPop p{margin:0 0 12px;font-size:13px;color:var(--txt);line-height:1.5}
+#tourPop .nav{display:flex;gap:8px;align-items:center}
+#tourPop .nav .sp{flex:1}
+#tourShield{position:fixed;inset:0;z-index:59}
+
 /* ---------- impression : rapport de diagnostic ---------- */
 .print-only{display:none}
 @media print{
   @page{size:A4;margin:14mm}
   body{background:#fff;font-size:11.5px}
-  .hdr,.demo,.side-l,.no-print,.ack,.eqh .acts{display:none!important}
+  .hdr,.demo,.side-l,.no-print,.ack,.eqh .acts,#tourHole,#tourPop,#tourShield{display:none!important}
   .print-only{display:block}
   .layout{display:block;padding:0}
   .col{gap:10px}
@@ -170,7 +190,8 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
   <div class="app"><b>Surveillance vibratoire</b><span>Module de pronostic de durée de vie résiduelle</span></div>
   <div class="crumb" id="crumb"></div>
   <div class="sp"></div>
-  <div class="tabs" role="tablist"><button id="tabReplay" class="on" role="tab">Supervision</button><button id="tabFiles" role="tab">Import de mesures</button></div>
+  <div class="tabs" role="tablist" id="tabs"><button id="tabReplay" class="on" role="tab">Supervision</button><button id="tabInst" role="tab">Diagnostic instantané</button><button id="tabFiles" role="tab">Pronostic sur historique</button></div>
+  <button class="btn" id="btnTour" title="Présentation pas à pas de l'écran"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/></svg>Visite guidée</button>
   <div class="clockh" id="clockh"></div>
 </header>
 
@@ -202,6 +223,7 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
       <div class="pb note">
         <b style="color:var(--txt)">RUL</b> : alerte &lt; 2,5 j · alarme &lt; 1 j<br>
         <b style="color:var(--txt)">Niveau RMS</b> : alerte +6 dB (×2) · alarme +12 dB (×4) par rapport à la référence<br>
+        <b style="color:var(--txt)">Signature spectrale</b> : alerte si l'émergence d'une fréquence de défaut atteint ×8<br>
         <b style="color:var(--txt)">Référence</b> : médiane des 200 premières acquisitions (≈ 33 h)
       </div>
     </section>
@@ -210,12 +232,12 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
   <!-- ===== Colonne centrale ===== -->
   <main class="col">
     <section class="pn hidden" id="importPn">
-      <h3>Import de mesures brutes</h3>
+      <h3>Pronostic sur historique — import des acquisitions d'un roulement</h3>
       <div class="pb">
         <div class="drop" id="drop">
           <svg class="i" viewBox="0 0 24 24" style="width:30px;height:30px;color:var(--pri)"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
           <h4>Déposer le dossier d'acquisitions d'un roulement</h4>
-          <p>Format IMS : 1 fichier texte par acquisition (20 480 points à 20 kHz), nommé AAAA.MM.JJ.hh.mm.ss.<br>Minimum 230 acquisitions : les 200 premières constituent la référence de l'état neuf.</p>
+          <p>Format IMS : 1 fichier texte par acquisition (20 480 points à 20 kHz), nommé AAAA.MM.JJ.hh.mm.ss.<br>Minimum <b>230 acquisitions consécutives</b> : le modèle lit une trajectoire de 30 acquisitions (5 h), pas un état isolé, et les 200 premières constituent la référence de l'état neuf.<br>Pour un fichier unique, utiliser l'onglet « Diagnostic instantané ».</p>
           <div class="row">
             <label for="col">Voie de mesure</label>
             <select id="col"><option value="0">Voie 1</option><option value="1">Voie 2</option><option value="2">Voie 3</option><option value="3">Voie 4</option><option value="4">Voie 5</option><option value="5">Voie 6</option><option value="6">Voie 7</option><option value="7">Voie 8</option></select>
@@ -230,6 +252,31 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
       </div>
     </section>
 
+    <section class="pn hidden" id="instPn">
+      <h3>Diagnostic instantané — une acquisition, toutes les voies</h3>
+      <div class="pb">
+        <div class="drop" id="drop1">
+          <svg class="i" viewBox="0 0 24 24" style="width:30px;height:30px;color:var(--pri)"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+          <h4>Déposer un fichier d'acquisition</h4>
+          <p>Un seul fichier suffit (20 480 points par voie à 20 kHz, voies en colonnes). Chaque voie est analysée : niveau, impulsivité et recherche des fréquences de défaut dans le spectre d'enveloppe.<br>Sans historique, ni durée de vie résiduelle ni comparaison à l'état neuf ne sont calculées.</p>
+          <div class="row"><button class="btn pri" id="pickOne">Sélectionner un fichier</button></div>
+          <div class="ex" id="examples"></div>
+          <input type="file" id="inOne" class="hidden">
+          <div class="msg" id="msg1"></div>
+        </div>
+      </div>
+    </section>
+    <section class="pn hidden" id="instRes">
+      <h3>Résultat <span class="r" id="instInfo"></span></h3>
+      <div class="inst-sum"><span class="sq off" id="instSq"></span><div id="instTxt"></div></div>
+      <table id="instTbl"><thead><tr><th>Voie</th><th class="n">RMS (g)</th><th class="n">Crête (g)</th><th class="n">Facteur crête</th><th class="n">Kurtosis</th><th class="n">BPFO</th><th class="n">BPFI</th><th class="n">BSF</th><th>Verdict</th></tr></thead><tbody></tbody></table>
+      <div class="pb note">BPFO / BPFI / BSF : émergence de la fréquence de défaut dans le spectre d'enveloppe (≥ 4 signature faible, ≥ 8 défaut confirmé). Cliquer une ligne pour afficher la voie. Détecteur validé sur les 984 acquisitions du 2nd test IMS : signature de bague extérieure détectée sur le palier défaillant 74 h avant la rupture, aucune détection pendant la phase saine.</div>
+    </section>
+    <div class="g2 hidden" id="instCharts">
+      <section class="pn"><h3>Signal temporel <span class="r" id="instWaveInfo">100 premières ms</span></h3><div class="chart" id="chWave"></div></section>
+      <section class="pn"><h3>Spectre d'enveloppe <span class="r">mg · démodulation 2–8 kHz</span></h3><div class="chart" id="chInstSpec"></div></section>
+    </div>
+
     <div class="print-only" id="printHead"></div>
 
     <section class="pn" id="eqPn">
@@ -243,7 +290,7 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
         <div class="kpi" id="kState"><div class="l">État</div><div class="v" id="kStateV">—</div><div class="s" id="kStateS">—</div></div>
         <div class="kpi" id="kRul"><div class="l">RUL estimée</div><div class="v" id="kRulV">—</div><div class="s" id="kRulS">—</div></div>
         <div class="kpi" id="kRms"><div class="l">Niveau RMS</div><div class="v" id="kRmsV">—</div><div class="s" id="kRmsS">—</div></div>
-        <div class="kpi" id="kKur"><div class="l">Kurtosis</div><div class="v" id="kKurV">—</div><div class="s" id="kKurS">—</div></div>
+        <div class="kpi" id="kEnv"><div class="l">Signature spectrale</div><div class="v" id="kEnvV">—</div><div class="s" id="kEnvS">—</div></div>
       </div>
     </section>
 
@@ -252,20 +299,20 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
       <div class="pb" style="padding:6px 14px 10px"><svg id="syn" viewBox="0 0 900 150" role="img" aria-label="Synoptique du banc : moteur, arbre, 4 paliers"></svg></div>
     </section>
 
-    <div class="g2">
-      <section class="pn">
+    <div class="g2" id="trends">
+      <section class="pn" id="secRul">
         <h3>Tendance — durée de vie résiduelle <span class="r">jours</span></h3>
         <div class="chart" id="chRul"></div>
         <div class="leg"><span><i style="border-color:var(--pri)"></i>RUL estimée (médiane 1 h)</span><span><i style="border-color:#b8cde3;border-top-width:8px"></i>Incertitude ± MAE</span><span id="lgReal"><i style="border-color:var(--txt);border-top-style:dashed"></i>RUL réelle</span></div>
       </section>
-      <section class="pn">
+      <section class="pn" id="secRms">
         <h3>Tendance — niveau vibratoire <span class="r">accélération RMS, g</span></h3>
         <div class="chart" id="chRms"></div>
         <div class="leg"><span><i style="border-color:var(--pri)"></i>RMS</span><span><i style="border-color:#a7b0ba"></i>Kurtosis (axe droit)</span><span><i style="border-color:var(--warn);border-top-style:dashed"></i>Alerte +6 dB</span><span><i style="border-color:var(--crit);border-top-style:dashed"></i>Alarme +12 dB</span></div>
       </section>
     </div>
 
-    <section class="pn">
+    <section class="pn" id="secSpec">
       <h3>Analyse spectrale — spectre d'enveloppe <span class="r" id="specInfo">démodulation 2–8 kHz</span></h3>
       <div class="diag" id="diag"><span class="sq off"></span><div id="diagT">—</div></div>
       <div class="g2" style="gap:0">
@@ -277,7 +324,7 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
       </div>
     </section>
 
-    <section class="pn">
+    <section class="pn" id="secAlm">
       <h3>Journal des alarmes et événements <span class="r" id="almCount"></span></h3>
       <div class="tbl-wrap">
         <table><thead><tr><th>Horodatage</th><th>Équipement</th><th>Priorité</th><th>Message</th><th class="n">Valeur</th><th>État</th><th class="no-print"></th></tr></thead><tbody id="almBody"></tbody></table>
@@ -310,6 +357,7 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
 
 <script id="model-data" type="application/json">__MODEL_DATA__</script>
 <script id="replay-data" type="application/json">__REPLAY_DATA__</script>
+<script id="extras-data" type="application/json">__EXTRAS_DATA__</script>
 <script id="engine">
 /* ======================= Moteur de calcul (aussi utilisé par le Web Worker) ======================= */
 function modelForward(win, W){
@@ -382,6 +430,7 @@ function predictAt(rows, ref, i, W, win){
 /* ======================= Données et constantes ======================= */
 var MODEL = JSON.parse(document.getElementById('model-data').textContent);
 var REPLAY = JSON.parse(document.getElementById('replay-data').textContent);
+var EXTRAS = JSON.parse(document.getElementById('extras-data').textContent);
 var WIN = MODEL.window, NBASE = MODEL.n_base, FS = 20000;
 var MAE = (MODEL.lofo.filter(function(r){ return r['Modèle'] === 'CNN-LSTM'; })[0] || {})['MAE dégradation (j)'] || 1;
 var GEOM = (function(){ var n = 16, d = .331, D = 2.815, a = 15.17 * Math.PI / 180, fr = 2000 / 60, q = d / D * Math.cos(a);
@@ -389,7 +438,8 @@ var GEOM = (function(){ var n = 16, d = .331, D = 2.815, a = 15.17 * Math.PI / 1
 var C = {pri: '#0b5394', priL: 'rgba(11,83,148,.16)', ok: '#2e7d32', warn: '#c77700', crit: '#c62828', off: '#9aa5b1', txt: '#1c2733', mut: '#5b6773', dim: '#8a95a1', line: '#e3e7ec', line2: '#c3cad3'};
 var TAGS = {1: 'BRG-01', 2: 'BRG-02', 3: 'BRG-03', 4: 'BRG-04'};
 var DESC = {1: 'Palier 1', 2: 'Palier 2 · chargé', 3: 'Palier 3 · chargé', 4: 'Palier 4'};
-var DB_ALERT = 6, DB_ALARM = 12;
+var DB_ALERT = 6, DB_ALARM = 12, ENV_ALERT = 8, ENV_WEAK = 4;
+var FMAX = 1000;  // plage du spectre d'enveloppe (3 × BPFI = 891 Hz)
 var $ = function(id){ return document.getElementById(id); };
 function fmt(v, d){ return (v < 0 && v > -Math.pow(10, -d) / 2 ? 0 : v).toFixed(d).replace('.', ','); }
 function pad(n){ return (n < 10 ? '0' : '') + n; }
@@ -458,6 +508,12 @@ function diagnose(spec){
     return {key: t[0], name: t[1], score: s, peak: peaks[0], peaks: peaks};
   });
 }
+/* Spectre d'enveloppe stocké sur 8 bits (échelle logarithmique, dynamique 80 dB) */
+function decodeSpec(r){
+  var bin = atob(r.q), out = {f: [], a: []}, lo = r.hi - 4;
+  for(var i = 0; i < bin.length; i++){ out.f.push(i * EXTRAS.df); out.a.push(Math.pow(10, lo + bin.charCodeAt(i) / 255 * 4)); }
+  return out;
+}
 function decodeF32(b64){ var bin = atob(b64), u = new Uint8Array(bin.length); for(var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Float32Array(u.buffer); }
 
 /* ======================= Sources de données ======================= */
@@ -469,7 +525,8 @@ function buildReplay(){
   s.times = REPLAY.minutes.map(function(m){ return new Date(t0.getTime() + m * 60000); });
   s.failure = new Date(REPLAY.failure.replace(' ', 'T'));
   s.bearings.forEach(function(b){ s.rows[b] = REPLAY.bearings[b]; s.ref[b] = reference(s.rows[b].slice(0, NBASE)); s.pred[b] = new Array(s.n).fill(undefined); });
-  s.raw = REPLAY.raw_b1.map(function(r){ return {idx: r.idx, bearing: 1, sig: decodeF32(r.f32)}; });
+  s.raw = EXTRAS.spectra.map(function(x){ return {idx: x.idx, bearing: x.b, hi: x.hi, q: x.q}; });   // spectres d'enveloppe horaires précalculés
+  s.env = EXTRAS.emergence;
   s.site = ['Banc d’essai IMS n°2', 'Arbre principal'];
   return s;
 }
@@ -486,15 +543,24 @@ function smoothPred(s, b, i, compute){
 function valid(s, b, i){ return s.rows[b][i][0] >= 0.01; }
 function dbOf(s, b, i){ return 20 * Math.log10(s.rows[b][i][0] / s.ref[b][0]); }
 function dbSmooth(s, b, i){ var v = []; for(var k = i; k >= Math.max(0, i - 5); k--) if(valid(s, b, k)) v.push(dbOf(s, b, k)); return v.length ? median(v) : null; }
-var HYST = {vib: 1, rul: 0.25};   // hystérésis de retour à la normale : 1 dB, 0,25 j
+var HYST = {vib: 1, rul: 0.25, env: 2};   // hystérésis de retour à la normale : 1 dB, 0,25 j, émergence −2
+/* Signature spectrale lissée sur 1 h : fréquence de défaut dominante et son émergence médiane */
+function envSmooth(s, b, i){
+  if(!s.env || !s.env[b]) return null;
+  var best = null;
+  FAULTS.forEach(function(t){ var v = []; for(var k = i; k >= Math.max(0, i - 5); k--){ var e = s.env[b][t[0]][k]; if(e != null) v.push(e); }
+    if(v.length){ var m = median(v); if(!best || m > best.e) best = {key: t[0], name: t[1], e: m}; } });
+  return best;
+}
 /* État combiné : le plus sévère entre le pronostic RUL et le niveau vibratoire */
 function stateAt(s, b, i, compute){
   if(i < NBASE - 1) return {st: 'off', rul: null, db: null};
-  var rul = smoothPred(s, b, i, compute), db = dbSmooth(s, b, i);
+  var rul = smoothPred(s, b, i, compute), db = dbSmooth(s, b, i), env = envSmooth(s, b, i);
   var sr = rul == null ? 'ok' : rul < 1 ? 'crit' : rul < 2.5 ? 'warn' : 'ok';
   var sv = db == null ? 'ok' : db >= DB_ALARM ? 'crit' : db >= DB_ALERT ? 'warn' : 'ok';
-  var rank = {ok: 0, warn: 1, crit: 2}, st = rank[sr] >= rank[sv] ? sr : sv;
-  return {st: st, rul: rul, db: db, sr: sr, sv: sv};
+  var se = env && env.e >= ENV_ALERT ? 'warn' : 'ok';
+  var rank = {ok: 0, warn: 1, crit: 2}, st = [sr, sv, se].reduce(function(a, c){ return rank[c] > rank[a] ? c : a; }, 'ok');
+  return {st: st, rul: rul, db: db, env: env, sr: sr, sv: sv, se: se};
 }
 var LABEL = {ok: 'NORMAL', warn: 'ALERTE', crit: 'ALARME', off: 'CALIBRATION'};
 
@@ -532,23 +598,26 @@ function startWorker(s){
 function computeAlarms(s){
   var out = [];
   s.bearings.forEach(function(b){
-    var cur = {rul: null, vib: null};
+    var cur = {rul: null, vib: null, env: null};
     for(var i = NBASE - 1; i <= S.step; i++){
       if(!valid(s, b, i)) continue;
-      var rul = smoothPred(s, b, i, false), db = dbSmooth(s, b, i);
+      var rul = smoothPred(s, b, i, false), db = dbSmooth(s, b, i), env = envSmooth(s, b, i);
+      var lvE = function(h){ return env && env.e >= ENV_ALERT - h ? 1 : 0; };
       var lvR = function(h){ return rul == null ? 0 : rul < 1 + h ? 2 : rul < 2.5 + h ? 1 : 0; };
       var lvV = function(h){ return db >= DB_ALARM - h ? 2 : db >= DB_ALERT - h ? 1 : 0; };
       // une alarme active ne retombe que si la grandeur repasse le seuil avec une marge (hystérésis)
       var lv = {rul: cur.rul ? Math.max(lvR(0), Math.min(cur.rul.level, lvR(HYST.rul))) : lvR(0),
-                vib: cur.vib ? Math.max(lvV(0), Math.min(cur.vib.level, lvV(HYST.vib))) : lvV(0)};
-      ['rul', 'vib'].forEach(function(k){
+                vib: cur.vib ? Math.max(lvV(0), Math.min(cur.vib.level, lvV(HYST.vib))) : lvV(0),
+                env: cur.env ? Math.max(lvE(0), Math.min(cur.env.level, lvE(HYST.env))) : lvE(0)};
+      ['rul', 'vib', 'env'].forEach(function(k){
         var a = cur[k];
         if(a && lv[k] < a.level){ a.end = i; cur[k] = null; a = null; }
         if(lv[k] > 0 && (!a || lv[k] > a.level)){
           if(a) a.end = i;
           var msg = k === 'rul' ? (lv[k] === 2 ? 'Durée de vie résiduelle < 1 j' : 'Durée de vie résiduelle < 2,5 j')
-                                : (lv[k] === 2 ? 'Niveau vibratoire ≥ +12 dB' : 'Niveau vibratoire ≥ +6 dB');
-          var val = k === 'rul' ? fmt(rul, 2) + ' j' : (db >= 0 ? '+' : '') + fmt(db, 1) + ' dB';
+                  : k === 'vib' ? (lv[k] === 2 ? 'Niveau vibratoire ≥ +12 dB' : 'Niveau vibratoire ≥ +6 dB')
+                  : 'Signature de défaut : ' + env.name.toLowerCase() + ' (' + env.key + ')';
+          var val = k === 'rul' ? fmt(rul, 2) + ' j' : k === 'vib' ? (db >= 0 ? '+' : '') + fmt(db, 1) + ' dB' : '×' + fmt(env.e, 1);
           cur[k] = {id: s.id + '|' + b + '|' + k + '|' + i, b: b, i: i, kind: k, level: lv[k], msg: msg, val: val, end: null};
           out.push(cur[k]);
         }
@@ -640,13 +709,14 @@ var chRms = new Chart2($('chRms'), {data: function(){
       return '<span class="mono">' + dstr(s.times[i]) + '</span><br>RMS <b class="mono">' + fmt(rows[i][0], 3) + ' g</b> (' + (dbOf(s, b, i) >= 0 ? '+' : '') + fmt(dbOf(s, b, i), 1) + ' dB)<br>Kurtosis <span class="mono">' + fmt(rows[i][3], 2) + '</span>'; }};
 }});
 var SPEC = null;
-var chSpec = new Chart2($('chSpec'), {data: function(){
-  if(!SPEC) return null; var amax = 0; SPEC.a.forEach(function(a, i){ if(SPEC.f[i] > 20) amax = Math.max(amax, a); }); amax = amax * 1e3 * 1.12;
+function specChart(get){ return function(){
+  var SPEC = get(); if(!SPEC) return null; var amax = 0; SPEC.a.forEach(function(a, i){ if(SPEC.f[i] > 20) amax = Math.max(amax, a); }); amax = amax * 1e3 * 1.12;
   var vl = []; [['BPFO', C.crit, 0], ['BPFI', C.warn, 1], ['BSF', '#6a4c93', 2]].forEach(function(t){ for(var h = 1; h <= 3; h++) vl.push({x: h * GEOM[t[0]], c: t[1], a: .7, row: t[2], label: h === 1 ? t[0] : h + '×' + t[0]}); });
-  return {x: [0, 800], xt: [0, 100, 200, 300, 400, 500, 600, 700, 800], xf: function(v){ return v + ''; }, y: [0, amax], yt: ticks(0, amax, 4), yf: function(v){ return fmt(v, v < 10 ? 1 : 0); },
+  return {x: [0, FMAX], xt: [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000], xf: function(v){ return v + ''; }, y: [0, amax], yt: ticks(0, amax, 4), yf: function(v){ return fmt(v, v < 10 ? 1 : 0); },
     vlines: vl, series: [{pts: SPEC.f.map(function(f, i){ return [f, SPEC.a[i] * 1e3]; }), c: C.txt, w: 1}],
     tip: function(xv){ var i = Math.round(xv / SPEC.f[1]); if(SPEC.a[i] == null) return null; return '<span class="mono">' + fmt(SPEC.f[i], 1) + ' Hz · ' + fmt(SPEC.a[i] * 1e3, 2) + ' mg</span>'; }};
-}, empty: 'Signal brut non disponible pour cet équipement à cet instant'});
+}; }
+var chSpec = new Chart2($('chSpec'), {data: specChart(function(){ return SPEC; }), empty: 'Signal brut non disponible pour cet équipement à cet instant'});
 
 /* ======================= Synoptique ======================= */
 var BX = {1: 330, 2: 470, 3: 610, 4: 750};
@@ -684,11 +754,11 @@ function paintSpectrum(s){
   var body = $('faultTbl').tBodies[0];
   if(!r){ SPEC = null; chSpec.draw(); $('specInfo').textContent = 'démodulation 2–8 kHz';
     $('diag').firstElementChild.className = 'sq off';
-    $('diagT').innerHTML = S.mode === 'replay' ? 'Dans cette démonstration, le signal brut complet n’est embarqué que pour BRG-01 (début, milieu et fin d’essai).' : '—';
+    $('diagT').innerHTML = 'Aucun spectre disponible à cet instant pour cet équipement.';
     body.innerHTML = FAULTS.map(function(t){ return '<tr><td>' + t[1] + ' (' + t[0] + ')</td><td class="n">' + fmt(GEOM[t[0]], 1) + '</td><td class="n">—</td><td class="n">—</td><td>—</td></tr>'; }).join(''); return; }
-  SPEC = envelopeSpectrum(r.sig, 800);
+  SPEC = r.sig ? envelopeSpectrum(r.sig, FMAX) : decodeSpec(r);
   var dg = diagnose(SPEC), top = dg.slice().sort(function(a, c){ return c.score - a.score; })[0];
-  $('specInfo').textContent = 'acquisition du ' + dstr(s.times[r.idx]) + ' · démodulation 2–8 kHz';
+  $('specInfo').textContent = 'acquisition du ' + dstr(s.times[r.idx]) + (r.sig ? '' : ' (spectre horaire)') + ' · démodulation 2–8 kHz';
   body.innerHTML = dg.map(function(d){ var v = d.score >= 8 ? '<span class="pri1">Défaut confirmé</span>' : d.score >= 4 ? '<span class="pri2">Signature faible</span>' : 'Non détecté';
     return '<tr><td>' + d.name + ' (' + d.key + ')</td><td class="n">' + fmt(GEOM[d.key], 1) + '</td><td class="n">' + (d.score >= 4 ? fmt(d.peak, 1) : '—') + '</td><td class="n">×' + fmt(d.score, 1) + '</td><td>' + v + '</td></tr>'; }).join('');
   if(top.score >= 8){ $('diag').firstElementChild.className = 'sq crit';
@@ -742,14 +812,17 @@ function render(){
   $('eqBadge').className = 'badge ' + st.st; $('eqBadge').textContent = LABEL[st.st];
   $('eqMeta').textContent = (S.mode === 'files' ? 'Voie ' + (s.col + 1) + ' · ' : '') + 'Acquisition n° ' + (S.step + 1) + ' / ' + s.n;
   $('kState').className = 'kpi ' + (st.st === 'off' ? '' : st.st); $('kStateV').textContent = LABEL[st.st];
-  $('kStateS').textContent = st.st === 'off' ? 'référence ' + (S.step + 1) + ' / ' + NBASE : st.st === 'ok' ? 'aucun seuil franchi' : 'cause : ' + [st.sr !== 'ok' ? 'pronostic RUL' : null, st.sv !== 'ok' ? 'niveau vibratoire' : null].filter(Boolean).join(' + ');
+  $('kStateS').textContent = st.st === 'off' ? 'référence ' + (S.step + 1) + ' / ' + NBASE : st.st === 'ok' ? 'aucun seuil franchi' : 'cause : ' + [st.sr !== 'ok' ? 'pronostic RUL' : null, st.sv !== 'ok' ? 'niveau vibratoire' : null, st.se !== 'ok' ? 'signature spectrale' : null].filter(Boolean).join(' + ');
   $('kRul').className = 'kpi ' + (st.sr && st.sr !== 'ok' ? st.sr : '');
   if(st.rul == null){ $('kRulV').textContent = '—'; $('kRulS').textContent = st.st === 'off' ? 'disponible après calibration' : 'calcul en cours'; }
   else { $('kRulV').innerHTML = (st.rul >= 2.5 ? '&gt; 2,5' : fmt(st.rul, 1)) + ' <small>j</small>'; $('kRulS').textContent = 'incertitude ± ' + fmt(MAE, 1) + ' j (MAE de validation)'; }
   $('kRms').className = 'kpi ' + (st.sv && st.sv !== 'ok' ? st.sv : '');
   $('kRmsV').innerHTML = ok ? fmt(row[0], 3) + ' <small>g</small>' : '—';
   $('kRmsS').textContent = ok ? (dbOf(s, b, S.step) >= 0 ? '+' : '') + fmt(dbOf(s, b, S.step), 1) + ' dB / référence ' + fmt(s.ref[b][0], 3) + ' g (moy. 1 h : ' + (st.db >= 0 ? '+' : '') + fmt(st.db, 1) + ' dB)' : 'signal nul (capteur ?)';
-  $('kKurV').textContent = ok ? fmt(row[3], 2) : '—'; $('kKurS').textContent = 'référence ' + fmt(s.ref[b][3], 2) + ' · impulsivité si > 3';
+  $('kEnv').className = 'kpi ' + (st.se === 'warn' ? 'warn' : '');
+  if(st.env){ $('kEnvV').innerHTML = '×' + fmt(st.env.e, 1) + ' <small>' + st.env.key + '</small>';
+    $('kEnvS').textContent = st.env.e >= ENV_ALERT ? 'défaut de ' + st.env.name.toLowerCase() + ' détecté' : st.env.e >= ENV_WEAK ? 'signature faible (' + st.env.name.toLowerCase() + ')' : 'aucune fréquence de défaut · kurtosis ' + (ok ? fmt(row[3], 2) : '—'); }
+  else { $('kEnvV').textContent = '—'; $('kEnvS').textContent = 'spectre non disponible · kurtosis ' + (ok ? fmt(row[3], 2) : '—'); }
   $('lgReal').classList.toggle('hidden', !(s.real && s.real[b]));
   var rc = RECO[st.st];
   $('reco').innerHTML = '<p><span class="badge ' + st.st + '">' + LABEL[st.st] + '</span></p><p><b>' + rc[0] + '.</b> ' + rc[1] + '</p>' +
@@ -796,16 +869,20 @@ $('btnPrint').onclick = function(){ window.print(); };
 /* ======================= Import de mesures ======================= */
 function setMode(m){
   setPlaying(false); S.mode = m; specKey = null;
-  $('tabReplay').classList.toggle('on', m === 'replay'); $('tabFiles').classList.toggle('on', m === 'files');
+  $('tabReplay').classList.toggle('on', m === 'replay'); $('tabFiles').classList.toggle('on', m === 'files'); $('tabInst').classList.toggle('on', m === 'inst');
   $('demo').classList.toggle('hidden', m !== 'replay'); $('importPn').classList.toggle('hidden', m !== 'files');
-  var s = SRC[m];
-  document.querySelectorAll('#eqPn, #synPn, .g2, .side-r, main > section:not(#importPn):not(#eqPn):not(#synPn)').forEach(function(el){ el.classList.toggle('hidden', !s); });
+  $('instPn').classList.toggle('hidden', m !== 'inst'); $('instRes').classList.toggle('hidden', m !== 'inst' || !INST); $('instCharts').classList.toggle('hidden', m !== 'inst' || !INST);
+  document.querySelector('.layout').classList.toggle('single', m === 'inst');
+  var s = m === 'inst' ? null : SRC[m];
+  document.querySelectorAll('#eqPn, #synPn, #trends, #secSpec, #secAlm, .side-r').forEach(function(el){ el.classList.toggle('hidden', !s); });
+  if(m === 'inst'){ $('crumb').textContent = 'Diagnostic instantané'; $('clockh').textContent = ''; if(INST) paintInst(); return; }
   if(s){ if(s.bearings.indexOf(S.sel) < 0) S.sel = s.bearings[0]; S.step = m === 'files' ? s.lastIdx : Math.min(S.step, s.n - 1); $('slider').max = s.n - 1; render(); }
   else { $('tree').innerHTML = '<li class="grp">Aucune mesure importée</li>'; $('almSum').innerHTML = ''; $('crumb').textContent = ''; $('clockh').textContent = ''; }
   paintModel();
 }
 $('tabReplay').onclick = function(){ setMode('replay'); };
 $('tabFiles').onclick = function(){ setMode('files'); };
+$('tabInst').onclick = function(){ setMode('inst'); };
 $('pickFolder').onclick = function(){ $('inFolder').click(); };
 $('pickFiles').onclick = function(){ $('inFiles').click(); };
 $('inFolder').onchange = function(e){ analyse(e.target.files); };
@@ -857,12 +934,156 @@ async function analyse(fileList){
   var s = {id: 'files', bearings: [b], rows: {}, ref: {}, pred: {}, W: MODEL.weights, n: rows.length, times: times, col: col, complete: true, lastIdx: lastIdx,
     raw: [{idx: lastIdx, bearing: b, sig: lastSig}], site: ['Mesures importées', list.length + ' acquisitions']};
   s.rows[b] = rows; s.ref[b] = reference(refRows); s.pred[b] = new Array(rows.length).fill(undefined);
+  s.env = {}; s.env[b] = {}; var dgl = diagnose(envelopeSpectrum(lastSig, FMAX));
+  FAULTS.forEach(function(t, j){ s.env[b][t[0]] = new Array(rows.length).fill(null); s.env[b][t[0]][lastIdx] = dgl[j].score; });
   for(var k = NBASE - 1; k < NBASE + WIN - 1; k++) s.pred[b][k] = null;        // fenêtres à cheval sur la référence : pas de pronostic
   for(k = NBASE + WIN - 1; k < rows.length; k++) rawPred(s, b, k);
   SRC.files = s; S.sel = b;
   msg('Analyse terminée : ' + list.length + ' acquisitions · référence ' + pick[0].name + ' → ' + pick[NBASE - 1].name + ' · ' + (pick.length - NBASE) + ' dernières analysées · ' + fmt((performance.now() - t0) / 1000, 1) + ' s');
   setMode('files');
 }
+
+/* ======================= Diagnostic instantané ======================= */
+var INST = null;
+function parseAllCols(txt){
+  var lines = txt.split(/\r?\n/), cols = null;
+  for(var i = 0; i < lines.length; i++){ var t = lines[i].trim(); if(!t) continue; var p = t.split(/[\t,; ]+/).map(parseFloat);
+    if(p.some(function(v){ return !isFinite(v); })) continue;
+    if(!cols) cols = p.map(function(){ return []; });
+    for(var c = 0; c < cols.length && c < p.length; c++) cols[c].push(p[c]); }
+  return cols || [];
+}
+function listFr(a){ return a.length > 1 ? a.slice(0, -1).join(', ') + ' et ' + a[a.length - 1] : a.join(''); }
+function verdictOf(d){ var top = d.slice().sort(function(a, c){ return c.score - a.score; })[0];
+  return top.score >= ENV_ALERT ? {lv: 2, top: top} : top.score >= ENV_WEAK ? {lv: 1, top: top} : {lv: 0, top: top}; }
+function runInst(name, cols, label){
+  var ch = cols.map(function(sig, c){
+    var n = sig.length, s2 = 0, mean = 0, pk = 0, m2 = 0, m4 = 0, i;
+    for(i = 0; i < n; i++){ mean += sig[i]; s2 += sig[i] * sig[i]; } mean /= n;
+    for(i = 0; i < n; i++){ var d = sig[i] - mean; m2 += d*d; m4 += d*d*d*d; pk = Math.max(pk, Math.abs(sig[i])); } m2 /= n; m4 /= n;
+    var rms = Math.sqrt(s2 / n), flat = rms < 0.01, spec = flat ? null : envelopeSpectrum(sig, FMAX), dg = flat ? null : diagnose(spec);
+    return {c: c, sig: sig, rms: rms, peak: pk, crest: pk / (rms + 1e-12), kurt: m4 / (m2 * m2 + 1e-12) - 3, flat: flat, spec: spec, dg: dg, v: flat ? null : verdictOf(dg)};
+  });
+  var valid = ch.filter(function(x){ return !x.flat; });
+  var src = valid.slice().sort(function(a, c){ return c.v.top.score - a.v.top.score; })[0];
+  INST = {name: name, label: label, ch: ch, src: src, sel: src ? src.c : 0};
+  setMode('inst');
+}
+function paintInst(){
+  var I = INST; $('instRes').classList.remove('hidden'); $('instCharts').classList.remove('hidden');
+  $('instInfo').textContent = I.name + (I.label ? ' · ' + I.label : '') + ' · ' + I.ch.length + ' voie(s) · ' + I.ch[0].sig.length + ' points';
+  var src = I.src, sq = $('instSq'), txt;
+  if(!src){ sq.className = 'sq off'; txt = '<b>Aucune voie exploitable</b> : signaux nuls (capteurs arrêtés ?).'; }
+  else if(src.v.lv === 2){
+    var others = I.ch.filter(function(x){ return x !== src && x.v && x.v.top.key === src.v.top.key && x.v.top.score >= ENV_WEAK; });
+    sq.className = 'sq crit';
+    txt = '<b>Défaut de ' + src.v.top.name.toLowerCase() + ' détecté — localisé sur la voie ' + (src.c + 1) + '</b> (émergence ' + src.v.top.key + ' ×' + fmt(src.v.top.score, 1) + ', pic à ' + fmt(src.v.top.peak, 1) + ' Hz pour ' + fmt(GEOM[src.v.top.key], 1) + ' Hz théorique).' +
+      (others.length ? ' Signature plus faible sur ' + (others.length > 1 ? 'les voies ' : 'la voie ') + listFr(others.map(function(x){ return (x.c + 1) + ' (×' + fmt(x.v.top.score, 1) + ')'; })) + ' : propagation probable par l’arbre et le bâti ; la voie d’émergence maximale désigne le palier en cause.' : '') +
+      ' Recommandation : confirmer par le suivi de tendance (onglet « Pronostic sur historique ») et planifier l’intervention.';
+  } else if(src.v.lv === 1){ sq.className = 'sq warn'; txt = '<b>Signature faible</b> compatible avec un défaut de ' + src.v.top.name.toLowerCase() + ' sur la voie ' + (src.c + 1) + ' (émergence ×' + fmt(src.v.top.score, 1) + ') : à confirmer sur les acquisitions suivantes.'; }
+  else { sq.className = 'sq ok'; txt = '<b>Aucune fréquence de défaut détectée</b> sur les ' + I.ch.length + ' voie(s) (émergence maximale ×' + fmt(src.v.top.score, 1) + '). Un diagnostic sur une acquisition isolée ne remplace pas le suivi de tendance.'; }
+  $('instTxt').innerHTML = txt;
+  var cell = function(d, k){ var x = d.filter(function(y){ return y.key === k; })[0]; return '<td class="n' + (x.score >= ENV_ALERT ? ' pri1' : x.score >= ENV_WEAK ? ' pri2' : '') + '">×' + fmt(x.score, 1) + '</td>'; };
+  $('instTbl').tBodies[0].innerHTML = I.ch.map(function(x){
+    if(x.flat) return '<tr data-c="' + x.c + '"><td class="mono">Voie ' + (x.c + 1) + '</td><td colspan="8" style="color:var(--dim)">signal nul — capteur arrêté ou débranché</td></tr>';
+    var prop = I.src && x !== I.src && I.src.v.lv === 2 && x.v.top.key === I.src.v.top.key && x.v.lv >= 1;
+    var v = prop ? '<span class="pri2">Propagation ' + x.v.top.key + '</span>' : x.v.lv === 2 ? '<span class="pri1">Défaut ' + x.v.top.key + '</span>' : x.v.lv === 1 ? '<span class="pri2">Signature faible</span>' : 'RAS';
+    return '<tr data-c="' + x.c + '" class="' + (x.c === I.sel ? 'sel' : '') + '"><td class="mono">Voie ' + (x.c + 1) + '</td><td class="n">' + fmt(x.rms, 3) + '</td><td class="n">' + fmt(x.peak, 2) + '</td><td class="n">' + fmt(x.crest, 1) + '</td><td class="n">' + fmt(x.kurt, 2) + '</td>' +
+      cell(x.dg, 'BPFO') + cell(x.dg, 'BPFI') + cell(x.dg, 'BSF') + '<td>' + v + '</td></tr>'; }).join('');
+  $('instTbl').querySelectorAll('tbody tr').forEach(function(tr){ tr.onclick = function(){ var c = +tr.dataset.c; if(!INST.ch[c].flat){ INST.sel = c; paintInst(); } }; });
+  $('instWaveInfo').textContent = 'voie ' + (I.sel + 1) + ' · 100 premières ms';
+  chWave.draw(); chInstSpec.draw();
+}
+var chWave = new Chart2($('chWave'), {data: function(){
+  if(!INST) return null; var x = INST.ch[INST.sel]; if(!x || x.flat) return null; var n = Math.min(x.sig.length, FS / 10), pts = [], amax = 0;
+  for(var i = 0; i < n; i++){ pts.push([i / FS * 1000, x.sig[i]]); amax = Math.max(amax, Math.abs(x.sig[i])); } amax = Math.max(amax * 1.1, 0.05);
+  return {x: [0, 100], xt: [0, 20, 40, 60, 80, 100], xf: function(v){ return v + ' ms'; }, y: [-amax, amax], yt: ticks(-amax, amax, 4), yf: function(v){ return fmt(v, 2); },
+    series: [{pts: pts, c: C.pri, w: .8}]};
+}});
+var chInstSpec = new Chart2($('chInstSpec'), {data: specChart(function(){ return INST && INST.ch[INST.sel] ? INST.ch[INST.sel].spec : null; })});
+$('pickOne').onclick = function(){ $('inOne').click(); };
+$('inOne').onchange = function(e){ loadOne(e.target.files[0]); };
+function loadOne(f){
+  if(!f) return; $('msg1').textContent = 'Analyse de ' + f.name + '…'; $('msg1').className = 'msg';
+  readText(f).then(function(txt){
+    var cols = parseAllCols(txt);
+    if(!cols.length || cols[0].length < 4096){ $('msg1').textContent = 'Fichier non reconnu : ' + (cols.length ? cols[0].length + ' points par voie' : 'aucune valeur numérique') + ' (minimum 4096).'; $('msg1').className = 'msg err'; return; }
+    $('msg1').textContent = ''; runInst(f.name, cols, 'fichier importé');
+  });
+}
+(function(){ var drop = $('drop1');
+  ['dragenter', 'dragover'].forEach(function(t){ drop.addEventListener(t, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
+  ['dragleave', 'drop'].forEach(function(t){ drop.addEventListener(t, function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
+  drop.addEventListener('drop', function(e){ loadOne(e.dataTransfer.files[0]); });
+  $('examples').innerHTML = EXTRAS.examples.map(function(x, k){ return '<button class="btn" data-k="' + k + '">Exemple : ' + x.label + '</button>'; }).join('');
+  $('examples').querySelectorAll('button').forEach(function(bt){ bt.onclick = function(){
+    var x = EXTRAS.examples[+bt.dataset.k], flat = decodeF32(x.f32), nc = x.channels, n = flat.length / nc, cols = [];
+    for(var c = 0; c < nc; c++){ var a = new Float32Array(n); for(var i = 0; i < n; i++) a[i] = flat[i * nc + c]; cols.push(a); }
+    runInst(x.name, cols, 'exemple 2nd test IMS'); }; });
+})();
+
+/* ======================= Visite guidée ======================= */
+var TOURS = {
+  replay: [
+    ['#tabs', 'Trois modes d’utilisation', 'Supervision : suivi continu des paliers (ici en rejeu). Diagnostic instantané : analyse d’un fichier unique. Pronostic sur historique : estimation de la durée de vie à partir d’une série d’acquisitions.'],
+    ['#demo', 'Mode démonstration', 'Les mesures réelles du 2nd test NASA IMS sont rejouées comme un flux en direct : une acquisition toutes les 10 minutes pendant 7 jours. Lecture, vitesse et curseur temporel ; raccourcis Espace et flèches.'],
+    ['.side-l', 'Équipements', 'Chaque palier avec son état (carré de couleur) et sa durée de vie résiduelle. Cliquer un palier pour l’afficher. La synthèse compte les alarmes actives et non acquittées.'],
+    ['#eqPn', 'Synthèse du palier', 'L’état retenu est le plus sévère de trois critères : le pronostic de RUL, le niveau vibratoire par rapport à l’état neuf et la signature spectrale d’un défaut. La RUL est donnée avec son incertitude mesurée en validation.'],
+    ['#synPn', 'Synoptique', 'Vue schématique du banc : moteur, arbre, quatre paliers instrumentés et charge radiale. Le carré de chaque palier reprend son état.'],
+    ['#secRul', 'Tendance de durée de vie résiduelle', 'Estimation du CNN-LSTM à partir des 30 dernières acquisitions (5 h), lissée sur 1 h. La bande bleue représente l’incertitude ; la ligne pointillée est la RUL réelle, connue après la rupture.'],
+    ['#secRms', 'Tendance du niveau vibratoire', 'Accélération RMS comparée à la référence de l’état neuf : alerte à +6 dB (×2), alarme à +12 dB (×4). La kurtosis (axe droit) traduit l’apparition de chocs.'],
+    ['#secSpec', 'Analyse spectrale', 'Le spectre d’enveloppe fait ressortir la fréquence de répétition des chocs. Chaque type de défaut a sa fréquence (BPFO, BPFI, BSF), calculée à partir de la géométrie du roulement : c’est ce qui permet d’identifier la pièce endommagée.'],
+    ['#secAlm', 'Journal des alarmes', 'Chaque franchissement de seuil crée un événement horodaté avec sa priorité et sa valeur. Une alarme reste active tant que la condition persiste ; l’opérateur l’acquitte pour indiquer qu’elle est prise en compte.'],
+    ['.side-r', 'Diagnostic, fiche équipement et modèle', 'Recommandation d’intervention selon l’état, caractéristiques du roulement, fréquences de défaut et domaine de validité du modèle. Le bouton « Rapport PDF » produit un rapport de diagnostic imprimable.']
+  ],
+  inst: [
+    ['#instPn', 'Diagnostic à partir d’un seul fichier', 'Une acquisition isolée ne contient pas de trajectoire : la durée de vie résiduelle ne peut pas être estimée. En revanche, le spectre d’enveloppe de chaque voie révèle la présence d’un défaut et la pièce concernée.'],
+    ['#examples', 'Exemples', 'Deux acquisitions réelles du 2nd test IMS : l’une en fonctionnement sain, l’autre en fin d’essai, lorsque la bague extérieure du palier 1 est endommagée.'],
+    ['#instRes', 'Résultat par voie', 'Niveau, valeur crête, facteur de crête, kurtosis et émergence des trois fréquences de défaut pour chaque voie. Le défaut est localisé sur la voie d’émergence maximale ; une signature plus faible sur les voies voisines traduit la propagation des vibrations.'],
+    ['#instCharts', 'Signal et spectre', 'Signal temporel brut et spectre d’enveloppe de la voie sélectionnée, avec les fréquences de défaut théoriques.']
+  ],
+  files: [
+    ['#importPn', 'Pronostic sur historique', 'Le modèle a été entraîné sur des trajectoires de 30 acquisitions consécutives (5 h) : il lit l’évolution du roulement, pas un état isolé. Les 200 premières acquisitions depuis la mise en service servent de référence de l’état neuf, d’où un minimum de 230 fichiers.'],
+    ['#col', 'Voie de mesure', 'Choisir la colonne du fichier correspondant au palier à analyser, puis sélectionner ou déposer le dossier complet des acquisitions.']
+  ]
+};
+var tour = null;
+function startTour(){
+  var steps = TOURS[S.mode].filter(function(st){ var el = document.querySelector(st[0]); return el && el.getClientRects().length; });
+  if(!steps.length) return;
+  setPlaying(false);
+  tour = {steps: steps, i: 0};
+  ['tourShield', 'tourHole', 'tourPop'].forEach(function(id){ if(!$(id)){ var d = document.createElement('div'); d.id = id; document.body.appendChild(d); } });
+  $('tourShield').onclick = endTour;
+  showStep();
+}
+function showStep(){
+  var st = tour.steps[tour.i], el = document.querySelector(st[0]);
+  el.scrollIntoView({block: 'center', behavior: 'smooth'});
+  setTimeout(function(){
+    if(!tour) return;
+    var r = el.getBoundingClientRect(), sx = window.scrollX, sy = window.scrollY, pad = 6;
+    var hole = $('tourHole'); hole.style.left = (r.left + sx - pad) + 'px'; hole.style.top = (r.top + sy - pad) + 'px'; hole.style.width = (r.width + 2 * pad) + 'px'; hole.style.height = (r.height + 2 * pad) + 'px';
+    var pop = $('tourPop'), last = tour.i === tour.steps.length - 1;
+    pop.innerHTML = '<div class="st">Étape ' + (tour.i + 1) + ' / ' + tour.steps.length + '</div><h4>' + st[1] + '</h4><p>' + st[2] + '</p>' +
+      '<div class="nav"><button class="btn" id="tQuit">Quitter</button><span class="sp"></span>' + (tour.i ? '<button class="btn" id="tPrev">Précédent</button>' : '') +
+      '<button class="btn pri" id="tNext">' + (last ? 'Terminer' : 'Suivant') + '</button></div>';
+    var pw = pop.offsetWidth, ph = pop.offsetHeight, vw = document.documentElement.clientWidth, vh = window.innerHeight;
+    var top = r.bottom + 14 + ph < vh ? r.bottom + 14 : r.top - 14 - ph >= 0 ? r.top - 14 - ph : Math.max(12, vh - ph - 12);
+    var left = Math.min(Math.max(12, r.left), vw - pw - 12);
+    pop.style.left = (left + sx) + 'px'; pop.style.top = (top + sy) + 'px';
+    $('tQuit').onclick = endTour; $('tNext').onclick = function(){ if(last) endTour(); else { tour.i++; showStep(); } };
+    if($('tPrev')) $('tPrev').onclick = function(){ tour.i--; showStep(); };
+    $('tNext').focus({preventScroll: true});
+  }, 320);
+}
+function endTour(){ tour = null; ['tourShield', 'tourHole', 'tourPop'].forEach(function(id){ if($(id)) $(id).remove(); }); try { localStorage.setItem('tourVu', '1'); } catch(e){} }
+document.addEventListener('keydown', function(e){ if(!tour) return;
+  if(e.key === 'Escape') endTour();
+  if(e.key === 'ArrowRight' && tour.i < tour.steps.length - 1){ e.stopImmediatePropagation(); tour.i++; showStep(); }
+  if(e.key === 'ArrowLeft' && tour.i > 0){ e.stopImmediatePropagation(); tour.i--; showStep(); } }, true);
+window.addEventListener('resize', function(){ if(tour) showStep(); });
+$('btnTour').onclick = startTour;
 
 /* ======================= Fiches ======================= */
 function paintStatic(){
@@ -892,6 +1113,9 @@ SRC.replay = buildReplay();
 startWorker(SRC.replay);
 setMode('replay');
 if(/play/.test(location.hash)) setPlaying(true);
+(function(){ var m = /inst=(\d)/.exec(location.hash); if(m) document.querySelectorAll('#examples button')[+m[1]].click(); else if(/inst/.test(location.hash)) setMode('inst'); })();
+(function(){ var seen = false; try { seen = localStorage.getItem('tourVu') === '1'; } catch(e){}
+  if(/tour/.test(location.hash) || (!seen && !/notour|t=|inst/.test(location.hash))) setTimeout(startTour, 600); })();
 </script>
 </body>
 </html>

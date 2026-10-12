@@ -12,13 +12,15 @@ const els = {};
 global.document = fake();
 document.getElementById = id => els[id] || (els[id] = Object.assign(fake(), {
   id, value: id === 'col' ? col : '', textContent: '', innerHTML: '', className: '', style: {}, dataset: {},
-  clientWidth: 0, clientHeight: 0 }));
+  clientWidth: 0, clientHeight: 0, tBodies: [fake()] }));
 document.querySelectorAll = () => [];
+document.querySelector = () => fake();
+global.localStorage = { getItem: () => '1', setItem() {} };
 document.documentElement = fake();
 global.getComputedStyle = () => fake();
 global.window = { devicePixelRatio: 1, addEventListener() {} };
 global.addEventListener = () => {};
-global.location = { hash: '' };
+global.location = { hash: '#notour' };
 global.requestAnimationFrame = f => setImmediate(f);
 global.ResizeObserver = class { observe() {} };
 global.Worker = class { constructor() { throw new Error('pas de Worker dans le test'); } };
@@ -29,6 +31,7 @@ const html = fs.readFileSync(path.join(__dirname, '..', 'jumeau_numerique.html')
 const grab = id => { const a = html.indexOf('<script id="' + id + '"'), b = html.indexOf('>', a) + 1; return html.slice(b, html.indexOf('</script>', b)); };
 els['model-data'] = { textContent: grab('model-data') };
 els['replay-data'] = { textContent: grab('replay-data') };
+els['extras-data'] = { textContent: grab('extras-data') };
 els['engine'] = { textContent: grab('engine') };
 eval(grab('engine'));
 let main = html.slice(html.indexOf('<script>\n/* ======================= Données') + 8);
