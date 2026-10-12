@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#06090d">
+<title>Pronostic de durée de vie des roulements</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06090d; --txt:#e9eef3; --mut:#93a1af; --dim:#5f6d7b; --line:rgba(255,255,255,.09);
+  --acc:#45c7bd; --acc-2:#2b9fb7; --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--txt);font:16px/1.55 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* ---------- fond : spectrogramme réel, fondu ---------- */
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.bg img{position:absolute;inset:-4%;width:108%;height:108%;object-fit:cover;opacity:.62;filter:saturate(1) contrast(1.1);
+  animation:drift 48s var(--ease) infinite alternate;transform-origin:70% 55%}
+@keyframes drift{from{transform:scale(1) translate3d(0,0,0)}to{transform:scale(1.08) translate3d(-2%,-1%,0)}}
+.bg::after{content:"";position:absolute;inset:0;background:
+  linear-gradient(90deg,var(--bg) 0%,rgba(6,9,13,.94) 30%,rgba(6,9,13,.5) 60%,rgba(6,9,13,.12) 100%),
+  linear-gradient(180deg,rgba(6,9,13,.75) 0%,rgba(6,9,13,0) 28%,rgba(6,9,13,0) 62%,var(--bg) 100%)}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ---------- mise en page ---------- */
+.page{position:relative;z-index:2;min-height:100%;display:flex;flex-direction:column;max-width:1180px;margin:0 auto;padding:28px 40px 26px}
+@media(max-width:640px){.page{padding:20px 20px 22px}}
+.top{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--mut)}
+.mark{width:28px;height:28px;flex:none}
+.top b{color:var(--txt);font-weight:500;letter-spacing:.2px}
+.top .sep{width:1px;height:14px;background:var(--line)}
+.hero{flex:1;display:flex;flex-direction:column;justify-content:center;max-width:720px;padding:56px 0 36px}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font:500 12px/1 'IBM Plex Mono',monospace;letter-spacing:2px;text-transform:uppercase;color:var(--acc)}
+.eyebrow i{width:26px;height:1px;background:var(--acc)}
+h1{margin:20px 0 18px;font-weight:300;font-size:clamp(36px,5.6vw,64px);line-height:1.06;letter-spacing:-1.2px}
+h1 strong{font-weight:600;background:linear-gradient(92deg,#fff 0%,#bfeee9 55%,var(--acc) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{margin:0;max-width:560px;color:var(--mut);font-size:clamp(16px,1.6vw,18px)}
+.cta{margin-top:38px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.btn{position:relative;display:inline-flex;align-items:center;gap:12px;padding:16px 24px 16px 26px;border-radius:999px;
+  background:var(--acc);color:#04211f;font-weight:600;font-size:15.5px;text-decoration:none;overflow:hidden;
+  box-shadow:0 0 0 0 rgba(69,199,189,.35),0 10px 30px -10px rgba(69,199,189,.55);transition:transform .35s var(--ease),box-shadow .35s var(--ease),background .35s}
+.btn::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);transform:translateX(-120%);transition:transform .8s var(--ease)}
+.btn:hover{transform:translateY(-2px);background:#5dd6cc;box-shadow:0 0 0 6px rgba(69,199,189,.12),0 16px 36px -12px rgba(69,199,189,.7)}
+.btn:hover::before{transform:translateX(120%)}
+.btn svg{width:18px;height:18px;transition:transform .35s var(--ease)}
+.btn:hover svg{transform:translateX(4px)}
+.btn:focus-visible{outline:2px solid #fff;outline-offset:4px}
+.hint{font-size:13.5px;color:var(--dim)}
+
+/* ---------- chiffres clés ---------- */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:58px;border-top:1px solid var(--line);max-width:640px}
+.stat{padding:18px 18px 0 0}
+.stat + .stat{padding-left:22px;border-left:1px solid var(--line)}
+.stat b{display:block;font:500 clamp(24px,2.6vw,30px)/1.1 'IBM Plex Mono',monospace;color:var(--txt);letter-spacing:-.5px}
+.stat b small{font-size:.55em;color:var(--mut);margin-left:3px}
+.stat > span{display:block;margin-top:6px;font-size:13px;color:var(--mut);line-height:1.4}
+@media(max-width:560px){.stats{grid-template-columns:1fr}.stat + .stat{padding-left:0;border-left:0;border-top:1px solid var(--line)}}
+
+/* ---------- oscilloscope ---------- */
+.scope{position:relative;height:96px;margin:0 -40px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
+@media(max-width:640px){.scope{margin:0 -20px;height:72px}}
+.scope canvas{width:100%;height:100%;display:block}
+.scope .lbl{position:absolute;right:14%;top:2px;font:400 11px/1 'IBM Plex Mono',monospace;color:var(--dim);letter-spacing:.6px}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--dim)}
+
+/* ---------- apparitions ---------- */
+.rv{opacity:0;transform:translateY(18px);animation:rise 1s var(--ease) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.d1{animation-delay:.1s}.d2{animation-delay:.25s}.d3{animation-delay:.4s}.d4{animation-delay:.55s}.d5{animation-delay:.75s}.d6{animation-delay:.95s}
+.veil{position:fixed;inset:0;z-index:10;background:var(--bg);opacity:0;pointer-events:none;transition:opacity .45s var(--ease)}
+.veil.on{opacity:1}
+@media (prefers-reduced-motion: reduce){
+  .bg img{animation:none}
+  .rv{animation:none;opacity:1;transform:none}
+  .btn,.btn::before,.btn svg,.veil{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><img src="fond_spectrogramme.jpg" alt=""></div>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="page">
+  <header class="top rv d1">
+    <svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#45c7bd" stroke-width="1.5"/><circle cx="14" cy="14" r="5.5" fill="none" stroke="#45c7bd" stroke-width="1.5"/><g fill="#45c7bd"><circle cx="14" cy="5.2" r="1.6"/><circle cx="22.8" cy="14" r="1.6"/><circle cx="14" cy="22.8" r="1.6"/><circle cx="5.2" cy="14" r="1.6"/><circle cx="20.2" cy="7.8" r="1.6"/><circle cx="20.2" cy="20.2" r="1.6"/><circle cx="7.8" cy="20.2" r="1.6"/><circle cx="7.8" cy="7.8" r="1.6"/></g></svg>
+    <b>Projet de fin d'année</b><span class="sep"></span><span>Génie industriel</span>
+  </header>
+
+  <main class="hero">
+    <div class="eyebrow rv d2"><i></i>Maintenance prédictive</div>
+    <h1 class="rv d3">Pronostic de durée de vie <strong>des roulements</strong></h1>
+    <p class="lead rv d4">Diagnostic vibratoire et estimation de la durée de vie résiduelle par apprentissage profond, à partir d'essais réels menés jusqu'à la rupture.</p>
+    <div class="cta rv d5">
+      <a class="btn" id="go" href="jumeau_numerique.html">Ouvrir le poste de surveillance
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <span class="hint">Visite guidée à la première ouverture</span>
+    </div>
+    <div class="stats rv d6">
+      <div class="stat"><b><span data-n="74">74</span><small>h</small></b><span>d'avance sur la rupture pour la détection du défaut</span></div>
+      <div class="stat"><b><span data-n="4">4</span></b><span>pannes réelles (3 essais) pour valider le modèle</span></div>
+      <div class="stat"><b><span data-n="20">20</span><small>kHz</small></b><span>vibration brute analysée dans le navigateur</span></div>
+    </div>
+  </main>
+
+  <div class="scope rv d6" aria-hidden="true"><canvas id="scope"></canvas><span class="lbl">vibration mesurée · palier défaillant</span></div>
+  <footer class="foot rv d6"><span>Données : NASA Prognostics Data Repository — IMS Bearing Dataset, University of Cincinnati</span><span>Calculs exécutés localement</span></footer>
+</div>
+<div class="veil" id="veil"></div>
+
+<script>
+(function(){
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Compteurs */
+  document.querySelectorAll('[data-n]').forEach(function(el, k){
+    var n = +el.dataset.n; if(reduce) return; el.textContent = '0';
+    setTimeout(function(){ var t0 = performance.now();
+      (function step(t){ var p = Math.min(1, (t - t0) / 1400), e = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(n * e); if(p < 1) requestAnimationFrame(step); })(t0);
+    }, 1000 + k * 150);
+  });
+
+  /* Oscilloscope : signal réel du palier 1 en fin d'essai (20 kHz), défilement lent */
+  var W = __WAVE__;
+  var cv = document.getElementById('scope'), g = cv.getContext('2d'), off = 0, last = 0;
+  function draw(t){
+    var dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+    if(cv.width !== Math.round(w * dpr)){ cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+    var n = Math.min(W.length, 1400), step = w / (n - 1), mid = h * .55, amp = h * .42;
+    var grad = g.createLinearGradient(0, 0, w, 0); grad.addColorStop(0, '#2b9fb7'); grad.addColorStop(1, '#45c7bd');
+    g.lineWidth = 1.2; g.strokeStyle = grad; g.shadowColor = 'rgba(69,199,189,.6)'; g.shadowBlur = 8;
+    g.beginPath();
+    for(var i = 0; i < n; i++){ var v = W[(Math.floor(off) + i) % W.length]; var x = i * step, y = mid - v * amp; if(i) g.lineTo(x, y); else g.moveTo(x, y); }
+    g.stroke(); g.shadowBlur = 0;
+    if(!reduce){ off += Math.min(64, (t - last) || 16) * 0.06; last = t; requestAnimationFrame(draw); }
+  }
+  requestAnimationFrame(draw);
+  window.addEventListener('resize', function(){ if(reduce) requestAnimationFrame(draw); });
+
+  /* Transition de sortie */
+  document.getElementById('go').addEventListener('click', function(e){
+    if(reduce || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+    e.preventDefault(); var href = this.href; document.getElementById('veil').classList.add('on');
+    setTimeout(function(){ location.href = href; }, 420);
+  });
+  window.addEventListener('pageshow', function(){ document.getElementById('veil').classList.remove('on'); });
+})();
+</script>
+</body>
+</html>
