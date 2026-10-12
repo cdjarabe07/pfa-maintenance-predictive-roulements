@@ -17,8 +17,9 @@
 
 ## Site public
 
-**https://pfa-maintenance-roulements.vercel.app** — page d'accueil, poste de surveillance, interface simplifiée et
-archive du projet à télécharger (non indexé par les moteurs de recherche). Après une modification, committer puis
+**https://pfa-maintenance-roulements.vercel.app** — page d'accueil (fond : spectrogramme réel du palier 1, généré par
+`make_background.py`) et poste de surveillance. Non liés depuis l'accueil mais accessibles : `/rul_4feat.html` et
+l'archive du projet `/projet_pfa_roulements.zip`. Site non indexé par les moteurs de recherche. Après une modification, committer puis
 lancer `bash deploy_site.sh` pour republier (l'archive est générée à partir du dernier commit).
 
 ## Lancer le notebook
