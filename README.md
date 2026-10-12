@@ -15,6 +15,12 @@
 | `envelope_validation.py`, `make_twin_extras.py` | Valident le détecteur par spectre d'enveloppe sur les 984 acquisitions du 2nd test et préparent ses données pour l'interface → `twin_extras.json` |
 | `tests/` | Vérifie que le JavaScript de l'interface donne les mêmes résultats que Python/Keras |
 
+## Site public
+
+**https://pfa-maintenance-roulements.vercel.app** — page d'accueil, poste de surveillance, interface simplifiée et
+archive du projet à télécharger (non indexé par les moteurs de recherche). Après une modification, committer puis
+lancer `bash deploy_site.sh` pour republier (l'archive est générée à partir du dernier commit).
+
 ## Lancer le notebook
 
 ```

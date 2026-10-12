@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Maintenance prédictive des roulements — PFA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f4;--panel:#fff;--sub:#f6f7f9;--line:#d8dde3;--line2:#c3cad3;--txt:#1c2733;--mut:#5b6773;--pri:#0b5394;--pri2:#e8f0f8;--ok:#2e7d32}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.55 'IBM Plex Sans','Segoe UI',system-ui,sans-serif}
+.hdr{background:#fff;border-bottom:1px solid var(--line)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+.hdr .wrap{padding-top:28px;padding-bottom:26px}
+.k{font-size:12px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--pri)}
+h1{margin:6px 0 8px;font-size:28px;line-height:1.25}
+.lead{margin:0;color:var(--mut);max-width:760px}
+main.wrap{padding-top:24px;padding-bottom:40px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px;display:flex;flex-direction:column}
+.card h2{margin:0 0 6px;font-size:17px}
+.card p{margin:0 0 14px;color:var(--mut);font-size:14px;flex:1}
+.btn{display:inline-block;text-align:center;text-decoration:none;font-weight:600;font-size:14px;padding:10px 14px;border-radius:4px;border:1px solid var(--line2);color:var(--txt);background:#fff}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn:hover{filter:brightness(.96)}
+.btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.tag{font-size:12px;color:var(--mut);margin-bottom:8px;font-family:'IBM Plex Mono',monospace}
+section.pn{background:var(--panel);border:1px solid var(--line);border-radius:4px;margin-top:14px}
+section.pn h3{margin:0;padding:10px 18px;border-bottom:1px solid var(--line);font-size:12px;letter-spacing:.7px;text-transform:uppercase;color:var(--mut)}
+section.pn .b{padding:14px 18px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td{padding:8px 18px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td:first-child{color:var(--mut);width:36%}
+ol{margin:0;padding-left:20px}
+ol li{margin-bottom:6px}
+code{font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--sub);border:1px solid var(--line);border-radius:3px;padding:1px 5px}
+.foot{color:var(--mut);font-size:12.5px;text-align:center;margin-top:22px}
+</style>
+</head>
+<body>
+<header class="hdr"><div class="wrap">
+  <div class="k">Projet de fin d'année · génie industriel</div>
+  <h1>Maintenance prédictive des roulements</h1>
+  <p class="lead">Analyse vibratoire, diagnostic de défaut et estimation de la durée de vie résiduelle (RUL) de roulements à rouleaux, à partir des essais jusqu'à la rupture du jeu de données NASA IMS.</p>
+</div></header>
+
+<main class="wrap">
+  <div class="grid">
+    <div class="card">
+      <div class="tag">jumeau_numerique.html</div>
+      <h2>Poste de surveillance</h2>
+      <p>Supervision des 4 paliers en rejeu du 2nd essai, diagnostic instantané sur un fichier, pronostic de RUL sur historique, journal d'alarmes et rapport PDF. Une visite guidée présente l'écran.</p>
+      <a class="btn pri" href="jumeau_numerique.html">Ouvrir le poste de surveillance</a>
+    </div>
+    <div class="card">
+      <div class="tag">rul_4feat.html</div>
+      <h2>Interface simplifiée</h2>
+      <p>Version épurée destinée à l'opérateur : chargement du dossier d'acquisitions d'un roulement et affichage de l'état (normal, surveillance, arrêt recommandé).</p>
+      <a class="btn" href="rul_4feat.html">Ouvrir l'interface simplifiée</a>
+    </div>
+    <div class="card">
+      <div class="tag">projet_pfa_roulements.zip · 10 Mo</div>
+      <h2>Projet complet</h2>
+      <p>Notebook exécuté avec ses résultats, scripts Python, attributs pré-calculés des 3 essais, modèle entraîné et sources des interfaces. S'ouvre directement dans VS Code.</p>
+      <a class="btn" href="projet_pfa_roulements.zip" download>Télécharger le projet (.zip)</a>
+    </div>
+  </div>
+
+  <section class="pn">
+    <h3>Principaux résultats</h3>
+    <table>
+      <tr><td>Détection du défaut</td><td>Spectre d'enveloppe : défaut de bague extérieure identifié <b>74 h avant la rupture</b>, aucune fausse détection en phase saine (984 acquisitions du 2nd essai).</td></tr>
+      <tr><td>Durée de vie résiduelle</td><td>CNN-LSTM évalué sur un roulement jamais vu (validation croisée sur 4 pannes) : erreur moyenne ≈ 0,9 j pendant la dégradation, contre 1,4 j pour une prédiction constante.</td></tr>
+      <tr><td>Classification healthy / faulty</td><td>F1 ≈ 0,99 en validation croisée classique ; ≈ 0,6 sur un roulement jamais vu (section 6.3 du notebook).</td></tr>
+      <tr><td>Données</td><td>NASA Prognostics Data Repository — IMS Bearing Dataset (University of Cincinnati), 3 essais jusqu'à la rupture, 20 kHz.</td></tr>
+    </table>
+  </section>
+
+  <section class="pn">
+    <h3>Ouvrir le projet dans VS Code</h3>
+    <div class="b">
+      <ol>
+        <li>Télécharger l'archive puis l'extraire (clic droit → « Extraire tout »).</li>
+        <li>Dans VS Code : <i>Fichier → Ouvrir le dossier</i>, puis choisir le dossier <code>pfa_maintenance_roulements</code>.</li>
+        <li>Installer les bibliothèques dans un terminal : <code>pip install pandas numpy scipy matplotlib seaborn scikit-learn PyWavelets xgboost tensorflow</code></li>
+        <li>Ouvrir <code>IMS_Bearing_Analysis_corrige.ipynb</code> : les résultats sont déjà enregistrés, la réexécution utilise le dossier <code>cache/</code> (pas besoin des 6 Go de données brutes).</li>
+        <li>Le fichier <code>README.md</code> décrit chaque fichier et la façon de régénérer les interfaces.</li>
+      </ol>
+    </div>
+  </section>
+  <div class="foot">Les calculs des interfaces sont exécutés dans le navigateur ; aucune donnée importée n'est transmise.</div>
+</main>
+</body>
+</html>

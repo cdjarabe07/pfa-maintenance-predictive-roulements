@@ -2,3 +2,7 @@ data/
 cache/pred_*.npz
 __pycache__/
 .ipynb_checkpoints/
+site/.vercel/
+site/*.zip
+site/jumeau_numerique.html
+site/rul_4feat.html
