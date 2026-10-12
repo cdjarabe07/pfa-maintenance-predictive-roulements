@@ -17,13 +17,15 @@
 html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--txt);font:16px/1.55 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 
-/* ---------- fond : spectrogramme réel, fondu ---------- */
+/* ---------- fond : photo de roulement à rouleaux, fondue ---------- */
 .bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-.bg img{position:absolute;inset:-4%;width:108%;height:108%;object-fit:cover;opacity:.62;filter:saturate(1) contrast(1.1);
-  animation:drift 48s var(--ease) infinite alternate;transform-origin:70% 55%}
-@keyframes drift{from{transform:scale(1) translate3d(0,0,0)}to{transform:scale(1.08) translate3d(-2%,-1%,0)}}
+.bg img{position:absolute;top:52%;right:-14vh;height:min(82vh,50vw);width:auto;opacity:.9;
+  -webkit-mask-image:radial-gradient(ellipse 52% 50% at 62% 52%,#000 58%,transparent 100%);mask-image:radial-gradient(ellipse 52% 50% at 62% 52%,#000 58%,transparent 100%);
+  animation:drift 40s var(--ease) infinite alternate;transform:translateY(-50%);transform-origin:62% 52%}
+@media(max-width:900px){.bg img{right:-30vw;opacity:.55}}
+@keyframes drift{from{transform:translateY(-50%) scale(1) rotate(0deg)}to{transform:translateY(-50%) scale(1.05) rotate(-1.5deg)}}
 .bg::after{content:"";position:absolute;inset:0;background:
-  linear-gradient(90deg,var(--bg) 0%,rgba(6,9,13,.94) 30%,rgba(6,9,13,.5) 60%,rgba(6,9,13,.12) 100%),
+  linear-gradient(90deg,var(--bg) 0%,rgba(6,9,13,.75) 40%,rgba(6,9,13,0) 66%),
   linear-gradient(180deg,rgba(6,9,13,.75) 0%,rgba(6,9,13,0) 28%,rgba(6,9,13,0) 62%,var(--bg) 100%)}
 .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
@@ -67,6 +69,8 @@ h1 strong{font-weight:600;background:linear-gradient(92deg,#fff 0%,#bfeee9 55%,v
 @media(max-width:640px){.scope{margin:0 -20px;height:72px}}
 .scope canvas{width:100%;height:100%;display:block}
 .scope .lbl{position:absolute;right:14%;top:2px;font:400 11px/1 'IBM Plex Mono',monospace;color:var(--dim);letter-spacing:.6px}
+.foot a{color:var(--mut);text-decoration:none;border-bottom:1px solid var(--line)}
+.foot a:hover{color:var(--txt)}
 .foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--dim)}
 
 /* ---------- apparitions ---------- */
@@ -76,14 +80,14 @@ h1 strong{font-weight:600;background:linear-gradient(92deg,#fff 0%,#bfeee9 55%,v
 .veil{position:fixed;inset:0;z-index:10;background:var(--bg);opacity:0;pointer-events:none;transition:opacity .45s var(--ease)}
 .veil.on{opacity:1}
 @media (prefers-reduced-motion: reduce){
-  .bg img{animation:none}
+  .bg img{animation:none;transform:translateY(-50%)}
   .rv{animation:none;opacity:1;transform:none}
   .btn,.btn::before,.btn svg,.veil{transition:none}
 }
 </style>
 </head>
 <body>
-<div class="bg" aria-hidden="true"><img src="fond_spectrogramme.jpg" alt=""></div>
+<div class="bg" aria-hidden="true"><img src="fond_roulement.jpg" alt=""></div>
 <div class="grain" aria-hidden="true"></div>
 
 <div class="page">
@@ -109,7 +113,7 @@ h1 strong{font-weight:600;background:linear-gradient(92deg,#fff 0%,#bfeee9 55%,v
   </main>
 
   <div class="scope rv d6" aria-hidden="true"><canvas id="scope"></canvas><span class="lbl">vibration mesurée · palier défaillant</span></div>
-  <footer class="foot rv d6"><span>Données : NASA Prognostics Data Repository — IMS Bearing Dataset, University of Cincinnati</span><span>Calculs exécutés localement</span></footer>
+  <footer class="foot rv d6"><span>Données : NASA Prognostics Data Repository — IMS Bearing Dataset, University of Cincinnati</span><span>Photo : <a href="https://commons.wikimedia.org/wiki/File:2015_F.A.G._NJ306E_Roller_Bearing.jpg">Andydevon</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.fr">CC BY-SA 4.0</a>, retouchée</span></footer>
 </div>
 <div class="veil" id="veil"></div>
 
