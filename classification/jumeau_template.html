@@ -1,0 +1,756 @@
+<title>Jumeau numérique des roulements</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Concept : poste de supervision. Neutres bleutés, l'encre porte l'interface, la couleur ne sert qu'aux données (4 roulements) et à l'état (ok / écart / alerte / arrêt). */
+:root {
+  --bg: #f1f4f8;
+  --surface: #ffffff;
+  --surface-2: #e8edf3;
+  --ink: #13202f;
+  --ink-2: #4a5b6e;
+  --ink-3: #75869a;
+  --line: #d3dbe5;
+  --ok: #17794f;   --ok-bg: #dcf2e6;
+  --warn: #9a6200; --warn-bg: #fbecc9;
+  --crit: #bf2a2a; --crit-bg: #fadcdc;
+  --off: #627184;  --off-bg: #e2e7ed;
+  --c1: #0b66c8; --c2: #8240b8; --c3: #0b8791; --c4: #8a6a2c;
+  --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d141c; --surface: #141d27; --surface-2: #1b2733;
+    --ink: #e7eef6; --ink-2: #a0b0c2; --ink-3: #7d8ea1; --line: #2a3745;
+    --ok: #4cc38a; --ok-bg: #12332a;
+    --warn: #e8b24c; --warn-bg: #3a2f14;
+    --crit: #ff7373; --crit-bg: #3e1b1f;
+    --off: #93a2b3; --off-bg: #232e3a;
+    --c1: #5ea6ff; --c2: #bb90f2; --c3: #3fc9d4; --c4: #cdb57c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d141c; --surface: #141d27; --surface-2: #1b2733;
+  --ink: #e7eef6; --ink-2: #a0b0c2; --ink-3: #7d8ea1; --line: #2a3745;
+  --ok: #4cc38a; --ok-bg: #12332a;
+  --warn: #e8b24c; --warn-bg: #3a2f14;
+  --crit: #ff7373; --crit-bg: #3e1b1f;
+  --off: #93a2b3; --off-bg: #232e3a;
+  --c1: #5ea6ff; --c2: #bb90f2; --c3: #3fc9d4; --c4: #cdb57c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 20px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { margin: 0; font-weight: 600; text-wrap: balance; }
+h1 { font-size: 22px; letter-spacing: -0.01em; }
+h2 { font-size: 15px; }
+h3 { font-size: 14px; }
+p { margin: 0; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--ink-2); }
+.small { font-size: 12px; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
+
+.top { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: flex-end; justify-content: space-between; }
+.top p { color: var(--ink-2); max-width: 62ch; margin-top: 4px; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field label { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+select, button { font: inherit; color: var(--ink); }
+select { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 7px 28px 7px 10px; min-width: 0; max-width: 100%; }
+
+.tabs { display: flex; gap: 4px; margin: 18px 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 9px 14px; cursor: pointer; color: var(--ink-2); font-weight: 500; white-space: nowrap; margin-bottom: -1px; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.tab:hover { color: var(--ink); }
+.panel[hidden] { display: none; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.card + .card { margin-top: 14px; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.stack > .card + .card, .cols2 > .card + .card { margin-top: 0; }
+
+/* bandeau */
+.banner { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; justify-content: space-between; border-radius: 8px; padding: 14px 16px; border: 1px solid var(--line); background: var(--surface); }
+.banner .big { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; flex: none; }
+.banner[data-s="ok"] { border-color: var(--ok); } .banner[data-s="ok"] .big { color: var(--ok); }
+.banner[data-s="warn"] { border-color: var(--warn); } .banner[data-s="warn"] .big { color: var(--warn); }
+.banner[data-s="crit"] { border-color: var(--crit); background: var(--crit-bg); } .banner[data-s="crit"] .big { color: var(--crit); }
+.banner[data-s="off"] { border-color: var(--off); background: var(--off-bg); } .banner[data-s="off"] .big { color: var(--off); }
+.clock { text-align: right; }
+.clock .t { font-family: var(--mono); font-size: 16px; font-variant-numeric: tabular-nums; }
+
+/* commandes */
+.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 14px; }
+.btn { background: var(--ink); color: var(--bg); border: 0; border-radius: 6px; padding: 8px 14px; font-weight: 600; cursor: pointer; min-width: 92px; }
+.btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-weight: 500; min-width: 0; }
+.btn:hover { opacity: 0.88; }
+.slider { flex: 1 1 260px; min-width: 0; display: flex; }
+input[type=range] { width: 100%; accent-color: var(--ink); min-width: 0; }
+
+/* cartes roulements */
+.grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-top: 14px; }
+.brg { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; min-width: 0; border-top: 3px solid var(--bc); }
+.brg-head { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+.brg-head h3 { display: flex; align-items: center; gap: 8px; }
+.sw { width: 10px; height: 10px; border-radius: 2px; background: var(--bc); flex: none; }
+.brg .role { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+.pill { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; padding: 3px 8px; border-radius: 999px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.ok { color: var(--ok); background: var(--ok-bg); }
+.pill.warn { color: var(--warn); background: var(--warn-bg); }
+.pill.crit { color: var(--crit); background: var(--crit-bg); }
+.pill.off { color: var(--off); background: var(--off-bg); }
+.feat { margin-top: 10px; }
+.feat-row { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+.feat-row .n { color: var(--ink-2); }
+.feat-row .v { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.feat-row .v.out { color: var(--crit); font-weight: 500; }
+.gauge { position: relative; height: 8px; border-radius: 4px; background: var(--surface-2); margin-top: 4px; }
+.gauge .band { position: absolute; top: 0; bottom: 0; background: var(--ok-bg); border-left: 1px solid var(--ok); border-right: 1px solid var(--ok); }
+.gauge .mk { position: absolute; top: -2px; width: 3px; height: 12px; border-radius: 1px; background: var(--ink); transform: translateX(-50%); }
+.gauge .mk.out { background: var(--crit); }
+.gauge .cl { position: absolute; top: -3px; font-size: 10px; line-height: 14px; color: var(--crit); transform: translateX(-100%); }
+.gauge .cr { position: absolute; top: -3px; font-size: 10px; line-height: 14px; color: var(--crit); }
+
+/* graphiques */
+.sec-head { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.seg button { background: none; border: 0; padding: 6px 11px; cursor: pointer; color: var(--ink-2); font-size: 13px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.chart-box { width: 100%; overflow: hidden; touch-action: pan-y; }
+svg text { font-family: var(--mono); font-size: 11px; fill: var(--ink-3); }
+svg .grid { stroke: var(--line); stroke-width: 1; }
+svg .axis { stroke: var(--ink-3); stroke-width: 1; }
+svg .cur { stroke: var(--ink); stroke-width: 1; }
+svg .stop { fill: var(--off-bg); }
+svg .stopl { stroke: var(--off); stroke-dasharray: 4 3; }
+svg .rowbg { fill: var(--surface-2); }
+svg .alert { fill: var(--crit); opacity: 0.85; }
+svg .tick { fill: var(--warn); }
+svg .lbl { fill: var(--ink); font-weight: 500; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink-2); margin-top: 8px; }
+.legend i { display: inline-block; width: 12px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: baseline; }
+
+/* tableaux */
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* journal */
+.log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 320px; overflow-y: auto; }
+.log li { display: grid; grid-template-columns: 112px 1fr auto; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+.log .when { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+.log .rel { font-family: var(--mono); font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+.log .tag { font-weight: 600; }
+.log .tag.crit { color: var(--crit); } .log .tag.ok { color: var(--ok); } .log .tag.off { color: var(--off); }
+.empty { color: var(--ink-3); padding: 10px 0; }
+.cols2 { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 860px) { .cols2 { grid-template-columns: minmax(0, 1fr); } .log li { grid-template-columns: 96px 1fr; } .log .rel { grid-column: 2; } }
+
+/* modèles */
+.mrow { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; padding: 8px 6px; border-radius: 6px; cursor: pointer; align-items: center; border: 1px solid transparent; }
+.mrow:hover { background: var(--surface-2); }
+.mrow[aria-current="true"] { border-color: var(--ink); }
+.mname { font-weight: 500; font-size: 13px; }
+.bars { display: flex; flex-direction: column; gap: 3px; }
+.bar { display: grid; grid-template-columns: minmax(0, 1fr) 40px; gap: 8px; align-items: center; }
+.bar .tr { position: relative; height: 12px; background: var(--surface-2); border-radius: 3px; }
+.bar .f { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; width: calc(var(--w) * 100%); background: var(--bcol); }
+.bar .val { font-family: var(--mono); font-size: 11px; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
+.k1 { --bcol: var(--c1); } .k2 { --bcol: var(--c2); } .k3 { --bcol: var(--c3); }
+.cm { display: grid; grid-template-columns: auto 1fr 1fr; gap: 6px; align-items: stretch; margin-top: 10px; }
+.cm .h { font-size: 11px; color: var(--ink-3); display: flex; align-items: center; justify-content: center; text-align: center; padding: 2px; }
+.cm .c { border-radius: 6px; padding: 12px 8px; text-align: center; font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+.cm .c small { display: block; font-family: var(--font); font-size: 11px; color: var(--ink-2); margin-top: 2px; }
+.cm .good { background: var(--ok-bg); color: var(--ok); }
+.cm .bad { background: var(--crit-bg); color: var(--crit); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.kpi { background: var(--surface-2); border-radius: 6px; padding: 8px 10px; }
+.kpi .l { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; }
+.kpi .x { font-family: var(--mono); font-size: 16px; font-variant-numeric: tabular-nums; }
+@media (max-width: 520px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mrow { grid-template-columns: minmax(0, 1fr); } }
+
+/* simulateur */
+.sim-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 150px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.sim-row .nm { font-weight: 500; }
+.sim-row .rg { font-size: 12px; color: var(--ink-2); }
+@media (max-width: 640px) { .sim-row { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+.chip { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; display: inline-block; }
+.chip.ok { color: var(--ok); background: var(--ok-bg); } .chip.crit { color: var(--crit); background: var(--crit-bg); }
+.verdict { margin-top: 14px; padding: 12px 14px; border-radius: 8px; font-weight: 600; }
+.verdict.ok { color: var(--ok); background: var(--ok-bg); } .verdict.crit { color: var(--crit); background: var(--crit-bg); }
+
+/* limites */
+.prose { max-width: 70ch; }
+.prose h3 { margin-top: 18px; }
+.prose h3:first-child { margin-top: 0; }
+.prose p { margin-top: 6px; color: var(--ink-2); }
+.prose p b { color: var(--ink); font-weight: 600; }
+.note { font-size: 12px; color: var(--ink-3); margin-top: 10px; }
+@media (max-width: 520px) { .tab { padding: 9px 9px; font-size: 13px; } h1 { font-size: 20px; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Jumeau numérique des roulements</h1>
+      <p>Rejeu de l'essai IMS n°2 : quatre roulements Rexnord ZA-2115 sur un même arbre, 2 000 tr/min, 984 acquisitions d'une seconde toutes les 10 minutes, du 12 au 19 février 2004.</p>
+    </div>
+    <div class="field">
+      <label for="src">État fourni par</label>
+      <select id="src"></select>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="t-supervision" data-tab="supervision">Supervision</button>
+    <button class="tab" role="tab" id="t-modeles" data-tab="modeles">Modèles</button>
+    <button class="tab" role="tab" id="t-simulateur" data-tab="simulateur">Simulateur</button>
+    <button class="tab" role="tab" id="t-limites" data-tab="limites">Limites</button>
+  </nav>
+
+  <!-- SUPERVISION -->
+  <section class="panel" id="p-supervision" role="tabpanel" aria-labelledby="t-supervision">
+    <div class="banner" id="banner" data-s="ok">
+      <div>
+        <div class="big"><span class="dot"></span><span id="bn-title">Fonctionnement normal</span></div>
+        <div class="muted small" id="bn-sub" style="margin-top:2px"></div>
+      </div>
+      <div class="clock">
+        <div class="t" id="clk"></div>
+        <div class="muted small" id="clk-rel"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="play" type="button">Lecture</button>
+      <div class="field" style="flex-direction:row;align-items:center;gap:8px">
+        <label for="speed" style="text-transform:none;letter-spacing:0;font-size:13px">Vitesse</label>
+        <select id="speed">
+          <option value="6">1 h d'essai par seconde</option>
+          <option value="18" selected>3 h d'essai par seconde</option>
+          <option value="48">8 h d'essai par seconde</option>
+        </select>
+      </div>
+      <button class="btn ghost" id="go-alert" type="button">Première alerte du roulement 1</button>
+      <button class="btn ghost" id="go-stop" type="button">Arrêt machine</button>
+      <button class="btn ghost" id="go-start" type="button">Début</button>
+      <div class="slider"><input id="pos" type="range" min="0" max="983" step="1" value="0" aria-label="Instant de l'essai"></div>
+    </div>
+
+    <div class="grid4" id="cards"></div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="sec-head">
+        <h2>Évolution des quatre roulements</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <div class="seg" id="featseg" role="group" aria-label="Variable affichée"></div>
+          <div class="seg" id="scaleseg" role="group" aria-label="Échelle">
+            <button type="button" data-sc="lin" aria-pressed="true">Linéaire</button>
+            <button type="button" data-sc="log" aria-pressed="false">Log</button>
+          </div>
+        </div>
+      </div>
+      <div class="chart-box"><svg id="chart" role="img" aria-label="Variable choisie pour les quatre roulements au cours de l'essai"></svg></div>
+      <div class="legend" id="chart-legend"></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="sec-head">
+        <h2>Frise des alertes</h2>
+        <span class="muted small" id="srcnote"></span>
+      </div>
+      <div class="chart-box"><svg id="timeline" role="img" aria-label="Frise des alertes par roulement"></svg></div>
+      <div class="legend">
+        <span><i style="background:var(--crit)"></i>Alerte : 3 anomalies de suite, levée après 6 mesures normales</span>
+        <span><i style="background:var(--warn);width:3px;height:10px"></i>Anomalie isolée, hors alerte</span>
+        <span><i style="background:var(--off-bg);border:1px solid var(--off)"></i>Machine à l'arrêt</span>
+      </div>
+    </div>
+
+    <div class="cols2" style="margin-top:14px">
+      <div class="card">
+        <h2 style="margin-bottom:6px">Avance à la détection</h2>
+        <p class="muted small" id="lead-sum" style="margin-bottom:8px"></p>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Roulement</th><th class="num">1re alerte avant l'arrêt</th><th class="num">Épisodes</th><th class="num">Anomalies avant −72 h</th></tr></thead>
+          <tbody id="lead-body"></tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <h2 style="margin-bottom:6px">Journal d'alarmes</h2>
+        <ul class="log" id="log"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODÈLES -->
+  <section class="panel" id="p-modeles" role="tabpanel" aria-labelledby="t-modeles" hidden>
+    <div class="cols2">
+      <div class="card">
+        <h2>Le même modèle, trois protocoles</h2>
+        <p class="muted small" style="margin:4px 0 10px">F1 sur les labels de la règle IQR. Cliquer sur un modèle pour le sélectionner.</p>
+        <div class="legend" style="margin:0 0 8px">
+          <span><i class="k1" style="background:var(--c1)"></i>Validation croisée 5 plis (son notebook)</span>
+          <span><i style="background:var(--c2)"></i>Roulement jamais vu, variables brutes</span>
+          <span><i style="background:var(--c3)"></i>Roulement jamais vu, calibré sur ses 20 % premiers instants</span>
+        </div>
+        <div id="mbars"></div>
+        <p class="note" id="mnote"></p>
+      </div>
+      <div class="stack">
+        <div class="card">
+          <div class="sec-head" style="margin-bottom:0">
+            <h2 id="cm-title">Matrice de confusion</h2>
+            <div class="field" style="flex-direction:row;align-items:center;gap:8px">
+              <label for="cmscope" style="text-transform:none;letter-spacing:0;font-size:13px">Portée</label>
+              <select id="cmscope"></select>
+            </div>
+          </div>
+          <div class="cm" id="cm"></div>
+          <div class="kpis" id="kpis"></div>
+          <p class="note">Validation croisée 5 plis, un modèle par roulement, graine 42, prédictions hors échantillon. Lignes : vrai label, colonnes : prédiction.</p>
+        </div>
+        <div class="card">
+          <h2 style="margin-bottom:6px">Ce que montre l'écart</h2>
+          <p class="muted" id="gapsum"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SIMULATEUR -->
+  <section class="panel" id="p-simulateur" role="tabpanel" aria-labelledby="t-simulateur" hidden>
+    <div class="card">
+      <div class="sec-head">
+        <h2>Et si ce roulement vibrait comme ça ?</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <div class="field" style="flex-direction:row;align-items:center;gap:8px">
+            <label for="simb" style="text-transform:none;letter-spacing:0;font-size:13px">Roulement</label>
+            <select id="simb"></select>
+          </div>
+          <button class="btn ghost" id="sim-now" type="button">Reprendre l'instant de la supervision</button>
+        </div>
+      </div>
+      <p class="muted small" style="margin-bottom:6px">Déplacer les curseurs pour tester la règle IQR de ce roulement. L'énergie est calculée à partir du RMS (énergie = 20 480 × RMS²), comme dans les données.</p>
+      <div id="sim"></div>
+      <div class="verdict ok" id="sim-verdict"></div>
+      <p class="note">Les seuils de chaque roulement sont calculés sur les 984 acquisitions de l'essai, donc connus après coup. Un système réel devrait les fixer sur une période de référence.</p>
+    </div>
+  </section>
+
+  <!-- LIMITES -->
+  <section class="panel" id="p-limites" role="tabpanel" aria-labelledby="t-limites" hidden>
+    <div class="card prose" id="limits"></div>
+  </section>
+</div>
+
+<script type="application/json" id="data">__DATA__</script>
+<script>
+(function () {
+  "use strict";
+  var D = JSON.parse(document.getElementById('data').textContent);
+  var N = D.n, B = D.bearings, F = D.feats, FAIL = D.fail_idx;
+  var RULE = 'Règle IQR';
+  var SRCS = [RULE].concat(D.models);
+  var FL = { rms: 'RMS', energy: 'Énergie', entropy: 'Entropie spectrale', kurtosis: 'Kurtosis' };
+  var BCOL = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)'];
+  var ROLE = ['Défaillance documentée : bague extérieure', 'Pas de défaillance documentée', 'Pas de défaillance documentée', 'Pas de défaillance documentée'];
+  var T = D.timestamps.map(function (s) { return Date.parse(s + 'Z'); });
+  var STOP_I = 0;
+  for (var q = 0; q < N; q++) { if (B.every(function (b) { return D.series[b].rms[q] < 0.01; })) { STOP_I = q; break; } }
+
+  function $(s) { return document.querySelector(s); }
+  function nf(v, d) { return v.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function sig(v) { return v.toLocaleString('fr-FR', { maximumSignificantDigits: 3 }); }
+  function fmtDate(i) { return new Date(T[i]).toLocaleString('fr-FR', { timeZone: 'UTC', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+  function fmtDay(i) { return new Date(T[i]).toLocaleString('fr-FR', { timeZone: 'UTC', day: 'numeric', month: 'short' }); }
+  function hToStop(i) { return (T[FAIL] - T[i]) / 3.6e6; }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function bits(src, b) { return src === RULE ? D.rule[b] : D.oof[src][b]; }
+
+  /* épisodes d'alerte : 3 anomalies de suite déclenchent, 6 mesures normales de suite lèvent */
+  function episodes(str) {
+    var st = new Uint8Array(N), on = [], off = [], state = 0, r1 = 0, r0 = 0;
+    for (var i = 0; i < N; i++) {
+      if (str.charCodeAt(i) === 49) { r1++; r0 = 0; } else { r0++; r1 = 0; }
+      if (!state && r1 >= 3) { state = 1; on.push(i); }
+      else if (state && r0 >= 6) { state = 0; off.push(i); }
+      st[i] = state;
+    }
+    return { st: st, on: on, off: off };
+  }
+  var EP = {};
+  SRCS.forEach(function (s) { EP[s] = {}; B.forEach(function (b) { EP[s][b] = episodes(bits(s, b)); }); });
+
+  var S = { i: Math.min(N - 1, EP[RULE][B[0]].on[0] + 12), src: RULE, model: 'Decision Tree', feat: 'rms', scale: 'lin', playing: false, speed: 18, tab: 'supervision' };
+
+  /* ---------- sélecteur d'état ---------- */
+  (function () {
+    var sel = $('#src'), h = '<optgroup label="Référence"><option value="' + RULE + '">' + RULE + ' (labels de son notebook)</option></optgroup><optgroup label="Modèles, prédictions hors échantillon">';
+    D.models.forEach(function (m) { h += '<option value="' + m + '">' + m + '</option>'; });
+    sel.innerHTML = h + '</optgroup>';
+    sel.addEventListener('change', function () { setSrc(sel.value); });
+  })();
+  function setSrc(s) {
+    S.src = s; if (s !== RULE) S.model = s;
+    $('#src').value = s;
+    renderAll();
+  }
+
+  /* ---------- cartes roulements ---------- */
+  function status(b, i) {
+    if (D.series[b].rms[i] < 0.01) return ['off', 'ARRÊT'];
+    if (EP[S.src][b].st[i]) return ['crit', 'ALERTE'];
+    if (bits(S.src, b).charCodeAt(i) === 49) return ['warn', 'ÉCART'];
+    return ['ok', 'NORMAL'];
+  }
+  function fmtV(f, v) { return f === 'energy' ? (v >= 100 ? nf(v, 0) : nf(v, 1)) : nf(v, 3); }
+  function gaugeHTML(b, f, v) {
+    var t = D.thr[b][f], mid = (t.lo + t.hi) / 2, half = (t.hi - t.lo) / 2 || 1e-9;
+    var z = (v - mid) / half, A = -4, Z = 8;
+    var pos = clamp((z - A) / (Z - A), 0, 1) * 100;
+    var out = v < t.lo || v > t.hi;
+    var bandL = (-1 - A) / (Z - A) * 100, bandW = 2 / (Z - A) * 100;
+    var arrow = '';
+    if (z > Z) arrow = '<span class="cr" style="left:calc(' + pos + '% + 4px)">▸</span>';
+    if (z < A) arrow = '<span class="cl" style="left:calc(' + pos + '% - 4px)">◂</span>';
+    return '<div class="gauge" aria-hidden="true"><div class="band" style="left:' + bandL + '%;width:' + bandW + '%"></div><div class="mk' + (out ? ' out' : '') + '" style="left:' + pos + '%"></div>' + arrow + '</div>';
+  }
+  function renderCards() {
+    var h = '';
+    B.forEach(function (b, k) {
+      var st = status(b, S.i);
+      h += '<article class="brg" style="--bc:' + BCOL[k] + '"><div class="brg-head"><div><h3><span class="sw"></span>Roulement ' + (k + 1) + '</h3><div class="role">' + ROLE[k] + '</div></div><span class="pill ' + st[0] + '">' + st[1] + '</span></div>';
+      F.forEach(function (f) {
+        var v = D.series[b][f][S.i], t = D.thr[b][f], out = v < t.lo || v > t.hi;
+        h += '<div class="feat"><div class="feat-row"><span class="n">' + FL[f] + '</span><span class="v' + (out ? ' out' : '') + '">' + fmtV(f, v) + '</span></div>' + gaugeHTML(b, f, v) + '</div>';
+      });
+      h += '</article>';
+    });
+    $('#cards').innerHTML = h;
+  }
+
+  /* ---------- bandeau ---------- */
+  function renderBanner() {
+    var crit = 0, warn = 0, stopped = D.series[B[0]].rms[S.i] < 0.01;
+    B.forEach(function (b) { var s = status(b, S.i)[0]; if (s === 'crit') crit++; if (s === 'warn') warn++; });
+    var el = $('#banner'), title, sub, s;
+    if (stopped) { s = 'off'; title = 'Machine à l\'arrêt'; sub = 'Vibration quasi nulle sur les quatre roulements.'; }
+    else if (crit) { s = 'crit'; title = 'Alerte sur ' + crit + ' roulement' + (crit > 1 ? 's' : ''); sub = B.map(function (b, k) { return status(b, S.i)[0] === 'crit' ? 'Roulement ' + (k + 1) : null; }).filter(Boolean).join(', '); }
+    else if (warn) { s = 'warn'; title = 'Écart isolé'; sub = 'Une mesure sort de la plage, sans alerte confirmée.'; }
+    else { s = 'ok'; title = 'Fonctionnement normal'; sub = 'Les quatre roulements restent dans leur plage.'; }
+    el.setAttribute('data-s', s);
+    $('#bn-title').textContent = title; $('#bn-sub').textContent = sub;
+    $('#clk').textContent = fmtDate(S.i) + ' 2004';
+    $('#clk-rel').textContent = S.i <= FAIL ? ('Arrêt de la machine dans ' + nf(hToStop(S.i), 1) + ' h') : 'Après l\'arrêt de la machine';
+  }
+
+  /* ---------- géométrie commune des graphiques ---------- */
+  var DAYS = [];
+  for (var d0 = 0; d0 < N; d0++) { if (d0 === 0 || new Date(T[d0]).getUTCDate() !== new Date(T[d0 - 1]).getUTCDate()) DAYS.push(d0); }
+  function xAxis(x0, iw, y) {
+    var h = '', every = iw / DAYS.length < 62 ? 2 : 1;
+    DAYS.forEach(function (i, n) { var x = x0 + iw * i / (N - 1); h += '<line class="grid" x1="' + x + '" x2="' + x + '" y1="0" y2="' + y + '"/>' + (n % every === 0 ? '<text x="' + (x + 3) + '" y="' + (y + 14) + '">' + fmtDay(i) + '</text>' : ''); });
+    return h;
+  }
+  function niceTicks(lo, hi, n) {
+    var span = hi - lo, s0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(s0))), nm = s0 / mag;
+    var step = (nm < 1.5 ? 1 : nm < 3 ? 2 : nm < 7 ? 5 : 10) * mag, out = [];
+    for (var v = Math.ceil(lo / step) * step; v <= hi + 1e-12; v += step) out.push(+v.toPrecision(12));
+    return out;
+  }
+  function logTicks(lo, hi) {
+    var out = [];
+    for (var p = Math.floor(Math.log10(lo)); p <= Math.ceil(Math.log10(hi)); p++) [1, 2, 5].forEach(function (m) { var v = m * Math.pow(10, p); if (v >= lo && v <= hi) out.push(v); });
+    return out;
+  }
+  var CG = null, TG = null;
+
+  function drawChart() {
+    var svg = $('#chart'), w = Math.max(280, svg.parentElement.clientWidth), h = 270;
+    var m = { l: 54, r: 34, t: 10, b: 22 }, iw = w - m.l - m.r, ih = h - m.t - m.b;
+    var f = S.feat, lo = Infinity, hi = -Infinity;
+    B.forEach(function (b) { for (var i = 0; i <= FAIL; i++) { var v = D.series[b][f][i]; if (v < lo) lo = v; if (v > hi) hi = v; } });
+    var log = S.scale === 'log' && lo > 0;
+    var pad = log ? 1 : (hi - lo) * 0.05, ylo = log ? lo / 1.15 : lo - pad, yhi = log ? hi * 1.15 : hi + pad;
+    function Y(v) { return log ? m.t + ih * (1 - (Math.log10(v) - Math.log10(ylo)) / (Math.log10(yhi) - Math.log10(ylo))) : m.t + ih * (1 - (v - ylo) / (yhi - ylo)); }
+    function X(i) { return m.l + iw * i / (N - 1); }
+    var s = '<rect class="stop" x="' + X(FAIL) + '" y="' + m.t + '" width="' + (X(N - 1) - X(FAIL)) + '" height="' + ih + '"/>';
+    s += '<g transform="translate(0,' + m.t + ')">' + xAxis(m.l, iw, ih) + '</g>';
+    (log ? logTicks(ylo, yhi) : niceTicks(ylo, yhi, 5)).forEach(function (v) {
+      s += '<line class="grid" x1="' + m.l + '" x2="' + (w - m.r) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"/><text x="' + (m.l - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + sig(v) + '</text>';
+    });
+    s += '<line class="axis" x1="' + m.l + '" x2="' + (w - m.r) + '" y1="' + (m.t + ih) + '" y2="' + (m.t + ih) + '"/>';
+    s += '<line class="stopl" x1="' + X(FAIL) + '" x2="' + X(FAIL) + '" y1="' + m.t + '" y2="' + (m.t + ih) + '" stroke-width="1"/>';
+    var ends = [];
+    B.forEach(function (b, k) {
+      var d = '';
+      for (var i = 0; i <= FAIL; i++) d += (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(D.series[b][f][i]).toFixed(1);
+      s += '<path d="' + d + '" fill="none" stroke="' + BCOL[k] + '" stroke-width="' + (k === 0 ? 2 : 1.4) + '" stroke-linejoin="round"/>';
+      ends.push({ k: k, y: Y(D.series[b][f][FAIL]) });
+    });
+    ends.sort(function (a, b) { return a.y - b.y; });
+    for (var e = 1; e < ends.length; e++) if (ends[e].y - ends[e - 1].y < 12) ends[e].y = ends[e - 1].y + 12;
+    ends.forEach(function (e) { s += '<text class="lbl" x="' + (X(FAIL) + 4) + '" y="' + (e.y + 4) + '" style="fill:' + BCOL[e.k] + '">B' + (e.k + 1) + '</text>'; });
+    s += '<line class="cur" id="c-line" y1="' + m.t + '" y2="' + (m.t + ih) + '"/>';
+    B.forEach(function (b, k) { s += '<circle id="c-dot' + k + '" r="3.5" fill="' + BCOL[k] + '" stroke="var(--surface)" stroke-width="1.5"/>'; });
+    s += '<rect id="c-hit" x="' + m.l + '" y="' + m.t + '" width="' + iw + '" height="' + ih + '" fill="transparent" style="cursor:ew-resize"/>';
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h); svg.setAttribute('width', w); svg.setAttribute('height', h);
+    svg.innerHTML = s;
+    CG = { m: m, iw: iw, X: X, Y: Y, f: f };
+    $('#chart-legend').innerHTML = B.map(function (b, k) { return '<span><i style="background:' + BCOL[k] + '"></i>Roulement ' + (k + 1) + '</span>'; }).join('') + '<span class="muted">' + FL[f] + (log ? ', échelle logarithmique' : '') + '</span>';
+    bindDrag('#c-hit', CG);
+    moveCursor();
+  }
+
+  function drawTimeline() {
+    var svg = $('#timeline'), w = Math.max(280, svg.parentElement.clientWidth), rh = 24, gap = 6, m = { l: 54, r: 34, t: 4, b: 22 };
+    var iw = w - m.l - m.r, ih = B.length * (rh + gap) - gap, h = m.t + ih + m.b;
+    function X(i) { return m.l + iw * i / (N - 1); }
+    var s = '<g transform="translate(0,' + m.t + ')">' + xAxis(m.l, iw, ih) + '</g>';
+    s += '<rect class="stop" x="' + X(FAIL) + '" y="' + m.t + '" width="' + (X(N - 1) - X(FAIL)) + '" height="' + ih + '"/>';
+    B.forEach(function (b, k) {
+      var y = m.t + k * (rh + gap), str = bits(S.src, b), ep = EP[S.src][b];
+      s += '<rect class="rowbg" x="' + m.l + '" y="' + y + '" width="' + iw + '" height="' + rh + '" rx="3"/>';
+      s += '<text class="lbl" x="' + (m.l - 8) + '" y="' + (y + rh / 2 + 4) + '" text-anchor="end" style="fill:' + BCOL[k] + '">B' + (k + 1) + '</text>';
+      ep.on.forEach(function (a, n) { var z = ep.off[n] === undefined ? N - 1 : ep.off[n]; s += '<rect class="alert" x="' + X(a) + '" y="' + y + '" width="' + Math.max(2, X(z) - X(a)) + '" height="' + rh + '"/>'; });
+      var tk = '';
+      for (var i = 0; i < N; i++) if (str.charCodeAt(i) === 49 && i <= FAIL && !ep.st[i]) tk += 'M' + X(i).toFixed(1) + ',' + (y + 3) + 'v' + (rh - 6);
+      s += '<path d="' + tk + '" stroke="var(--warn)" stroke-width="1.2" fill="none"/>';
+    });
+    s += '<line class="stopl" x1="' + X(FAIL) + '" x2="' + X(FAIL) + '" y1="' + m.t + '" y2="' + (m.t + ih) + '" stroke-width="1"/>';
+    s += '<line class="cur" id="t-line" y1="' + m.t + '" y2="' + (m.t + ih) + '"/>';
+    s += '<rect id="t-hit" x="' + m.l + '" y="' + m.t + '" width="' + iw + '" height="' + ih + '" fill="transparent" style="cursor:ew-resize"/>';
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h); svg.setAttribute('width', w); svg.setAttribute('height', h);
+    svg.innerHTML = s;
+    TG = { m: m, iw: iw, X: X };
+    bindDrag('#t-hit', TG);
+    moveCursor();
+  }
+
+  function bindDrag(sel, G) {
+    var el = $(sel), down = false;
+    function at(e) { var r = el.getBoundingClientRect(); S.i = clamp(Math.round((e.clientX - r.left) / r.width * (N - 1)), 0, N - 1); renderLive(); }
+    el.addEventListener('pointerdown', function (e) { down = true; el.setPointerCapture(e.pointerId); at(e); });
+    el.addEventListener('pointermove', function (e) { if (down) at(e); });
+    el.addEventListener('pointerup', function () { down = false; });
+    el.addEventListener('pointercancel', function () { down = false; });
+  }
+
+  function moveCursor() {
+    if (CG) {
+      var x = CG.X(S.i), l = $('#c-line');
+      if (l) { l.setAttribute('x1', x); l.setAttribute('x2', x); }
+      B.forEach(function (b, k) {
+        var c = $('#c-dot' + k); if (!c) return;
+        if (S.i <= FAIL) { c.setAttribute('cx', x); c.setAttribute('cy', CG.Y(D.series[b][CG.f][S.i])); c.style.display = ''; } else c.style.display = 'none';
+      });
+    }
+    if (TG) { var tl = $('#t-line'); if (tl) { var tx = TG.X(S.i); tl.setAttribute('x1', tx); tl.setAttribute('x2', tx); } }
+  }
+
+  /* ---------- avance à la détection + journal ---------- */
+  function renderLead() {
+    var rows = '', firsts = [];
+    B.forEach(function (b, k) {
+      var ep = EP[S.src][b], first = ep.on.length ? ep.on[0] : null, lead = D.lead[S.src][b];
+      if (first !== null) firsts.push(hToStop(first));
+      rows += '<tr><td><span class="sw" style="display:inline-block;margin-right:8px;background:' + BCOL[k] + '"></span>Roulement ' + (k + 1) + '</td><td class="num">' + (first === null ? 'aucune' : nf(hToStop(first), 1) + ' h') + '</td><td class="num">' + ep.on.length + '</td><td class="num">' + lead.early_false_snapshots + ' / ' + lead.early_snapshots + '</td></tr>';
+    });
+    $('#lead-body').innerHTML = rows;
+    var f1 = EP[S.src][B[0]].on[0], others = [1, 2, 3].map(function (k) { return hToStop(EP[S.src][B[k]].on[0]); });
+    $('#lead-sum').innerHTML = 'Le roulement 1 déclenche <b>' + nf(hToStop(f1), 1) + ' h</b> avant l\'arrêt. Les roulements 2 à 4 suivent entre ' + nf(Math.max.apply(null, others), 1) + ' h et ' + nf(Math.min.apply(null, others), 1) + ' h avant l\'arrêt, probablement parce que les vibrations du roulement 1 se transmettent par l\'arbre commun.';
+    $('#srcnote').textContent = S.src === RULE ? 'Labels de la règle IQR' : S.src + ', prédictions hors échantillon';
+  }
+  function eventsFor(src) {
+    var ev = [];
+    B.forEach(function (b, k) {
+      EP[src][b].on.forEach(function (i) { ev.push({ i: i, k: k, t: 'on' }); });
+      EP[src][b].off.forEach(function (i) { ev.push({ i: i, k: k, t: 'off' }); });
+    });
+    ev.push({ i: STOP_I, k: -1, t: 'stop' });
+    ev.sort(function (a, b) { return a.i - b.i || a.k - b.k; });
+    return ev;
+  }
+  function renderLog() {
+    var ev = eventsFor(S.src).filter(function (e) { return e.i <= S.i; }).reverse();
+    if (!ev.length) { $('#log').innerHTML = '<li class="empty" style="display:block">Aucun événement pour l\'instant. Lancer la lecture ou déplacer le curseur.</li>'; return; }
+    $('#log').innerHTML = ev.map(function (e) {
+      var tag = e.t === 'on' ? '<span class="tag crit">Alerte</span> Roulement ' + (e.k + 1) : e.t === 'off' ? '<span class="tag ok">Retour à la normale</span> Roulement ' + (e.k + 1) : '<span class="tag off">Arrêt machine</span> Vibration quasi nulle';
+      var rel = e.i <= FAIL ? '−' + nf(hToStop(e.i), 1) + ' h' : 'après arrêt';
+      return '<li><span class="when">' + fmtDate(e.i) + '</span><span>' + tag + '</span><span class="rel">' + rel + '</span></li>';
+    }).join('');
+  }
+
+  /* ---------- modèles ---------- */
+  function f1Range(get) { var v = D.models.map(get); return [Math.min.apply(null, v), Math.max.apply(null, v)]; }
+  function renderModels() {
+    var h = '';
+    D.models.forEach(function (n) {
+      var a = D.cv[n].overall.f1, b = D.lobo[n].mean_f1, c = D.lobo_norm[n].mean_f1;
+      function bar(v, k) { var w = clamp(v, 0, 1); return '<div class="bar k' + k + '" style="--w:' + w + '"><div class="tr"><span class="f"></span></div><span class="val">' + nf(v, 3) + '</span></div>'; }
+      h += '<div class="mrow" role="button" tabindex="0" data-m="' + n + '" aria-current="' + (n === S.model) + '"><div class="mname">' + n + '</div><div class="bars">' + bar(a, 1) + bar(b, 2) + bar(c, 3) + '</div></div>';
+    });
+    $('#mbars').innerHTML = h;
+    $('#mbars').querySelectorAll('.mrow').forEach(function (r) {
+      function pick() { setSrc(r.getAttribute('data-m')); }
+      r.addEventListener('click', pick);
+      r.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+    });
+    var ra = f1Range(function (n) { return D.cv[n].overall.f1; }), rb = f1Range(function (n) { return D.lobo[n].mean_f1; }), rc = f1Range(function (n) { return D.lobo_norm[n].mean_f1; });
+    var leads = D.models.map(function (n) { return hToStop(EP[n][B[0]].on[0]); });
+    $('#gapsum').innerHTML = 'En validation croisée, les modèles reproduisent la règle avec un F1 de ' + nf(ra[0], 2) + ' à ' + nf(ra[1], 2) + '. Entraînés sur trois roulements et testés sur le quatrième avec les variables brutes, ils tombent à ' + nf(rb[0], 2) + ' à ' + nf(rb[1], 2) + '. Quand chaque roulement est d\'abord calibré sur ses 20 % premiers instants (son état neuf), ils remontent à ' + nf(rc[0], 2) + ' à ' + nf(rc[1], 2) + '. Sur le roulement 1, tous donnent l\'alerte entre ' + nf(Math.min.apply(null, leads), 1) + ' h et ' + nf(Math.max.apply(null, leads), 1) + ' h avant l\'arrêt, comme la règle elle-même.';
+    $('#mnote').textContent = 'F1 sur 3 936 lignes (validation croisée) ou moyenne des quatre roulements testés tour à tour (roulement jamais vu). Forêt aléatoire : écart de quelques millièmes avec son notebook, dû à la version de scikit-learn.';
+    var scope = $('#cmscope');
+    if (!scope.options.length) { scope.innerHTML = '<option value="overall">Les 4 roulements</option>' + B.map(function (b, k) { return '<option value="' + b + '">Roulement ' + (k + 1) + '</option>'; }).join(''); scope.addEventListener('change', renderCM); }
+    renderCM();
+  }
+  function renderCM() {
+    var n = S.model, sc = $('#cmscope').value, c = D.cv[n][sc];
+    $('#cm-title').textContent = 'Matrice de confusion : ' + n;
+    $('#cm').innerHTML = '<div></div><div class="h">Prédit normal</div><div class="h">Prédit anomalie</div>' +
+      '<div class="h">Vrai normal</div><div class="c good">' + c.tn + '<small>vrais négatifs</small></div><div class="c bad">' + c.fp + '<small>fausses alertes</small></div>' +
+      '<div class="h">Vrai anomalie</div><div class="c bad">' + c.fn + '<small>manquées</small></div><div class="c good">' + c.tp + '<small>vrais positifs</small></div>';
+    $('#kpis').innerHTML = [['Exactitude', c.acc], ['Précision', c.prec], ['Rappel', c.rec], ['F1', c.f1]].map(function (k) { return '<div class="kpi"><div class="l">' + k[0] + '</div><div class="x">' + nf(k[1], 3) + '</div></div>'; }).join('');
+  }
+
+  /* ---------- simulateur ---------- */
+  var SIM = { b: B[0], v: {} };
+  function simRange(b, f) {
+    var lo = Infinity, hi = -Infinity;
+    for (var i = 0; i <= FAIL; i++) { var v = D.series[b][f][i]; if (v < lo) lo = v; if (v > hi) hi = v; }
+    return [lo, hi];
+  }
+  function simLoad(i) { ['rms', 'entropy', 'kurtosis'].forEach(function (f) { SIM.v[f] = D.series[SIM.b][f][Math.min(i, FAIL)]; }); }
+  function renderSim() {
+    var sb = $('#simb');
+    if (!sb.options.length) {
+      sb.innerHTML = B.map(function (b, k) { return '<option value="' + b + '">Roulement ' + (k + 1) + '</option>'; }).join('');
+      sb.addEventListener('change', function () { SIM.b = sb.value; simLoad(S.i); renderSim(); });
+      $('#sim-now').addEventListener('click', function () { simLoad(S.i); renderSim(); });
+    }
+    sb.value = SIM.b;
+    var rows = '';
+    ['rms', 'energy', 'entropy', 'kurtosis'].forEach(function (f) {
+      var t = D.thr[SIM.b][f], v = f === 'energy' ? 20480 * SIM.v.rms * SIM.v.rms : SIM.v[f], out = v < t.lo || v > t.hi;
+      var ctrl;
+      if (f === 'energy') ctrl = '<div class="muted small">Calculée : 20 480 × RMS²</div>';
+      else { var r = simRange(SIM.b, f); ctrl = '<input type="range" id="sl-' + f + '" min="' + r[0] + '" max="' + r[1] + '" step="' + ((r[1] - r[0]) / 600) + '" value="' + SIM.v[f] + '" aria-label="' + FL[f] + '">'; }
+      rows += '<div class="sim-row"><div class="nm">' + FL[f] + '<div class="mono small muted" id="sv-' + f + '">' + (f === 'energy' ? nf(v, 1) : nf(v, 4)) + '</div></div><div>' + ctrl + '<div class="rg">Plage acceptée : ' + sig(t.lo) + ' à ' + sig(t.hi) + '</div></div><div><span class="chip ' + (out ? 'crit' : 'ok') + '" id="sc-' + f + '">' + (out ? 'Hors plage' : 'Dans la plage') + '</span></div></div>';
+    });
+    $('#sim').innerHTML = rows;
+    ['rms', 'entropy', 'kurtosis'].forEach(function (f) {
+      $('#sl-' + f).addEventListener('input', function (e) { SIM.v[f] = parseFloat(e.target.value); updateSim(); });
+    });
+    updateSim();
+  }
+  function updateSim() {
+    var any = false;
+    ['rms', 'energy', 'entropy', 'kurtosis'].forEach(function (f) {
+      var t = D.thr[SIM.b][f], v = f === 'energy' ? 20480 * SIM.v.rms * SIM.v.rms : SIM.v[f], out = v < t.lo || v > t.hi;
+      if (out) any = true;
+      $('#sv-' + f).textContent = f === 'energy' ? nf(v, 1) : nf(v, 4);
+      var c = $('#sc-' + f); c.className = 'chip ' + (out ? 'crit' : 'ok'); c.textContent = out ? 'Hors plage' : 'Dans la plage';
+    });
+    var vd = $('#sim-verdict'); vd.className = 'verdict ' + (any ? 'crit' : 'ok');
+    vd.textContent = any ? 'Anomalie selon la règle IQR : au moins une variable sort de sa plage.' : 'Normal selon la règle IQR : les quatre variables sont dans leur plage.';
+  }
+
+  /* ---------- limites ---------- */
+  function renderLimits() {
+    var ra = f1Range(function (n) { return D.cv[n].overall.f1; }), rb = f1Range(function (n) { return D.lobo[n].mean_f1; }), rc = f1Range(function (n) { return D.lobo_norm[n].mean_f1; });
+    var early = [1, 2, 3].map(function (k) { return D.lead[RULE][B[k]].early_false_snapshots; });
+    $('#limits').innerHTML =
+      '<h3>Les anomalies sont définies par une règle, pas observées</h3>' +
+      '<p>Un snapshot est étiqueté anomalie quand l\'une des quatre variables sort de l\'intervalle [Q1 − 1,5 × IQR ; Q3 + 1,5 × IQR] de son roulement. Les modèles reçoivent ces mêmes quatre variables : ils apprennent à reproduire la règle, d\'où un F1 de ' + nf(ra[0], 2) + ' à ' + nf(ra[1], 2) + ' en validation croisée. Ce score mesure la fidélité à la règle, pas la détection d\'un défaut.</p>' +
+      '<h3>Un seul événement réel dans l\'essai</h3>' +
+      '<p>Seul le roulement 1 défaille (bague extérieure). Les anomalies des roulements 2 à 4 se concentrent dans les dernières heures, quand la panne se propage. Avant les 72 dernières heures, elles ne concernent que ' + early[0] + ', ' + early[1] + ' et ' + early[2] + ' snapshots (roulements 2, 3 et 4) sur ' + D.lead[RULE][B[1]].early_snapshots + '. Les labels suivent donc surtout la fin de l\'essai. Les deux derniers snapshots, pris machine arrêtée, sont aussi classés anomalie par la règle : l\'interface les affiche comme arrêt.</p>' +
+      '<h3>Sur un roulement jamais vu, les scores baissent</h3>' +
+      '<p>Entraînés sur trois roulements et testés sur le quatrième, avec les variables brutes, les modèles obtiennent un F1 moyen de ' + nf(rb[0], 2) + ' à ' + nf(rb[1], 2) + '. Les seuils sont propres à chaque roulement et les niveaux de vibration diffèrent d\'un roulement à l\'autre. En calibrant chacun sur ses 20 % premiers instants (son état neuf), le F1 remonte à ' + nf(rc[0], 2) + ' à ' + nf(rc[1], 2) + '. Cette calibration est possible en exploitation, contrairement à des seuils calculés sur tout l\'essai.</p>' +
+      '<h3>Le test sur le 1er essai ne prouve rien</h3>' +
+      '<p>Les seuils appris sur le 2e essai étiquettent les 2 156 snapshots du roulement 3 du 1er essai comme anomalies. Les modèles à 100 % répondent « anomalie » partout. Le résultat utile est que les seuils ne se transfèrent pas d\'un essai à l\'autre.</p>' +
+      '<h3>Quatre variables, trois informations</h3>' +
+      '<p>L\'énergie vaut 20 480 × RMS² : les deux variables portent presque la même information. Pour aller plus loin, il faudrait une vérité terrain (l\'instant réel de la panne) plutôt qu\'une règle statistique, et des variables liées aux fréquences de défaut du roulement.</p>';
+  }
+
+  /* ---------- rendu et boucle ---------- */
+  function renderLive() { $('#pos').value = S.i; renderBanner(); renderCards(); renderLog(); moveCursor(); }
+  function renderAll() {
+    $('#pos').value = S.i;
+    renderBanner(); renderCards(); renderLead(); renderLog();
+    drawChart(); drawTimeline(); renderModels();
+  }
+  function setPlaying(p) { S.playing = p; $('#play').textContent = p ? 'Pause' : (S.i >= N - 1 ? 'Rejouer' : 'Lecture'); if (p) { last = null; requestAnimationFrame(loop); } }
+  var last = null, acc = 0;
+  function loop(t) {
+    if (!S.playing) return;
+    if (last === null) last = t;
+    var dt = Math.min(0.1, (t - last) / 1000); last = t;
+    acc += S.speed * dt; // vitesse en snapshots (10 min d'essai) par seconde
+    var step = Math.floor(acc);
+    if (step > 0) {
+      acc -= step; S.i = Math.min(N - 1, S.i + step); renderLive();
+      if (S.i >= N - 1) { setPlaying(false); return; }
+    }
+    requestAnimationFrame(loop);
+  }
+
+  /* ---------- onglets, commandes ---------- */
+  var TABS = ['supervision', 'modeles', 'simulateur', 'limites'];
+  function showTab(name) {
+    if (TABS.indexOf(name) < 0) name = 'supervision';
+    S.tab = name;
+    TABS.forEach(function (t) { $('#p-' + t).hidden = t !== name; $('#t-' + t).setAttribute('aria-selected', t === name ? 'true' : 'false'); $('#t-' + t).tabIndex = t === name ? 0 : -1; });
+    if (name === 'supervision') { drawChart(); drawTimeline(); }
+    if (name === 'simulateur') { if (!Object.keys(SIM.v).length) simLoad(S.i); renderSim(); }
+  }
+  document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('click', function () { var n = b.getAttribute('data-tab'); try { history.replaceState(null, '', '#' + n); } catch (e) { location.hash = n; } showTab(n); }); });
+  window.addEventListener('hashchange', function () { showTab(location.hash.slice(1)); });
+
+  $('#play').addEventListener('click', function () { if (!S.playing && S.i >= N - 1) S.i = 0; setPlaying(!S.playing); });
+  $('#speed').addEventListener('change', function (e) { S.speed = parseFloat(e.target.value); });
+  $('#pos').addEventListener('input', function (e) { S.i = parseInt(e.target.value, 10); renderLive(); });
+  $('#go-alert').addEventListener('click', function () { S.i = EP[S.src][B[0]].on[0]; renderLive(); });
+  $('#go-stop').addEventListener('click', function () { S.i = STOP_I; renderLive(); });
+  $('#go-start').addEventListener('click', function () { S.i = 0; renderLive(); });
+  $('#featseg').innerHTML = F.map(function (f) { return '<button type="button" data-f="' + f + '" aria-pressed="' + (f === S.feat) + '">' + FL[f] + '</button>'; }).join('');
+  $('#featseg').addEventListener('click', function (e) {
+    var f = e.target.getAttribute && e.target.getAttribute('data-f'); if (!f) return;
+    S.feat = f; S.scale = f === 'energy' ? 'log' : 'lin';
+    document.querySelectorAll('#featseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-f') === f); });
+    document.querySelectorAll('#scaleseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-sc') === S.scale); });
+    drawChart();
+  });
+  $('#scaleseg').addEventListener('click', function (e) {
+    var s = e.target.getAttribute && e.target.getAttribute('data-sc'); if (!s) return;
+    S.scale = s;
+    document.querySelectorAll('#scaleseg button').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-sc') === s); });
+    drawChart();
+  });
+  document.addEventListener('keydown', function (e) {
+    var tg = e.target && e.target.tagName; if (tg === 'INPUT' || tg === 'SELECT' || tg === 'TEXTAREA' || tg === 'BUTTON') return;
+    if (S.tab !== 'supervision') return;
+    if (e.key === ' ') { e.preventDefault(); $('#play').click(); }
+    else if (e.key === 'ArrowRight') { S.i = Math.min(N - 1, S.i + (e.shiftKey ? 10 : 1)); renderLive(); }
+    else if (e.key === 'ArrowLeft') { S.i = Math.max(0, S.i - (e.shiftKey ? 10 : 1)); renderLive(); }
+  });
+  var rt = null;
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { if (S.tab === 'supervision') { drawChart(); drawTimeline(); } }, 120); });
+
+  renderLimits();
+  renderAll();
+  showTab(location.hash.slice(1));
+  window.__twin = { D: D, S: S, EP: EP, STOP_I: STOP_I };
+})();
+</script>
