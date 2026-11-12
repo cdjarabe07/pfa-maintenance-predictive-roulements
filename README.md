@@ -14,11 +14,31 @@
 | `make_twin_data.py` | Entraîne le CNN-LSTM **sans le 2nd test** pour le rejeu (prédiction honnête) → `twin_replay.json` |
 | `envelope_validation.py`, `make_twin_extras.py` | Valident le détecteur par spectre d'enveloppe sur les 984 acquisitions du 2nd test et préparent ses données pour l'interface → `twin_extras.json` |
 | `tests/` | Vérifie que le JavaScript de l'interface donne les mêmes résultats que Python/Keras |
+| `classification/` | **Jumeau numérique v2** (classification d'anomalies du 2nd test, voir plus bas) : CSV de Salma, préparation des données, gabarit et assemblage de `site/jumeau_roulements.html` |
+
+## Jumeau numérique v2 (classification d'anomalies)
+
+Rejeu des 984 acquisitions du 2nd test IMS à partir du travail de classification (labels par règle IQR sur RMS, énergie,
+entropie spectrale et kurtosis, six modèles classiques). Page : `site/jumeau_roulements.html`, avec quatre onglets :
+Supervision (état des 4 roulements, frise des alertes, journal), Modèles (validation croisée, roulement jamais vu,
+matrices de confusion), Simulateur (règle IQR) et Limites.
+
+```
+python classification/prep_twin_data.py classification/bearing_features_labels_2nd_test.csv classification/twin_data.json   # ≈ 1 min
+python classification/build_jumeau.py                                                                                      # écrit site/jumeau_roulements.html
+```
+
+`prep_twin_data.py` vérifie que les seuils IQR redonnent exactement les labels du CSV, reproduit la validation croisée
+5 plis (un modèle par roulement, graine 42) et ajoute deux évaluations plus exigeantes : roulement jamais vu (entraînement
+sur 3 roulements, test sur le 4e), avec variables brutes puis calibrées sur les 20 % premiers instants de chaque roulement.
+Les scores en validation croisée (F1 ≈ 0,93 à 0,99) mesurent la fidélité à la règle IQR, pas la détection d'un défaut :
+voir l'onglet Limites.
 
 ## Site public
 
 **https://pfa-maintenance-roulements.vercel.app** — page d'accueil (fond : spectrogramme réel du palier 1, généré par
-`make_background.py`) et poste de surveillance. Non liés depuis l'accueil mais accessibles : `/rul_4feat.html` et
+`make_background.py`), jumeau numérique v2 (`/jumeau_roulements.html`) et poste de surveillance précédent
+(`/jumeau_numerique.html`, lié depuis l'accueil). Non liés mais accessibles : `/rul_4feat.html` et
 l'archive du projet `/projet_pfa_roulements.zip`. Site non indexé par les moteurs de recherche. Après une modification, committer puis
 lancer `bash deploy_site.sh` pour republier (l'archive est générée à partir du dernier commit).
 

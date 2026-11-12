@@ -4,6 +4,7 @@
 set -e
 cd "$(dirname "$0")"
 python build_interface.py
+python classification/build_jumeau.py
 cp jumeau_numerique.html rul_4feat.html site/
 git archive --format=zip --prefix=pfa_maintenance_roulements/ -o site/projet_pfa_roulements.zip HEAD
 cd site && npx -y vercel@latest deploy --prod --yes

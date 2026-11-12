@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#06090d">
-<title>Pronostic de durée de vie des roulements</title>
+<title>Jumeau numérique des roulements</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -54,6 +54,8 @@ h1 strong{font-weight:600;background:linear-gradient(92deg,#fff 0%,#bfeee9 55%,v
 .btn:hover svg{transform:translateX(4px)}
 .btn:focus-visible{outline:2px solid #fff;outline-offset:4px}
 .hint{font-size:13.5px;color:var(--dim)}
+.hint a{color:var(--mut);text-decoration:none;border-bottom:1px solid var(--line)}
+.hint a:hover{color:var(--txt)}
 
 /* ---------- chiffres clés ---------- */
 .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:58px;border-top:1px solid var(--line);max-width:640px}
@@ -98,17 +100,17 @@ h1 strong{font-weight:600;background:linear-gradient(92deg,#fff 0%,#bfeee9 55%,v
 
   <main class="hero">
     <div class="eyebrow rv d2"><i></i>Maintenance prédictive</div>
-    <h1 class="rv d3">Pronostic de durée de vie <strong>des roulements</strong></h1>
-    <p class="lead rv d4">Diagnostic vibratoire et estimation de la durée de vie résiduelle par apprentissage profond, à partir d'essais réels menés jusqu'à la rupture.</p>
+    <h1 class="rv d3">Jumeau numérique <strong>des roulements</strong></h1>
+    <p class="lead rv d4">Rejeu d'un essai réel mené jusqu'à la rupture : état de quatre roulements, détection d'anomalies et comparaison de six modèles, directement dans le navigateur.</p>
     <div class="cta rv d5">
-      <a class="btn" id="go" href="jumeau_numerique.html">Ouvrir le poste de surveillance
+      <a class="btn" id="go" href="jumeau_roulements.html">Ouvrir le jumeau numérique
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-      <span class="hint">Visite guidée à la première ouverture</span>
+      <span class="hint">Essai IMS n°2 · <a href="jumeau_numerique.html">Version précédente : pronostic de durée de vie</a></span>
     </div>
     <div class="stats rv d6">
-      <div class="stat"><b><span data-n="74">74</span><small>h</small></b><span>d'avance sur la rupture pour la détection du défaut</span></div>
-      <div class="stat"><b><span data-n="4">4</span></b><span>pannes réelles (3 essais) pour valider le modèle</span></div>
-      <div class="stat"><b><span data-n="20">20</span><small>kHz</small></b><span>vibration brute analysée dans le navigateur</span></div>
+      <div class="stat"><b><span data-n="46">46</span><small>h</small></b><span>d'avance de l'alerte sur l'arrêt du roulement 1</span></div>
+      <div class="stat"><b><span data-n="4">4</span></b><span>roulements suivis sur un même arbre</span></div>
+      <div class="stat"><b><span data-n="6">6</span></b><span>modèles comparés, sur roulement connu et jamais vu</span></div>
     </div>
   </main>
 
