@@ -48,10 +48,10 @@ déroule le parcours (fichiers valides, erreurs, mobile).
 ## Site public
 
 **https://pfa-maintenance-roulements.vercel.app** — page d'accueil (fond : spectrogramme réel du palier 1, généré par
-`make_background.py`), interface unique (`/jumeau_roulements.html`) et poste de surveillance précédent
-(`/jumeau_numerique.html`, lié depuis l'accueil). Non liés mais accessibles : `/rul_4feat.html` et
-l'archive du projet `/projet_pfa_roulements.zip`. Site non indexé par les moteurs de recherche. Après une modification, committer puis
-lancer `bash deploy_site.sh` pour republier (l'archive est générée à partir du dernier commit).
+`make_background.py`) et interface unique (`/jumeau_roulements.html`). Site non indexé par les moteurs de recherche.
+Le dossier `site/` est publié tel quel depuis Git (dépôt GitHub, branche `jumeau-numerique-classification`, dossier racine `site`).
+L'ancien poste de surveillance (`jumeau_numerique.html`), `rul_4feat.html` et l'archive du projet sont générés et ignorés par Git :
+`bash deploy_site.sh` les régénère et republie le site complet depuis un ordinateur connecté à Vercel.
 
 ## Lancer le notebook
 
