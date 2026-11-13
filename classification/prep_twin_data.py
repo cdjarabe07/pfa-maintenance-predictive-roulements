@@ -173,6 +173,33 @@ for n in ['Règle IQR'] + NAMES:
         }
     print(f"{n:22s} avance B1 = {lead[n]['Bearing 1']['first_alert_h_before']} h ; épisodes B1..B4 = {[lead[n][b]['episodes'] for b in BEARINGS]}")
 
+
+# ---- 3b. modèles exportés pour la prédiction dans le navigateur (un modèle par roulement, entraîné sur tout l'essai)
+# Arbre, régression logistique et Bayes naïf : paramètres simples, inférence exacte en JavaScript.
+def export_models():
+    out = {}
+    exp_pred = {}
+    for b in BEARINGS:
+        g = d[d.bearing == b]
+        X, y = g[FEATS].values, g.label.values
+        dt = DecisionTreeClassifier(class_weight='balanced', random_state=42).fit(X, y)
+        t = dt.tree_
+        lr = Pipeline([('s', StandardScaler()), ('m', LogisticRegression(class_weight='balanced', max_iter=5000, random_state=42))]).fit(X, y)
+        nb = GaussianNB().fit(X, y)
+        out[b] = {
+            'Decision Tree': {'left': t.children_left.tolist(), 'right': t.children_right.tolist(), 'feat': t.feature.tolist(),
+                              'thr': [float(v) for v in t.threshold], 'cls': [int(np.argmax(v)) for v in t.value[:, 0, :]]},
+            'Logistic Regression': {'mean': lr[0].mean_.tolist(), 'scale': lr[0].scale_.tolist(), 'coef': lr[1].coef_[0].tolist(), 'b': float(lr[1].intercept_[0])},
+            'Gaussian Naive Bayes': {'theta': nb.theta_.tolist(), 'var': nb.var_.tolist(), 'prior': nb.class_prior_.tolist()},
+        }
+        exp_pred[b] = {'Decision Tree': dt.predict(X).astype(int).tolist(), 'Logistic Regression': lr.predict(X).astype(int).tolist(),
+                       'Gaussian Naive Bayes': nb.predict(X).astype(int).tolist()}
+        print(f'{b}: arbre {len(t.feature)} nœuds')
+    return out, exp_pred
+
+
+clf_models, clf_expected = export_models()
+
 # ---- 4. export compact
 r = lambda v: [float(f'{x:.5g}') for x in v]
 data = {
@@ -190,7 +217,9 @@ data = {
     'lobo': lobo_summary,
     'lobo_norm': lobo_norm_summary,
     'lead': lead,
+    'clf': clf_models,
 }
 json.dump(data, open(out_path, 'w'), separators=(',', ':'))
+json.dump(clf_expected, open(out_path.replace('.json', '_clf_expected.json'), 'w'), separators=(',', ':'))
 import os
 print('écrit', out_path, round(os.path.getsize(out_path) / 1024, 1), 'Ko')

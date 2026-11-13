@@ -1,107 +1,127 @@
-<title>Jumeau numérique des roulements</title>
+<title>Supervision de la ligne d'arbre</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
 <style>
-/* Concept : poste de supervision. Neutres bleutés, l'encre porte l'interface, la couleur ne sert qu'aux données (4 roulements) et à l'état (ok / écart / alerte / arrêt). */
+/* Poste de supervision d'atelier : fond gris clair, menu graphite, jaune de signalisation pour la page active.
+   La couleur ne sert qu'aux données (4 roulements) et à l'état : normal (vert), écart isolé (jaune), alerte (orange), arrêt (gris). */
 :root {
-  --bg: #f1f4f8;
+  --bg: #e9eaec;
   --surface: #ffffff;
-  --surface-2: #e8edf3;
-  --ink: #13202f;
-  --ink-2: #4a5b6e;
-  --ink-3: #75869a;
-  --line: #d3dbe5;
-  --ok: #17794f;   --ok-bg: #dcf2e6;
-  --warn: #9a6200; --warn-bg: #fbecc9;
-  --crit: #bf2a2a; --crit-bg: #fadcdc;
-  --off: #627184;  --off-bg: #e2e7ed;
+  --surface-2: #dadde1;
+  --ink: #14181d;
+  --ink-2: #4b535d;
+  --ink-3: #5f6772;
+  --line: #c9ccd1;
+  --side: #1b1f24;
+  --side-ink: #e6e9ed;
+  --side-mute: #9aa3ad;
+  --signal: #f2b705;
+  --ok: #175640;   --ok-bg: #dcefe6;  --ok-fill: #1f6f54;
+  --warn: #6b5600; --warn-bg: #fff2bf; --warn-fill: #c9a100;
+  --crit: #8a4a05; --crit-bg: #fdebd8; --crit-fill: #b7650a;
+  --off: #4b535d;  --off-bg: #dadde1;
   --c1: #0b66c8; --c2: #8240b8; --c3: #0b8791; --c4: #8a6a2c;
   --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0d141c; --surface: #141d27; --surface-2: #1b2733;
-    --ink: #e7eef6; --ink-2: #a0b0c2; --ink-3: #7d8ea1; --line: #2a3745;
-    --ok: #4cc38a; --ok-bg: #12332a;
-    --warn: #e8b24c; --warn-bg: #3a2f14;
-    --crit: #ff7373; --crit-bg: #3e1b1f;
-    --off: #93a2b3; --off-bg: #232e3a;
-    --c1: #5ea6ff; --c2: #bb90f2; --c3: #3fc9d4; --c4: #cdb57c;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0d141c; --surface: #141d27; --surface-2: #1b2733;
-  --ink: #e7eef6; --ink-2: #a0b0c2; --ink-3: #7d8ea1; --line: #2a3745;
-  --ok: #4cc38a; --ok-bg: #12332a;
-  --warn: #e8b24c; --warn-bg: #3a2f14;
-  --crit: #ff7373; --crit-bg: #3e1b1f;
-  --off: #93a2b3; --off-bg: #232e3a;
-  --c1: #5ea6ff; --c2: #bb90f2; --c3: #3fc9d4; --c4: #cdb57c;
-  color-scheme: dark;
-}
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.5; }
-.wrap { max-width: 1180px; margin: 0 auto; padding-block: 20px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 h1, h2, h3 { margin: 0; font-weight: 600; text-wrap: balance; }
-h1 { font-size: 22px; letter-spacing: -0.01em; }
-h2 { font-size: 15px; }
+h1 { font-size: 28px; letter-spacing: -0.01em; font-weight: 700; }
+h2 { font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; }
 h3 { font-size: 14px; }
 p { margin: 0; }
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .muted { color: var(--ink-2); }
 .small { font-size: 12px; }
-:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
+:focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; border-radius: 3px; }
+.side :focus-visible { outline-color: var(--signal); }
 
-.top { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: flex-end; justify-content: space-between; }
-.top p { color: var(--ink-2); max-width: 62ch; margin-top: 4px; }
+/* gabarit : menu à gauche */
+.app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+.side { background: var(--side); color: var(--side-ink); padding: 26px 18px; display: flex; flex-direction: column; gap: 26px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.side .brand b { display: block; font-size: 17px; font-weight: 700; }
+.side .brand span { font-family: var(--mono); font-size: 12px; color: var(--side-mute); }
+.nav { display: flex; flex-direction: column; gap: 3px; }
+.nav .grp { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--side-mute); padding: 16px 12px 6px; }
+.nav .grp:first-child { padding-top: 0; }
+.tab { background: none; border: 0; text-align: left; padding: 10px 12px; border-radius: 3px; cursor: pointer; color: var(--side-ink); font: inherit; font-size: 15px; min-height: 42px; }
+.tab:hover { background: #2a3038; }
+.tab[aria-selected="true"] { background: var(--signal); color: #14181d; font-weight: 600; }
+.side .foot { margin-top: auto; font-size: 12px; line-height: 1.5; color: var(--side-mute); }
+.side .foot a { color: var(--side-ink); }
+.main { padding: 26px 34px 48px; min-width: 0; max-width: 1240px; width: 100%; }
+@media (max-width: 900px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; height: auto; padding: 14px 14px 10px; gap: 10px; }
+  .side .foot { display: none; }
+  .nav { flex-direction: row; overflow-x: auto; gap: 4px; }
+  .nav .grp { display: none; }
+  .tab { white-space: nowrap; font-size: 14px; padding: 9px 12px; }
+  .main { padding: 18px 16px 40px; }
+}
+
+.ph { border-bottom: 2px solid var(--ink); padding-bottom: 14px; margin-bottom: 18px; }
+.ph .tag { font-family: var(--mono); font-size: 12px; color: var(--ink-2); letter-spacing: 0.04em; }
+.ph p { color: var(--ink-2); max-width: 70ch; margin-top: 6px; }
 .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .field label { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
 select, button { font: inherit; color: var(--ink); }
-select { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 7px 28px 7px 10px; min-width: 0; max-width: 100%; }
-
-.tabs { display: flex; gap: 4px; margin: 18px 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
-.tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 9px 14px; cursor: pointer; color: var(--ink-2); font-weight: 500; white-space: nowrap; margin-bottom: -1px; }
-.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
-.tab:hover { color: var(--ink); }
+select { background: var(--surface); border: 1px solid #aab0b8; border-radius: 3px; padding: 9px 28px 9px 10px; min-width: 0; max-width: 100%; min-height: 40px; }
 .panel[hidden] { display: none; }
 
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 16px 18px; min-width: 0; }
 .card + .card { margin-top: 14px; }
 .stack { display: flex; flex-direction: column; gap: 14px; }
 .stack > .card + .card, .cols2 > .card + .card { margin-top: 0; }
 
 /* bandeau */
-.banner { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; justify-content: space-between; border-radius: 8px; padding: 14px 16px; border: 1px solid var(--line); background: var(--surface); }
-.banner .big { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-.dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; flex: none; }
-.banner[data-s="ok"] { border-color: var(--ok); } .banner[data-s="ok"] .big { color: var(--ok); }
-.banner[data-s="warn"] { border-color: var(--warn); } .banner[data-s="warn"] .big { color: var(--warn); }
-.banner[data-s="crit"] { border-color: var(--crit); background: var(--crit-bg); } .banner[data-s="crit"] .big { color: var(--crit); }
+.banner { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; justify-content: space-between; border-radius: 4px; padding: 16px 18px; border: 1px solid var(--line); border-left-width: 1px; background: var(--surface); }
+.banner .big { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.dot { width: 12px; height: 12px; background: currentColor; flex: none; }
+.banner[data-s="ok"] { border-color: var(--ok-fill); } .banner[data-s="ok"] .big { color: var(--ok); }
+.banner[data-s="warn"] { border-color: var(--warn-fill); background: var(--warn-bg); } .banner[data-s="warn"] .big { color: var(--warn); }
+.banner[data-s="crit"] { border-color: var(--crit-fill); background: var(--crit-bg); } .banner[data-s="crit"] .big { color: var(--crit); }
 .banner[data-s="off"] { border-color: var(--off); background: var(--off-bg); } .banner[data-s="off"] .big { color: var(--off); }
 .clock { text-align: right; }
-.clock .t { font-family: var(--mono); font-size: 16px; font-variant-numeric: tabular-nums; }
+.clock .t { font-family: var(--mono); font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* commandes */
 .controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 14px; }
-.btn { background: var(--ink); color: var(--bg); border: 0; border-radius: 6px; padding: 8px 14px; font-weight: 600; cursor: pointer; min-width: 92px; }
-.btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); font-weight: 500; min-width: 0; }
+.btn { background: var(--ink); color: #fff; border: 1px solid var(--ink); border-radius: 3px; padding: 9px 16px; font-weight: 600; cursor: pointer; min-width: 92px; min-height: 42px; }
+.btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid #aab0b8; font-weight: 500; min-width: 0; }
 .btn:hover { opacity: 0.88; }
 .slider { flex: 1 1 260px; min-width: 0; display: flex; }
 input[type=range] { width: 100%; accent-color: var(--ink); min-width: 0; }
 
+/* synoptique */
+.syn { display: flex; align-items: center; overflow-x: auto; padding: 10px 2px 6px; }
+.syn .motor { flex: 0 0 auto; width: 92px; height: 92px; border: 2px solid var(--ink); background: var(--surface-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-weight: 700; }
+.syn .motor span { font-family: var(--mono); font-size: 12px; font-weight: 400; color: var(--ink-2); }
+.syn .shaft { flex: 1 0 22px; height: 14px; background: #9aa3ad; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+.syn .load { flex: 0 0 auto; width: 92px; height: 80px; border: 2px dashed var(--ink-2); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; font-weight: 600; padding: 6px; }
+.syn .pal { flex: 0 0 auto; width: 132px; border: 2px solid var(--ok-fill); background: var(--ok-bg); padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; text-align: left; font: inherit; color: var(--ink); }
+.syn .pal .id { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+.syn .pal b { font-size: 15px; }
+.syn .pal .st { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; }
+.syn .pal.warn { border-color: var(--warn-fill); background: var(--warn-bg); } .syn .pal.warn .st { color: var(--warn); }
+.syn .pal.crit { border: 3px solid var(--crit-fill); background: var(--crit-bg); padding: 9px 11px; } .syn .pal.crit .st { color: var(--crit); }
+.syn .pal.off { border-color: var(--off); background: var(--off-bg); } .syn .pal.off .st { color: var(--off); }
+.syn .pal.ok .st { color: var(--ok); }
+.syn .pal[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--signal); }
+
 /* cartes roulements */
 .grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-top: 14px; }
-.brg { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; min-width: 0; border-top: 3px solid var(--bc); }
+.brg { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; min-width: 0; border-top: 4px solid var(--bc); }
+.brg.sel { box-shadow: 0 0 0 3px var(--signal); }
 .brg-head { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
 .brg-head h3 { display: flex; align-items: center; gap: 8px; }
 .sw { width: 10px; height: 10px; border-radius: 2px; background: var(--bc); flex: none; }
 .brg .role { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
-.pill { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; padding: 3px 8px; border-radius: 999px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
-.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 2px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.pill::before { content: ""; width: 6px; height: 6px; background: currentColor; }
 .pill.ok { color: var(--ok); background: var(--ok-bg); }
 .pill.warn { color: var(--warn); background: var(--warn-bg); }
 .pill.crit { color: var(--crit); background: var(--crit-bg); }
@@ -110,176 +130,249 @@ input[type=range] { width: 100%; accent-color: var(--ink); min-width: 0; }
 .feat-row { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
 .feat-row .n { color: var(--ink-2); }
 .feat-row .v { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-.feat-row .v.out { color: var(--crit); font-weight: 500; }
-.gauge { position: relative; height: 8px; border-radius: 4px; background: var(--surface-2); margin-top: 4px; }
-.gauge .band { position: absolute; top: 0; bottom: 0; background: var(--ok-bg); border-left: 1px solid var(--ok); border-right: 1px solid var(--ok); }
-.gauge .mk { position: absolute; top: -2px; width: 3px; height: 12px; border-radius: 1px; background: var(--ink); transform: translateX(-50%); }
-.gauge .mk.out { background: var(--crit); }
+.feat-row .v.out { color: var(--crit); font-weight: 600; }
+.gauge { position: relative; height: 8px; background: var(--surface-2); margin-top: 4px; }
+.gauge .band { position: absolute; top: 0; bottom: 0; background: var(--ok-bg); border-left: 1px solid var(--ok-fill); border-right: 1px solid var(--ok-fill); }
+.gauge .mk { position: absolute; top: -2px; width: 3px; height: 12px; background: var(--ink); transform: translateX(-50%); }
+.gauge .mk.out { background: var(--crit-fill); }
 .gauge .cl { position: absolute; top: -3px; font-size: 10px; line-height: 14px; color: var(--crit); transform: translateX(-100%); }
 .gauge .cr { position: absolute; top: -3px; font-size: 10px; line-height: 14px; color: var(--crit); }
 
+/* bon de travail */
+.wo { padding: 0; overflow: hidden; border-color: var(--ink); }
+.wo-h { background: var(--signal); color: #14181d; padding: 11px 18px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.wo-h b { font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; }
+.wo-h span { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.wo-b { padding: 16px 18px; display: flex; flex-direction: column; gap: 11px; }
+.wo-r { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; font-size: 14px; line-height: 1.45; }
+.wo-r > span:first-child { color: var(--ink-2); }
+.wo-r b { font-weight: 600; }
+.wo-none { color: var(--ink-2); }
+
 /* graphiques */
 .sec-head { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); }
-.seg button { background: none; border: 0; padding: 6px 11px; cursor: pointer; color: var(--ink-2); font-size: 13px; }
-.seg button + button { border-left: 1px solid var(--line); }
-.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg { display: inline-flex; border: 1px solid #aab0b8; border-radius: 3px; overflow: hidden; background: var(--surface); }
+.seg button { background: none; border: 0; padding: 8px 12px; cursor: pointer; color: var(--ink-2); font-size: 13px; min-height: 38px; }
+.seg button + button { border-left: 1px solid #aab0b8; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
 .chart-box { width: 100%; overflow: hidden; touch-action: pan-y; }
 svg text { font-family: var(--mono); font-size: 11px; fill: var(--ink-3); }
 svg .grid { stroke: var(--line); stroke-width: 1; }
 svg .axis { stroke: var(--ink-3); stroke-width: 1; }
-svg .cur { stroke: var(--ink); stroke-width: 1; }
+svg .cur { stroke: var(--ink); stroke-width: 1.5; }
 svg .stop { fill: var(--off-bg); }
 svg .stopl { stroke: var(--off); stroke-dasharray: 4 3; }
-svg .rowbg { fill: var(--surface-2); }
-svg .alert { fill: var(--crit); opacity: 0.85; }
-svg .tick { fill: var(--warn); }
+svg .rowbg { fill: #d6e6dd; }
+svg .alert { fill: var(--crit-fill); }
 svg .lbl { fill: var(--ink); font-weight: 500; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink-2); margin-top: 8px; }
-.legend i { display: inline-block; width: 12px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: baseline; }
+.legend i { display: inline-block; width: 12px; height: 8px; margin-right: 6px; vertical-align: baseline; }
 
 /* tableaux */
 .tbl-wrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
-th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-th { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; border-bottom: 2px solid var(--ink); }
 td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
 /* journal */
 .log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 320px; overflow-y: auto; }
-.log li { display: grid; grid-template-columns: 112px 1fr auto; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+.log li { display: grid; grid-template-columns: 112px 1fr auto; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
 .log .when { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
 .log .rel { font-family: var(--mono); font-size: 12px; color: var(--ink-3); white-space: nowrap; }
 .log .tag { font-weight: 600; }
 .log .tag.crit { color: var(--crit); } .log .tag.ok { color: var(--ok); } .log .tag.off { color: var(--off); }
 .empty { color: var(--ink-3); padding: 10px 0; }
-.cols2 { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; margin-top: 14px; }
 @media (max-width: 860px) { .cols2 { grid-template-columns: minmax(0, 1fr); } .log li { grid-template-columns: 96px 1fr; } .log .rel { grid-column: 2; } }
 
 /* modèles */
-.mrow { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; padding: 8px 6px; border-radius: 6px; cursor: pointer; align-items: center; border: 1px solid transparent; }
-.mrow:hover { background: var(--surface-2); }
+.cols2.m { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); margin-top: 0; }
+.mrow { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; padding: 8px 6px; border-radius: 3px; cursor: pointer; align-items: center; border: 1px solid transparent; }
+.mrow:hover { background: #eef0f2; }
 .mrow[aria-current="true"] { border-color: var(--ink); }
 .mname { font-weight: 500; font-size: 13px; }
 .bars { display: flex; flex-direction: column; gap: 3px; }
 .bar { display: grid; grid-template-columns: minmax(0, 1fr) 40px; gap: 8px; align-items: center; }
-.bar .tr { position: relative; height: 12px; background: var(--surface-2); border-radius: 3px; }
-.bar .f { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; width: calc(var(--w) * 100%); background: var(--bcol); }
+.bar .tr { position: relative; height: 12px; background: var(--surface-2); }
+.bar .f { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--w) * 100%); background: var(--bcol); }
 .bar .val { font-family: var(--mono); font-size: 11px; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
 .k1 { --bcol: var(--c1); } .k2 { --bcol: var(--c2); } .k3 { --bcol: var(--c3); }
 .cm { display: grid; grid-template-columns: auto 1fr 1fr; gap: 6px; align-items: stretch; margin-top: 10px; }
 .cm .h { font-size: 11px; color: var(--ink-3); display: flex; align-items: center; justify-content: center; text-align: center; padding: 2px; }
-.cm .c { border-radius: 6px; padding: 12px 8px; text-align: center; font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+.cm .c { border-radius: 3px; padding: 12px 8px; text-align: center; font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
 .cm .c small { display: block; font-family: var(--font); font-size: 11px; color: var(--ink-2); margin-top: 2px; }
 .cm .good { background: var(--ok-bg); color: var(--ok); }
 .cm .bad { background: var(--crit-bg); color: var(--crit); }
 .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-.kpi { background: var(--surface-2); border-radius: 6px; padding: 8px 10px; }
+.kpi { background: #eef0f2; border-radius: 3px; padding: 8px 10px; }
 .kpi .l { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; }
 .kpi .x { font-family: var(--mono); font-size: 16px; font-variant-numeric: tabular-nums; }
-@media (max-width: 520px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mrow { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 860px) { .cols2.m { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 520px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mrow { grid-template-columns: minmax(0, 1fr); } h1 { font-size: 24px; } }
 
 /* simulateur */
 .sim-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 150px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .sim-row .nm { font-weight: 500; }
 .sim-row .rg { font-size: 12px; color: var(--ink-2); }
 @media (max-width: 640px) { .sim-row { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
-.chip { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; display: inline-block; }
+.chip { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 2px; display: inline-block; }
 .chip.ok { color: var(--ok); background: var(--ok-bg); } .chip.crit { color: var(--crit); background: var(--crit-bg); }
-.verdict { margin-top: 14px; padding: 12px 14px; border-radius: 8px; font-weight: 600; }
+.verdict { margin-top: 14px; padding: 12px 14px; border-radius: 3px; font-weight: 600; }
 .verdict.ok { color: var(--ok); background: var(--ok-bg); } .verdict.crit { color: var(--crit); background: var(--crit-bg); }
 
+/* pages de prédiction */
+.pred { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .pred { grid-template-columns: minmax(0, 1fr); } }
+.drop { border: 2px dashed #8a929c; background: #f6f7f8; border-radius: 3px; padding: 28px 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; }
+.drop.over { background: var(--warn-bg); border-color: var(--warn-fill); }
+.drop .t { font-size: 18px; font-weight: 600; }
+.drop .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.fields { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; }
+.hid { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.side-note h3 { margin-bottom: 8px; font-size: 15px; }
+.side-note p { color: var(--ink-2); line-height: 1.6; }
+.side-note p + p { margin-top: 10px; }
+.msg { margin-top: 14px; padding: 12px 14px; border-radius: 3px; font-size: 14px; }
+.msg.err { background: var(--crit-bg); color: var(--crit); font-weight: 500; }
+.msg.info { background: #eef0f2; color: var(--ink-2); }
+.result { margin-top: 14px; }
+.vbig { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: flex-end; }
+.vbig .k { font-size: 13px; color: var(--ink-2); }
+.vbig .n { font-size: 52px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.05; }
+.vbig .n small { font-size: 22px; font-weight: 600; }
+.rbar { position: relative; height: 14px; background: var(--surface-2); margin-top: 8px; }
+.rbar .f { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ok-fill); }
+.rbar.crit .f { background: var(--crit-fill); } .rbar.warn .f { background: var(--warn-fill); }
+.reco { margin-top: 14px; padding: 12px 14px; border-radius: 3px; font-size: 15px; font-weight: 600; }
+.reco.ok { background: var(--ok-bg); color: var(--ok); } .reco.warn { background: var(--warn-bg); color: var(--warn); } .reco.crit { background: var(--crit-bg); color: var(--crit); }
+.reco small { display: block; font-weight: 400; margin-top: 3px; color: var(--ink-2); font-size: 13px; }
+.cl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 14px; }
+details.more { margin-top: 14px; }
+details.more summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
+
 /* limites */
-.prose { max-width: 70ch; }
+.prose { max-width: 72ch; }
 .prose h3 { margin-top: 18px; }
 .prose h3:first-child { margin-top: 0; }
 .prose p { margin-top: 6px; color: var(--ink-2); }
 .prose p b { color: var(--ink); font-weight: 600; }
 .note { font-size: 12px; color: var(--ink-3); margin-top: 10px; }
-@media (max-width: 520px) { .tab { padding: 9px 9px; font-size: 13px; } h1 { font-size: 20px; } }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+@media print {
+  .side, .ph, .controls, .btn { display: none !important; }
+  .main { padding: 0; }
+  body.pwo #p-supervision > *:not(.row-wo) { display: none !important; }
+  body.pwo .row-wo > *:not(.wo) { display: none !important; }
+  body.pwo .row-wo { display: block; margin: 0; }
+}
 </style>
 
-<div class="wrap">
-  <header class="top">
-    <div>
-      <h1>Jumeau numérique des roulements</h1>
-      <p>Rejeu de l'essai IMS n°2 : quatre roulements Rexnord ZA-2115 sur un même arbre, 2 000 tr/min, 984 acquisitions d'une seconde toutes les 10 minutes, du 12 au 19 février 2004.</p>
-    </div>
-    <div class="field">
-      <label for="src">État fourni par</label>
-      <select id="src"></select>
-    </div>
-  </header>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><b>Ligne d'arbre n° 2</b><span>Banc d'essai de roulements</span></div>
+    <nav class="nav" role="tablist" aria-label="Sections" aria-orientation="vertical">
+      <div class="grp">Surveiller</div>
+      <button class="tab" role="tab" id="t-supervision" data-tab="supervision" type="button">Supervision</button>
+      <div class="grp">Prédire</div>
+      <button class="tab" role="tab" id="t-rul" data-tab="rul" type="button">Durée de vie restante</button>
+      <button class="tab" role="tab" id="t-classe" data-tab="classe" type="button">État d'un roulement</button>
+      <div class="grp">Comprendre</div>
+      <button class="tab" role="tab" id="t-modeles" data-tab="modeles" type="button">Comparer les modèles</button>
+      <button class="tab" role="tab" id="t-simulateur" data-tab="simulateur" type="button">Simulateur de seuils</button>
+      <button class="tab" role="tab" id="t-limites" data-tab="limites" type="button">Limites de l'étude</button>
+    </nav>
+    <div class="foot">Projet de fin d'année, génie industriel. Données NASA IMS rejouées, aucune mesure en direct.<br><a href="./">Accueil du site</a></div>
+  </aside>
 
-  <nav class="tabs" role="tablist" aria-label="Sections">
-    <button class="tab" role="tab" id="t-supervision" data-tab="supervision">Supervision</button>
-    <button class="tab" role="tab" id="t-modeles" data-tab="modeles">Modèles</button>
-    <button class="tab" role="tab" id="t-simulateur" data-tab="simulateur">Simulateur</button>
-    <button class="tab" role="tab" id="t-limites" data-tab="limites">Limites</button>
-  </nav>
+  <main class="main">
+    <header class="ph">
+      <div class="tag" id="ph-tag"></div>
+      <h1 id="ph-h1"></h1>
+      <p id="ph-lead"></p>
+    </header>
 
-  <!-- SUPERVISION -->
-  <section class="panel" id="p-supervision" role="tabpanel" aria-labelledby="t-supervision">
-    <div class="banner" id="banner" data-s="ok">
-      <div>
-        <div class="big"><span class="dot"></span><span id="bn-title">Fonctionnement normal</span></div>
-        <div class="muted small" id="bn-sub" style="margin-top:2px"></div>
-      </div>
-      <div class="clock">
-        <div class="t" id="clk"></div>
-        <div class="muted small" id="clk-rel"></div>
-      </div>
-    </div>
-
-    <div class="controls">
-      <button class="btn" id="play" type="button">Lecture</button>
-      <div class="field" style="flex-direction:row;align-items:center;gap:8px">
-        <label for="speed" style="text-transform:none;letter-spacing:0;font-size:13px">Vitesse</label>
-        <select id="speed">
-          <option value="6">1 h d'essai par seconde</option>
-          <option value="18" selected>3 h d'essai par seconde</option>
-          <option value="48">8 h d'essai par seconde</option>
-        </select>
-      </div>
-      <button class="btn ghost" id="go-alert" type="button">Première alerte du roulement 1</button>
-      <button class="btn ghost" id="go-stop" type="button">Arrêt machine</button>
-      <button class="btn ghost" id="go-start" type="button">Début</button>
-      <div class="slider"><input id="pos" type="range" min="0" max="983" step="1" value="0" aria-label="Instant de l'essai"></div>
-    </div>
-
-    <div class="grid4" id="cards"></div>
-
-    <div class="card" style="margin-top:14px">
-      <div class="sec-head">
-        <h2>Évolution des quatre roulements</h2>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-          <div class="seg" id="featseg" role="group" aria-label="Variable affichée"></div>
-          <div class="seg" id="scaleseg" role="group" aria-label="Échelle">
-            <button type="button" data-sc="lin" aria-pressed="true">Linéaire</button>
-            <button type="button" data-sc="log" aria-pressed="false">Log</button>
-          </div>
+    <!-- SUPERVISION -->
+    <section class="panel" id="p-supervision" role="tabpanel" aria-labelledby="t-supervision">
+      <div class="banner" id="banner" data-s="ok">
+        <div>
+          <div class="big"><span class="dot"></span><span id="bn-title">Fonctionnement normal</span></div>
+          <div class="muted small" id="bn-sub" style="margin-top:2px"></div>
+        </div>
+        <div class="clock">
+          <div class="t" id="clk"></div>
+          <div class="muted small" id="clk-rel"></div>
         </div>
       </div>
-      <div class="chart-box"><svg id="chart" role="img" aria-label="Variable choisie pour les quatre roulements au cours de l'essai"></svg></div>
-      <div class="legend" id="chart-legend"></div>
-    </div>
 
-    <div class="card" style="margin-top:14px">
-      <div class="sec-head">
-        <h2>Frise des alertes</h2>
-        <span class="muted small" id="srcnote"></span>
+      <div class="controls">
+        <button class="btn" id="play" type="button">Lecture</button>
+        <div class="field" style="flex-direction:row;align-items:center;gap:8px">
+          <label for="speed" style="text-transform:none;letter-spacing:0;font-size:13px">Vitesse</label>
+          <select id="speed">
+            <option value="6">1 h d'essai par seconde</option>
+            <option value="18" selected>3 h d'essai par seconde</option>
+            <option value="48">8 h d'essai par seconde</option>
+          </select>
+        </div>
+        <button class="btn ghost" id="go-alert" type="button">Première alerte du roulement 1</button>
+        <button class="btn ghost" id="go-stop" type="button">Arrêt machine</button>
+        <button class="btn ghost" id="go-start" type="button">Début</button>
+        <div class="field" style="flex-direction:row;align-items:center;gap:8px">
+          <label for="src" style="text-transform:none;letter-spacing:0;font-size:13px">État fourni par</label>
+          <select id="src"></select>
+        </div>
+        <div class="slider"><input id="pos" type="range" min="0" max="983" step="1" value="0" aria-label="Instant de l'essai"></div>
       </div>
-      <div class="chart-box"><svg id="timeline" role="img" aria-label="Frise des alertes par roulement"></svg></div>
-      <div class="legend">
-        <span><i style="background:var(--crit)"></i>Alerte : 3 anomalies de suite, levée après 6 mesures normales</span>
-        <span><i style="background:var(--warn);width:3px;height:10px"></i>Anomalie isolée, hors alerte</span>
-        <span><i style="background:var(--off-bg);border:1px solid var(--off)"></i>Machine à l'arrêt</span>
-      </div>
-    </div>
 
-    <div class="cols2" style="margin-top:14px">
-      <div class="card">
+      <div class="card" style="margin-top:14px">
+        <div class="sec-head"><h2>Synoptique de la ligne</h2><span class="muted small">Cliquer sur un palier pour le mettre en évidence</span></div>
+        <div class="syn" id="syn"></div>
+      </div>
+
+      <div class="grid4" id="cards"></div>
+
+      <div class="cols2 row-wo">
+        <div class="card wo" id="wo">
+          <div class="wo-h"><b>Bon de travail suggéré</b><span id="wo-ref"></span></div>
+          <div class="wo-b" id="wo-body"></div>
+        </div>
+        <div class="card">
+          <h2 style="margin-bottom:6px">Journal des événements</h2>
+          <ul class="log" id="log"></ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="sec-head">
+          <h2>Évolution des quatre roulements</h2>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <div class="seg" id="featseg" role="group" aria-label="Variable affichée"></div>
+            <div class="seg" id="scaleseg" role="group" aria-label="Échelle">
+              <button type="button" data-sc="lin" aria-pressed="true">Linéaire</button>
+              <button type="button" data-sc="log" aria-pressed="false">Log</button>
+            </div>
+          </div>
+        </div>
+        <div class="chart-box"><svg id="chart" role="img" aria-label="Variable choisie pour les quatre roulements au cours de l'essai"></svg></div>
+        <div class="legend" id="chart-legend"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="sec-head">
+          <h2>Historique des alertes</h2>
+          <span class="muted small" id="srcnote"></span>
+        </div>
+        <div class="chart-box"><svg id="timeline" role="img" aria-label="Historique des alertes par roulement"></svg></div>
+        <div class="legend">
+          <span><i style="background:var(--crit-fill)"></i>Alerte : 3 anomalies de suite, levée après 6 mesures normales</span>
+          <span><i style="background:var(--warn-fill);width:3px;height:10px"></i>Anomalie isolée, hors alerte</span>
+          <span><i style="background:var(--off-bg);border:1px solid var(--off)"></i>Machine à l'arrêt</span>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
         <h2 style="margin-bottom:6px">Avance à la détection</h2>
         <p class="muted small" id="lead-sum" style="margin-bottom:8px"></p>
         <div class="tbl-wrap"><table>
@@ -287,75 +380,163 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
           <tbody id="lead-body"></tbody>
         </table></div>
       </div>
-      <div class="card">
-        <h2 style="margin-bottom:6px">Journal d'alarmes</h2>
-        <ul class="log" id="log"></ul>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- MODÈLES -->
-  <section class="panel" id="p-modeles" role="tabpanel" aria-labelledby="t-modeles" hidden>
-    <div class="cols2">
+    <!-- DURÉE DE VIE RESTANTE -->
+    <section class="panel" id="p-rul" role="tabpanel" aria-labelledby="t-rul" hidden>
       <div class="card">
-        <h2>Le même modèle, trois protocoles</h2>
-        <p class="muted small" style="margin:4px 0 10px">F1 sur les labels de la règle IQR. Cliquer sur un modèle pour le sélectionner.</p>
-        <div class="legend" style="margin:0 0 8px">
-          <span><i class="k1" style="background:var(--c1)"></i>Validation croisée 5 plis (son notebook)</span>
-          <span><i style="background:var(--c2)"></i>Roulement jamais vu, variables brutes</span>
-          <span><i style="background:var(--c3)"></i>Roulement jamais vu, calibré sur ses 20 % premiers instants</span>
-        </div>
-        <div id="mbars"></div>
-        <p class="note" id="mnote"></p>
-      </div>
-      <div class="stack">
-        <div class="card">
-          <div class="sec-head" style="margin-bottom:0">
-            <h2 id="cm-title">Matrice de confusion</h2>
-            <div class="field" style="flex-direction:row;align-items:center;gap:8px">
-              <label for="cmscope" style="text-transform:none;letter-spacing:0;font-size:13px">Portée</label>
-              <select id="cmscope"></select>
+        <div class="pred">
+          <div>
+            <div class="fields">
+              <div class="field"><label for="rul-col">Quel roulement ?</label>
+                <select id="rul-col">
+                  <option value="0">Roulement 1 (colonne 1)</option><option value="1">Roulement 2 (colonne 2)</option>
+                  <option value="2">Roulement 3 (colonne 3)</option><option value="3">Roulement 4 (colonne 4)</option>
+                  <option value="4">Colonne 5</option><option value="5">Colonne 6</option><option value="6">Colonne 7</option><option value="7">Colonne 8</option>
+                </select></div>
+            </div>
+            <div class="drop" id="rul-drop">
+              <div class="t">Glissez ici le dossier des fichiers</div>
+              <div class="muted">ou</div>
+              <div class="row">
+                <button class="btn" id="rul-pick-dir" type="button">Choisir un dossier</button>
+                <button class="btn ghost" id="rul-pick-files" type="button">Choisir des fichiers</button>
+              </div>
+              <div class="muted small">Rien n'est envoyé : tout se calcule dans votre navigateur.</div>
+              <input class="hid" type="file" id="rul-dir" webkitdirectory multiple tabindex="-1" aria-hidden="true">
+              <input class="hid" type="file" id="rul-files" multiple tabindex="-1" aria-hidden="true">
+            </div>
+            <div class="controls" style="margin-top:12px">
+              <span class="muted small">Pas de données sous la main ?</span>
+              <button class="btn ghost" id="rul-demo-h" type="button">Exemple : roulement sain</button>
+              <button class="btn ghost" id="rul-demo-d" type="button">Exemple : roulement dégradé</button>
             </div>
           </div>
-          <div class="cm" id="cm"></div>
-          <div class="kpis" id="kpis"></div>
-          <p class="note">Validation croisée 5 plis, un modèle par roulement, graine 42, prédictions hors échantillon. Lignes : vrai label, colonnes : prédiction.</p>
-        </div>
-        <div class="card">
-          <h2 style="margin-bottom:6px">Ce que montre l'écart</h2>
-          <p class="muted" id="gapsum"></p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SIMULATEUR -->
-  <section class="panel" id="p-simulateur" role="tabpanel" aria-labelledby="t-simulateur" hidden>
-    <div class="card">
-      <div class="sec-head">
-        <h2>Et si ce roulement vibrait comme ça ?</h2>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-          <div class="field" style="flex-direction:row;align-items:center;gap:8px">
-            <label for="simb" style="text-transform:none;letter-spacing:0;font-size:13px">Roulement</label>
-            <select id="simb"></select>
+          <div class="side-note">
+            <h3>Pourquoi un seul fichier ne suffit pas</h3>
+            <p>Un fichier montre l'état du roulement à un instant. La durée de vie restante se lit dans la façon dont il vieillit : il faut donc une suite de fichiers pris les uns après les autres, au moins <b>230 relevés</b>, soit environ un jour et demi de mesures.</p>
+            <p>Les 200 premiers servent à apprendre ce qu'est un roulement neuf, les 30 derniers sont analysés. Pour juger l'état à partir d'un seul fichier, utilisez la page « État d'un roulement ».</p>
           </div>
-          <button class="btn ghost" id="sim-now" type="button">Reprendre l'instant de la supervision</button>
+        </div>
+        <div class="msg info" id="rul-note" hidden></div>
+        <div class="msg err" id="rul-err" hidden></div>
+      </div>
+      <div class="card result" id="rul-res" hidden>
+        <div class="sec-head"><h2>Résultat</h2><span class="muted small" id="rul-meta"></span></div>
+        <div class="vbig">
+          <div><div class="k">Il reste environ</div><div class="n" id="rul-val">—</div><div class="k" id="rul-unc"></div></div>
+          <div style="flex:1 1 280px;min-width:0"><div class="k" style="display:flex;justify-content:space-between"><span>Panne</span><span>Au moins 2,5 jours</span></div><div class="rbar" id="rul-bar"><div class="f" id="rul-barf"></div></div><div class="k" style="margin-top:6px" id="rul-rms"></div></div>
+        </div>
+        <div class="reco ok" id="rul-reco"><span id="rul-reco-t"></span><small id="rul-reco-d"></small></div>
+        <div style="margin-top:16px"><h2 style="margin-bottom:6px">Vibration sur les 30 derniers relevés (5 h)</h2><div class="chart-box"><svg id="rul-chart" role="img" aria-label="Vibration relative au roulement neuf sur les 30 derniers relevés"></svg></div></div>
+        <details class="more"><summary>Voir les calculs intermédiaires</summary><div class="tbl-wrap"><table id="rul-table"></table></div></details>
+        <p class="note" id="rul-limits"></p>
+      </div>
+    </section>
+
+    <!-- ÉTAT D'UN ROULEMENT -->
+    <section class="panel" id="p-classe" role="tabpanel" aria-labelledby="t-classe" hidden>
+      <div class="card">
+        <div class="pred">
+          <div>
+            <div class="fields">
+              <div class="field"><label for="cl-model">Méthode</label>
+                <select id="cl-model"></select></div>
+            </div>
+            <div class="drop" id="cl-drop">
+              <div class="t">Glissez ici un fichier de mesure</div>
+              <div class="muted">ou</div>
+              <div class="row"><button class="btn" id="cl-pick" type="button">Choisir un fichier</button></div>
+              <div class="muted small">Un relevé d'une seconde : 20 480 lignes, une colonne par roulement. Rien n'est envoyé.</div>
+              <input class="hid" type="file" id="cl-file" tabindex="-1" aria-hidden="true">
+            </div>
+            <div class="controls" style="margin-top:12px">
+              <span class="muted small">Sans fichier :</span>
+              <button class="btn ghost" id="cl-ex-h" type="button">Exemple : relevé du 13 février</button>
+              <button class="btn ghost" id="cl-ex-d" type="button">Exemple : relevé du 19 février</button>
+              <button class="btn ghost" id="cl-ex-now" type="button">Instant de la supervision</button>
+            </div>
+          </div>
+          <div class="side-note">
+            <h3>Ce que fait cette page</h3>
+            <p>Elle calcule quatre mesures sur chaque colonne du fichier (niveau de vibration, énergie, désordre du signal, pics) et dit si chaque roulement vibre comme d'habitude ou non.</p>
+            <p>Elle est réglée sur les quatre roulements de cet essai. Pour une autre machine, la réponse ne serait pas fiable : chaque roulement a son propre niveau normal.</p>
+          </div>
+        </div>
+        <div class="msg err" id="cl-err" hidden></div>
+      </div>
+      <div class="card result" id="cl-res" hidden>
+        <div class="sec-head"><h2>Résultat</h2><span class="muted small" id="cl-meta"></span></div>
+        <div class="reco ok" id="cl-sum"><span id="cl-sum-t"></span><small id="cl-sum-d"></small></div>
+        <div class="cl-grid" id="cl-cards"></div>
+        <p class="note">Trait noir : valeur du relevé. Zone verte : plage normale de ce roulement. Une valeur hors plage est signalée en orange.</p>
+      </div>
+    </section>
+
+    <!-- MODÈLES -->
+    <section class="panel" id="p-modeles" role="tabpanel" aria-labelledby="t-modeles" hidden>
+      <div class="cols2 m">
+        <div class="card">
+          <h2>Le même modèle, trois protocoles</h2>
+          <p class="muted small" style="margin:4px 0 10px">F1 sur les labels de la règle IQR. Cliquer sur un modèle pour le sélectionner.</p>
+          <div class="legend" style="margin:0 0 8px">
+            <span><i class="k1" style="background:var(--c1)"></i>Validation croisée 5 plis (notebook)</span>
+            <span><i style="background:var(--c2)"></i>Roulement jamais vu, variables brutes</span>
+            <span><i style="background:var(--c3)"></i>Roulement jamais vu, calibré sur ses 20 % premiers instants</span>
+          </div>
+          <div id="mbars"></div>
+          <p class="note" id="mnote"></p>
+        </div>
+        <div class="stack">
+          <div class="card">
+            <div class="sec-head" style="margin-bottom:0">
+              <h2 id="cm-title">Matrice de confusion</h2>
+              <div class="field" style="flex-direction:row;align-items:center;gap:8px">
+                <label for="cmscope" style="text-transform:none;letter-spacing:0;font-size:13px">Portée</label>
+                <select id="cmscope"></select>
+              </div>
+            </div>
+            <div class="cm" id="cm"></div>
+            <div class="kpis" id="kpis"></div>
+            <p class="note">Validation croisée 5 plis, un modèle par roulement, graine 42, prédictions hors échantillon. Lignes : vrai label, colonnes : prédiction.</p>
+          </div>
+          <div class="card">
+            <h2 style="margin-bottom:6px">Ce que montre l'écart</h2>
+            <p class="muted" id="gapsum"></p>
+          </div>
         </div>
       </div>
-      <p class="muted small" style="margin-bottom:6px">Déplacer les curseurs pour tester la règle IQR de ce roulement. L'énergie est calculée à partir du RMS (énergie = 20 480 × RMS²), comme dans les données.</p>
-      <div id="sim"></div>
-      <div class="verdict ok" id="sim-verdict"></div>
-      <p class="note">Les seuils de chaque roulement sont calculés sur les 984 acquisitions de l'essai, donc connus après coup. Un système réel devrait les fixer sur une période de référence.</p>
-    </div>
-  </section>
+    </section>
 
-  <!-- LIMITES -->
-  <section class="panel" id="p-limites" role="tabpanel" aria-labelledby="t-limites" hidden>
-    <div class="card prose" id="limits"></div>
-  </section>
+    <!-- SIMULATEUR -->
+    <section class="panel" id="p-simulateur" role="tabpanel" aria-labelledby="t-simulateur" hidden>
+      <div class="card">
+        <div class="sec-head">
+          <h2>Et si ce roulement vibrait comme ça ?</h2>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <div class="field" style="flex-direction:row;align-items:center;gap:8px">
+              <label for="simb" style="text-transform:none;letter-spacing:0;font-size:13px">Roulement</label>
+              <select id="simb"></select>
+            </div>
+            <button class="btn ghost" id="sim-now" type="button">Reprendre l'instant de la supervision</button>
+          </div>
+        </div>
+        <p class="muted small" style="margin-bottom:6px">Déplacer les curseurs pour tester la règle IQR de ce roulement. L'énergie est calculée à partir du RMS (énergie = 20 480 × RMS²), comme dans les données.</p>
+        <div id="sim"></div>
+        <div class="verdict ok" id="sim-verdict"></div>
+        <p class="note">Les seuils de chaque roulement sont calculés sur les 984 acquisitions de l'essai, donc connus après coup. Un système réel devrait les fixer sur une période de référence.</p>
+      </div>
+    </section>
+
+    <!-- LIMITES -->
+    <section class="panel" id="p-limites" role="tabpanel" aria-labelledby="t-limites" hidden>
+      <div class="card prose" id="limits"></div>
+    </section>
+  </main>
 </div>
 
 <script type="application/json" id="data">__DATA__</script>
+<script type="application/json" id="rul-model">__MODEL__</script>
 <script>
 (function () {
   "use strict";
@@ -393,11 +574,11 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
   var EP = {};
   SRCS.forEach(function (s) { EP[s] = {}; B.forEach(function (b) { EP[s][b] = episodes(bits(s, b)); }); });
 
-  var S = { i: Math.min(N - 1, EP[RULE][B[0]].on[0] + 12), src: RULE, model: 'Decision Tree', feat: 'rms', scale: 'lin', playing: false, speed: 18, tab: 'supervision' };
+  var S = { i: Math.min(N - 1, EP[RULE][B[0]].on[0] + 12), src: RULE, model: 'Decision Tree', feat: 'rms', scale: 'lin', playing: false, speed: 18, tab: 'supervision', sel: -1 };
 
   /* ---------- sélecteur d'état ---------- */
   (function () {
-    var sel = $('#src'), h = '<optgroup label="Référence"><option value="' + RULE + '">' + RULE + ' (labels de son notebook)</option></optgroup><optgroup label="Modèles, prédictions hors échantillon">';
+    var sel = $('#src'), h = '<optgroup label="Référence"><option value="' + RULE + '">' + RULE + ' (labels du notebook)</option></optgroup><optgroup label="Modèles, prédictions hors échantillon">';
     D.models.forEach(function (m) { h += '<option value="' + m + '">' + m + '</option>'; });
     sel.innerHTML = h + '</optgroup>';
     sel.addEventListener('change', function () { setSrc(sel.value); });
@@ -431,7 +612,7 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
     var h = '';
     B.forEach(function (b, k) {
       var st = status(b, S.i);
-      h += '<article class="brg" style="--bc:' + BCOL[k] + '"><div class="brg-head"><div><h3><span class="sw"></span>Roulement ' + (k + 1) + '</h3><div class="role">' + ROLE[k] + '</div></div><span class="pill ' + st[0] + '">' + st[1] + '</span></div>';
+      h += '<article class="brg' + (S.sel === k ? ' sel' : '') + '" style="--bc:' + BCOL[k] + '"><div class="brg-head"><div><h3><span class="sw"></span>Roulement ' + (k + 1) + '</h3><div class="role">' + ROLE[k] + '</div></div><span class="pill ' + st[0] + '">' + st[1] + '</span></div>';
       F.forEach(function (f) {
         var v = D.series[b][f][S.i], t = D.thr[b][f], out = v < t.lo || v > t.hi;
         h += '<div class="feat"><div class="feat-row"><span class="n">' + FL[f] + '</span><span class="v' + (out ? ' out' : '') + '">' + fmtV(f, v) + '</span></div>' + gaugeHTML(b, f, v) + '</div>';
@@ -527,7 +708,7 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
       ep.on.forEach(function (a, n) { var z = ep.off[n] === undefined ? N - 1 : ep.off[n]; s += '<rect class="alert" x="' + X(a) + '" y="' + y + '" width="' + Math.max(2, X(z) - X(a)) + '" height="' + rh + '"/>'; });
       var tk = '';
       for (var i = 0; i < N; i++) if (str.charCodeAt(i) === 49 && i <= FAIL && !ep.st[i]) tk += 'M' + X(i).toFixed(1) + ',' + (y + 3) + 'v' + (rh - 6);
-      s += '<path d="' + tk + '" stroke="var(--warn)" stroke-width="1.2" fill="none"/>';
+      s += '<path d="' + tk + '" stroke="var(--warn-fill)" stroke-width="1.2" fill="none"/>';
     });
     s += '<line class="stopl" x1="' + X(FAIL) + '" x2="' + X(FAIL) + '" y1="' + m.t + '" y2="' + (m.t + ih) + '" stroke-width="1"/>';
     s += '<line class="cur" id="t-line" y1="' + m.t + '" y2="' + (m.t + ih) + '"/>';
@@ -611,7 +792,7 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
     var ra = f1Range(function (n) { return D.cv[n].overall.f1; }), rb = f1Range(function (n) { return D.lobo[n].mean_f1; }), rc = f1Range(function (n) { return D.lobo_norm[n].mean_f1; });
     var leads = D.models.map(function (n) { return hToStop(EP[n][B[0]].on[0]); });
     $('#gapsum').innerHTML = 'En validation croisée, les modèles reproduisent la règle avec un F1 de ' + nf(ra[0], 2) + ' à ' + nf(ra[1], 2) + '. Entraînés sur trois roulements et testés sur le quatrième avec les variables brutes, ils tombent à ' + nf(rb[0], 2) + ' à ' + nf(rb[1], 2) + '. Quand chaque roulement est d\'abord calibré sur ses 20 % premiers instants (son état neuf), ils remontent à ' + nf(rc[0], 2) + ' à ' + nf(rc[1], 2) + '. Sur le roulement 1, tous donnent l\'alerte entre ' + nf(Math.min.apply(null, leads), 1) + ' h et ' + nf(Math.max.apply(null, leads), 1) + ' h avant l\'arrêt, comme la règle elle-même.';
-    $('#mnote').textContent = 'F1 sur 3 936 lignes (validation croisée) ou moyenne des quatre roulements testés tour à tour (roulement jamais vu). Forêt aléatoire : écart de quelques millièmes avec son notebook, dû à la version de scikit-learn.';
+    $('#mnote').textContent = 'F1 sur 3 936 lignes (validation croisée) ou moyenne des quatre roulements testés tour à tour (roulement jamais vu). Forêt aléatoire : écart de quelques millièmes avec le notebook, dû à la version de scikit-learn.';
     var scope = $('#cmscope');
     if (!scope.options.length) { scope.innerHTML = '<option value="overall">Les 4 roulements</option>' + B.map(function (b, k) { return '<option value="' + b + '">Roulement ' + (k + 1) + '</option>'; }).join(''); scope.addEventListener('change', renderCM); }
     renderCM();
@@ -680,15 +861,421 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
       '<p>Entraînés sur trois roulements et testés sur le quatrième, avec les variables brutes, les modèles obtiennent un F1 moyen de ' + nf(rb[0], 2) + ' à ' + nf(rb[1], 2) + '. Les seuils sont propres à chaque roulement et les niveaux de vibration diffèrent d\'un roulement à l\'autre. En calibrant chacun sur ses 20 % premiers instants (son état neuf), le F1 remonte à ' + nf(rc[0], 2) + ' à ' + nf(rc[1], 2) + '. Cette calibration est possible en exploitation, contrairement à des seuils calculés sur tout l\'essai.</p>' +
       '<h3>Le test sur le 1er essai ne prouve rien</h3>' +
       '<p>Les seuils appris sur le 2e essai étiquettent les 2 156 snapshots du roulement 3 du 1er essai comme anomalies. Les modèles à 100 % répondent « anomalie » partout. Le résultat utile est que les seuils ne se transfèrent pas d\'un essai à l\'autre.</p>' +
+      '<h3>La durée de vie restante demande un historique</h3>' +
+      '<p>Le modèle lit une trajectoire de 30 relevés (5 heures) comparée à l\'état neuf, estimé sur les 200 premiers relevés. Il faut donc au moins 230 fichiers à la suite : un seul fichier ne permet pas d\'estimer la durée restante. L\'estimation est à plus ou moins 1 jour près.</p>' +
+      '<h3>L\'état d\'un roulement ne vaut que pour ces quatre roulements</h3>' +
+      '<p>La page « État d\'un roulement » juge un fichier avec les seuils de cet essai. Les niveaux de vibration normaux changent d\'un roulement à l\'autre et d\'une machine à l\'autre : sur une autre machine, il faudrait refaire les seuils à partir d\'une période de référence.</p>' +
       '<h3>Quatre variables, trois informations</h3>' +
       '<p>L\'énergie vaut 20 480 × RMS² : les deux variables portent presque la même information. Pour aller plus loin, il faudrait une vérité terrain (l\'instant réel de la panne) plutôt qu\'une règle statistique, et des variables liées aux fréquences de défaut du roulement.</p>';
   }
 
+  /* ---------- synoptique et bon de travail ---------- */
+  function setHTML(el, h) { if (el._h !== h) { el._h = h; el.innerHTML = h; } }
+  function renderSyn() {
+    function pal(k) {
+      var st = status(B[k], S.i);
+      return '<button type="button" class="pal ' + st[0] + '" data-k="' + k + '" aria-pressed="' + (S.sel === k) + '"><span class="id">PAL-' + (k + 1) + '</span><b>Palier ' + (k + 1) + '</b><span class="st">' + st[1] + '</span></button>';
+    }
+    var sh = '<div class="shaft"></div>';
+    setHTML($('#syn'), '<div class="motor">Moteur<span>M-01</span></div>' + sh + pal(0) + sh + pal(1) + sh + '<div class="load">Charge radiale</div>' + sh + pal(2) + sh + pal(3));
+  }
+  function two(n) { return (n < 10 ? '0' : '') + n; }
+  function renderWO() {
+    var d = new Date(T[S.i]), ref = 'BT-' + two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + '-' + two(d.getUTCHours()) + two(d.getUTCMinutes());
+    $('#wo-ref').textContent = ref;
+    function row(a, b) { return '<div class="wo-r"><span>' + a + '</span><span>' + b + '</span></div>'; }
+    var stopped = D.series[B[0]].rms[S.i] < 0.01, crit = [], warn = [];
+    B.forEach(function (b, k) { var s = status(b, S.i)[0]; if (s === 'crit') crit.push(k); if (s === 'warn') warn.push(k); });
+    var h;
+    function names(a) { return (a.length > 1 ? 'Paliers ' : 'Palier ') + a.map(function (k) { return k + 1; }).join(', '); }
+    if (stopped) {
+      h = row('Équipement', '<b>Ligne d\'arbre n° 2, quatre paliers</b>') + row('Priorité', '<b>Machine à l\'arrêt</b>') + row('Constat', 'Vibration quasi nulle sur les quatre roulements.') + row('Action', 'Inspecter les quatre roulements avant tout redémarrage.') + row('Délai', '<b>Avant le redémarrage</b>');
+    } else if (crit.length) {
+      var k0 = crit[0], b0 = B[k0], ep = EP[S.src][b0], start = 0;
+      ep.on.forEach(function (a) { if (a <= S.i) start = a; });
+      var outs = F.filter(function (f) { var v = D.series[b0][f][S.i], t = D.thr[b0][f]; return v < t.lo || v > t.hi; }).map(function (f) { return f === 'rms' ? 'RMS' : FL[f].toLowerCase(); });
+      h = row('Équipement', '<b>' + names(crit) + ', ligne d\'arbre n° 2</b>') + row('Priorité', '<b>Élevée</b>') +
+        row('Constat', (S.i - start < 1 ? 'Alerte confirmée à l\'instant' : 'Alerte confirmée depuis ' + nf((S.i - start) / 6, 1) + ' h') + (outs.length ? ' : ' + outs.join(', ') + ' hors plage.' : '.')) +
+        row('Action', 'Inspecter le roulement, vérifier la lubrification, préparer son remplacement.') +
+        row('Délai', S.i <= FAIL ? '<b>Dans l\'essai, l\'arrêt a eu lieu ' + nf(hToStop(S.i), 1) + ' h plus tard.</b>' : '<b>Dès que possible</b>');
+    } else if (warn.length) {
+      h = row('Équipement', '<b>' + names(warn) + '</b>') + row('Priorité', '<b>À surveiller</b>') + row('Constat', 'Une mesure isolée sort de la plage, sans alerte confirmée.') + row('Action', 'Rapprocher le contrôle. Pas d\'intervention tant que l\'écart ne dure pas.') + row('Délai', '<b>Prochain relevé</b>');
+    } else {
+      h = '<p class="wo-none">Rien à signaler à cet instant : aucun bon de travail.</p>';
+    }
+    if (stopped || crit.length || warn.length) h += '<button class="btn ghost" id="wo-print" type="button" style="align-self:flex-start">Imprimer le bon</button>';
+    setHTML($('#wo-body'), h);
+  }
+  $('#syn').addEventListener('click', function (e) {
+    var p = e.target.closest && e.target.closest('.pal'); if (!p) return;
+    var k = parseInt(p.getAttribute('data-k'), 10); S.sel = S.sel === k ? -1 : k;
+    renderSyn(); renderCards();
+  });
+  $('#wo-body').addEventListener('click', function (e) {
+    if (e.target.id !== 'wo-print') return;
+    document.body.classList.add('pwo'); window.print(); document.body.classList.remove('pwo');
+  });
+
+  /* ---------- outils communs : FFT exacte sur les 20 480 points (= 4096 x 5), comme numpy ---------- */
+  function fft2(re, im) {
+    var n = re.length, i, j = 0, len, k, t;
+    for (i = 1; i < n; i++) {
+      var bit = n >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) { t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+    }
+    for (len = 2; len <= n; len <<= 1) {
+      var ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang), h = len >> 1;
+      for (k = 0; k < n; k += len) {
+        var cr = 1, ci = 0;
+        for (j = 0; j < h; j++) {
+          var a = k + j, b = a + h;
+          var vr = re[b] * cr - im[b] * ci, vi = re[b] * ci + im[b] * cr;
+          re[b] = re[a] - vr; im[b] = im[a] - vi; re[a] += vr; im[a] += vi;
+          var nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr;
+        }
+      }
+    }
+  }
+  function fftReal(x) {
+    var n = x.length, m = 1;
+    while (n % (m * 2) === 0) m *= 2;
+    var p = n / m, subs = [], r, j, k;
+    for (r = 0; r < p; r++) {
+      var sr = new Float64Array(m), si = new Float64Array(m);
+      for (j = 0; j < m; j++) sr[j] = x[j * p + r];
+      fft2(sr, si); subs.push([sr, si]);
+    }
+    if (p === 1) return subs[0];
+    var cosT = new Float64Array(n), sinT = new Float64Array(n);
+    for (j = 0; j < n; j++) { cosT[j] = Math.cos(-2 * Math.PI * j / n); sinT[j] = Math.sin(-2 * Math.PI * j / n); }
+    var Or = new Float64Array(n), Oi = new Float64Array(n);
+    for (k = 0; k < n; k++) {
+      var km = k % m, ar = 0, ai = 0;
+      for (r = 0; r < p; r++) {
+        var w = (r * k) % n, xr = subs[r][0][km], xi = subs[r][1][km];
+        ar += xr * cosT[w] - xi * sinT[w]; ai += xr * sinT[w] + xi * cosT[w];
+      }
+      Or[k] = ar; Oi[k] = ai;
+    }
+    return [Or, Oi];
+  }
+  function readText(f) { return new Promise(function (ok, ko) { var rd = new FileReader(); rd.onload = function () { ok(rd.result); }; rd.onerror = ko; rd.readAsText(f, 'latin1'); }); }
+  function pause() { return new Promise(function (r) { setTimeout(r, 0); }); }
+  /* lit un glisser-déposer, dossiers compris */
+  function filesFromDrop(e) {
+    var items = e.dataTransfer && e.dataTransfer.items, out = [];
+    if (!items || !items[0] || !items[0].webkitGetAsEntry) return Promise.resolve(Array.prototype.slice.call(e.dataTransfer.files));
+    function walk(entry) {
+      return new Promise(function (ok) {
+        if (entry.isFile) { entry.file(function (f) { out.push(f); ok(); }, function () { ok(); }); return; }
+        var rd = entry.createReader(), all = [];
+        (function more() { rd.readEntries(function (es) { if (!es.length) { Promise.all(all.map(walk)).then(function () { ok(); }); return; } all = all.concat(Array.prototype.slice.call(es)); more(); }, function () { ok(); }); })();
+      });
+    }
+    var entries = Array.prototype.slice.call(items).map(function (it) { return it.webkitGetAsEntry(); }).filter(Boolean);
+    return Promise.all(entries.map(walk)).then(function () { return out; });
+  }
+  function dropZone(el, onFiles) {
+    ['dragenter', 'dragover'].forEach(function (n) { el.addEventListener(n, function (e) { e.preventDefault(); el.classList.add('over'); }); });
+    ['dragleave', 'drop'].forEach(function (n) { el.addEventListener(n, function (e) { e.preventDefault(); el.classList.remove('over'); }); });
+    el.addEventListener('drop', function (e) { filesFromDrop(e).then(onFiles); });
+  }
+  function showMsg(id, msg) { var e = $(id); e.hidden = !msg; e.textContent = msg || ''; }
+
+  /* ---------- État d'un roulement : un fichier -> les quatre roulements ---------- */
+  var NPTS = 20480, FKEYS = ['rms', 'energy', 'entropy', 'kurtosis'];
+  var CM = ['Règle IQR', 'Decision Tree', 'Logistic Regression', 'Gaussian Naive Bayes'];
+  var CNAME = { 'Règle IQR': 'Règle des seuils', 'Decision Tree': 'Arbre de décision', 'Logistic Regression': 'Régression logistique', 'Gaussian Naive Bayes': 'Bayes naïf' };
+  /* définitions identiques au CSV : énergie = somme des carrés, entropie = spectre de puissance sans la composante continue,
+     normalisée par ln(nombre de raies), kurtosis de Fisher corrigé du biais (scipy, bias=False). */
+  function classFeatures(x) {
+    var n = x.length, i, s2 = 0, mean = 0;
+    for (i = 0; i < n; i++) { mean += x[i]; s2 += x[i] * x[i]; }
+    mean /= n;
+    var c = new Float64Array(n);
+    for (i = 0; i < n; i++) c[i] = x[i] - mean;
+    var F = fftReal(c), half = Math.floor(n / 2), sp = new Float64Array(half), sm = 0;
+    for (i = 1; i <= half; i++) { sp[i - 1] = F[0][i] * F[0][i] + F[1][i] * F[1][i]; sm += sp[i - 1]; }
+    var ent = 0;
+    for (i = 0; i < half; i++) { var p = sp[i] / (sm + 1e-12); ent -= p * Math.log(p + 1e-12); }
+    ent /= Math.log(half);
+    var m2 = 0, m4 = 0;
+    for (i = 0; i < n; i++) { var d = c[i]; m2 += d * d; m4 += d * d * d * d; }
+    m2 /= n; m4 /= n;
+    var g2 = m4 / (m2 * m2) - 3, kur = (n - 1) / ((n - 2) * (n - 3)) * ((n + 1) * g2 + 6);
+    return [Math.sqrt(s2 / n), s2, ent, kur];
+  }
+  function predictClass(method, b, x) {
+    if (method === RULE) {
+      return FKEYS.some(function (f, i) { var t = D.thr[b][f]; return x[i] < t.lo || x[i] > t.hi; }) ? 1 : 0;
+    }
+    var m = D.clf[b][method], i;
+    if (method === 'Decision Tree') {
+      var nd = 0;
+      while (m.left[nd] !== -1) nd = Math.fround(x[m.feat[nd]]) <= m.thr[nd] ? m.left[nd] : m.right[nd];
+      return m.cls[nd];
+    }
+    if (method === 'Logistic Regression') {
+      var z = m.b;
+      for (i = 0; i < 4; i++) z += m.coef[i] * (x[i] - m.mean[i]) / m.scale[i];
+      return z > 0 ? 1 : 0;
+    }
+    var best = -Infinity, cls = 0;
+    for (var c = 0; c < 2; c++) {
+      var lp = Math.log(m.prior[c]);
+      for (i = 0; i < 4; i++) lp += -0.5 * Math.log(2 * Math.PI * m.var[c][i]) - 0.5 * Math.pow(x[i] - m.theta[c][i], 2) / m.var[c][i];
+      if (lp > best) { best = lp; cls = c; }
+    }
+    return cls;
+  }
+  function parseColumns(txt) {
+    var lines = String(txt).split(/\r?\n/), cols = null, nc = 0;
+    for (var i = 0; i < lines.length; i++) {
+      var s = lines[i].trim(); if (!s) continue;
+      var parts = s.split(/[\t,; ]+/);
+      if (!cols) { nc = parts.length; cols = []; for (var c = 0; c < Math.min(nc, 4); c++) cols.push([]); }
+      if (parts.length !== nc) continue;
+      for (var k = 0; k < cols.length; k++) { var v = parseFloat(parts[k]); if (isFinite(v)) cols[k].push(v); }
+    }
+    return { nc: nc, cols: cols || [] };
+  }
+  function renderClassResult(vals, meta) {
+    var method = $('#cl-model').value, h = '', bad = [], stoppedAll = true;
+    B.forEach(function (b, k) {
+      var x = vals[k], stopped = x[0] < 0.01, pred = stopped ? 0 : predictClass(method, b, x);
+      if (!stopped) stoppedAll = false;
+      var st = stopped ? ['off', 'ARRÊT'] : pred ? ['crit', 'ANORMAL'] : ['ok', 'NORMAL'];
+      if (pred && !stopped) bad.push(k + 1);
+      h += '<article class="brg" style="--bc:' + BCOL[k] + '"><div class="brg-head"><div><h3><span class="sw"></span>Roulement ' + (k + 1) + '</h3><div class="role">Colonne ' + (k + 1) + ' du fichier</div></div><span class="pill ' + st[0] + '">' + st[1] + '</span></div>';
+      FKEYS.forEach(function (f, i) {
+        var v = x[i], t = D.thr[b][f], out = v < t.lo || v > t.hi;
+        h += '<div class="feat"><div class="feat-row"><span class="n">' + FL[f] + '</span><span class="v' + (out ? ' out' : '') + '">' + fmtV(f, v) + '</span></div>' + gaugeHTML(b, f, v) + '</div>';
+      });
+      h += '</article>';
+    });
+    $('#cl-cards').innerHTML = h;
+    var box = $('#cl-sum'), t, d;
+    if (stoppedAll) { box.className = 'reco'; box.style.background = 'var(--off-bg)'; box.style.color = 'var(--off)'; t = 'Machine à l\'arrêt'; d = 'Vibration quasi nulle sur les quatre colonnes.'; }
+    else if (bad.length) { box.className = 'reco crit'; box.style.background = box.style.color = ''; t = 'Anormal : roulement' + (bad.length > 1 ? 's ' : ' ') + bad.join(', '); d = 'Au moins une mesure sort de la plage normale du roulement. Méthode : ' + CNAME[method] + '.'; }
+    else { box.className = 'reco ok'; box.style.background = box.style.color = ''; t = 'Les quatre roulements vibrent comme d\'habitude'; d = 'Méthode : ' + CNAME[method] + '.'; }
+    $('#cl-sum-t').textContent = t; $('#cl-sum-d').textContent = d;
+    $('#cl-meta').textContent = meta;
+    $('#cl-res').hidden = false;
+  }
+  var CL_LAST = null;
+  function classFromVals(vals, meta) { CL_LAST = { vals: vals, meta: meta }; showMsg('#cl-err', ''); renderClassResult(vals, meta); }
+  function classFromIndex(i, label) { classFromVals(B.map(function (b) { return FKEYS.map(function (f) { return D.series[b][f][i]; }); }), label + ' : valeurs du fichier de mesures déjà calculées, pas de fichier brut.'); }
+  async function classFromFile(list) {
+    var f = list && list[0]; if (!f) return;
+    $('#cl-res').hidden = true;
+    try {
+      var p = parseColumns(await readText(f));
+      if (p.nc < 4) throw new Error('Ce fichier a ' + p.nc + ' colonne(s) : il en faut 4, une par roulement.');
+      if (p.nc > 4) throw new Error('Ce fichier a ' + p.nc + ' colonnes : il vient d\'un autre essai. Il en faut exactement 4, une par roulement.');
+      if (p.cols[0].length !== NPTS) throw new Error('Le relevé doit contenir ' + nf(NPTS, 0) + ' lignes (1 seconde à 20 kHz), celui-ci en contient ' + nf(p.cols[0].length, 0) + '.');
+      await pause();
+      classFromVals(p.cols.map(classFeatures), 'Fichier : ' + f.name);
+    } catch (err) { showMsg('#cl-err', 'Lecture impossible : ' + err.message); }
+  }
+  (function () {
+    $('#cl-model').innerHTML = CM.map(function (m) { return '<option value="' + m + '">' + CNAME[m] + '</option>'; }).join('');
+    $('#cl-model').value = 'Decision Tree';
+    $('#cl-model').addEventListener('change', function () { if (CL_LAST) renderClassResult(CL_LAST.vals, CL_LAST.meta); });
+    $('#cl-pick').addEventListener('click', function () { $('#cl-file').click(); });
+    $('#cl-file').addEventListener('change', function (e) { classFromFile(e.target.files); e.target.value = ''; });
+    dropZone($('#cl-drop'), classFromFile);
+    function at(h) { var t = Date.UTC(2004, 1, 13, 12); for (var i = 0; i < N; i++) if (T[i] >= t) return i; return 0; }
+    $('#cl-ex-h').addEventListener('click', function () { var i = at(); classFromIndex(i, 'Relevé du ' + fmtDate(i)); });
+    $('#cl-ex-d').addEventListener('click', function () { classFromIndex(974, 'Relevé du ' + fmtDate(974)); });
+    $('#cl-ex-now').addEventListener('click', function () { classFromIndex(S.i, 'Instant de la supervision, ' + fmtDate(S.i)); });
+  })();
+
+  /* ---------- Durée de vie restante : dossier de fichiers -> RUL (CNN-LSTM, inférence exacte du modèle Keras) ---------- */
+  var RM = null;
+  function rulModel() { if (!RM) RM = JSON.parse(document.getElementById('rul-model').textContent); return RM; }
+  function modelForward(win, W) {
+    function relu(v) { return v > 0 ? v : 0; }
+    function conv1d(x, ks, In, Out, kf, bf) {
+      var Tn = x.length, lpad = (ks >> 1), res = new Array(Tn);
+      for (var t = 0; t < Tn; t++) {
+        var o = new Array(Out);
+        for (var c = 0; c < Out; c++) {
+          var s = bf[c];
+          for (var j = 0; j < ks; j++) {
+            var ti = t + j - lpad;
+            if (ti < 0 || ti >= Tn) continue;
+            var row = x[ti], base = j * In * Out + c;
+            for (var i = 0; i < In; i++) s += row[i] * kf[base + i * Out];
+          }
+          o[c] = relu(s);
+        }
+        res[t] = o;
+      }
+      return res;
+    }
+    function batchnorm(x, nC, g, bb, mm, mv) {
+      return x.map(function (r) { var o = new Array(nC); for (var c = 0; c < nC; c++) o[c] = g[c] * (r[c] - mm[c]) / Math.sqrt(mv[c] + 1e-3) + bb[c]; return o; });
+    }
+    function maxpool(x, nC, k, s) {
+      var Tn = Math.floor((x.length - k) / s) + 1, res = new Array(Tn);
+      for (var t = 0; t < Tn; t++) {
+        var o = new Array(nC), a = t * s;
+        for (var c = 0; c < nC; c++) { var best = -Infinity; for (var j = 0; j < k; j++) { var v = x[a + j][c]; if (v > best) best = v; } o[c] = best; }
+        res[t] = o;
+      }
+      return res;
+    }
+    function sigmoid(v) { return 1 / (1 + Math.exp(-v)); }
+    function lstm(x, In, U, kf, uf, bf) {
+      var W4 = 4 * U, h = new Array(U).fill(0), c = new Array(U).fill(0);
+      for (var t = 0; t < x.length; t++) {
+        var xt = x[t], z = new Array(W4);
+        for (var g = 0; g < W4; g++) {
+          var a = bf[g];
+          for (var i = 0; i < In; i++) a += xt[i] * kf[i * W4 + g];
+          for (var r = 0; r < U; r++) a += h[r] * uf[r * W4 + g];
+          z[g] = a;
+        }
+        var nh = new Array(U), nc = new Array(U);
+        for (var u = 0; u < U; u++) { nc[u] = sigmoid(z[U + u]) * c[u] + sigmoid(z[u]) * Math.tanh(z[2 * U + u]); nh[u] = sigmoid(z[3 * U + u]) * Math.tanh(nc[u]); }
+        h = nh; c = nc;
+      }
+      return h;
+    }
+    var x = conv1d(win, 5, 4, 128, W.conv1_k, W.conv1_b);
+    x = maxpool(batchnorm(x, 128, W.bn1_g, W.bn1_b, W.bn1_m, W.bn1_v), 128, 2, 2);
+    x = conv1d(x, 3, 128, 64, W.conv2_k, W.conv2_b);
+    x = maxpool(batchnorm(x, 64, W.bn2_g, W.bn2_b, W.bn2_m, W.bn2_v), 64, 2, 2);
+    var h = lstm(x, 64, 64, W.lstm_k, W.lstm_u, W.lstm_b), out = W.dense2_b[0];
+    for (var r = 0; r < 32; r++) { var acc = W.dense1_b[r]; for (var i = 0; i < 64; i++) acc += h[i] * W.dense1_w[i * 32 + r]; out += relu(acc) * W.dense2_w[r]; }
+    return out;
+  }
+  /* variables du modèle de RUL : RMS, énergie, entropie (spectre d'amplitude), kurtosis non corrigé */
+  function rulFeatures(sig) {
+    var n = sig.length, s2 = 0, mean = 0, i;
+    for (i = 0; i < n; i++) { mean += sig[i]; s2 += sig[i] * sig[i]; }
+    mean /= n;
+    var c = new Float64Array(n);
+    for (i = 0; i < n; i++) c[i] = sig[i] - mean;
+    var F = fftReal(c), half = Math.floor(n / 2), sm = 0, mags = new Float64Array(half + 1);
+    for (i = 0; i <= half; i++) { mags[i] = Math.hypot(F[0][i], F[1][i]); sm += mags[i]; }
+    var ent = 0;
+    for (i = 0; i <= half; i++) { var p = mags[i] / (sm + 1e-12); ent -= p * Math.log(p + 1e-12); }
+    var m2 = 0, m4 = 0;
+    for (i = 0; i < n; i++) { var d = sig[i] - mean; m2 += d * d; m4 += d * d * d * d; }
+    m2 /= n; m4 /= n;
+    return [Math.sqrt(s2 / n), s2, ent, m4 / (m2 * m2 + 1e-12) - 3.0];
+  }
+  function parseSignal(txt, col) {
+    var lines = String(txt).split(/\r?\n/), vals = [];
+    for (var i = 0; i < lines.length; i++) {
+      var s = lines[i].trim(); if (!s) continue;
+      var parts = s.split(/[\t,; ]+/);
+      if (col >= parts.length) throw new Error('colonne ' + (col + 1) + ' absente');
+      var v = parseFloat(parts[col]);
+      if (isFinite(v)) vals.push(v);
+    }
+    return vals;
+  }
+  function median(a) { var b = a.slice().sort(function (x, y) { return x - y; }), h = b.length >> 1; return b.length % 2 ? b[h] : (b[h - 1] + b[h]) / 2; }
+  function rulRef(refFeats) { var r = []; for (var f = 0; f < 4; f++) r.push(median(refFeats.map(function (x) { return x[f]; }))); return r; }
+  function rulRel(row, ref) { return [row[0] / ref[0], row[1] / ref[1], row[2] / ref[2], (row[3] + 3) / (ref[3] + 3)]; }
+  function rulPredict(seq, ref) { return Math.max(0, modelForward(seq.map(function (r) { return rulRel(r, ref).map(Math.log); }), rulModel().weights)); }
+  function drawRulChart(vals) {
+    var svg = $('#rul-chart'), w = Math.max(280, svg.parentElement.clientWidth), h = 200, m = { l: 48, r: 14, t: 10, b: 24 }, iw = w - m.l - m.r, ih = h - m.t - m.b;
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), pad = (hi - lo) * 0.1 || 0.1; lo -= pad; hi += pad;
+    function X(i) { return m.l + iw * i / (vals.length - 1); }
+    function Y(v) { return m.t + ih * (1 - (v - lo) / (hi - lo)); }
+    var s = '';
+    niceTicks(lo, hi, 4).forEach(function (v) { s += '<line class="grid" x1="' + m.l + '" x2="' + (w - m.r) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"/><text x="' + (m.l - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + sig(v) + '</text>'; });
+    s += '<line class="axis" x1="' + m.l + '" x2="' + (w - m.r) + '" y1="' + (m.t + ih) + '" y2="' + (m.t + ih) + '"/>';
+    var d = ''; vals.forEach(function (v, i) { d += (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(v).toFixed(1); });
+    s += '<path d="' + d + '" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>';
+    s += '<text x="' + m.l + '" y="' + (h - 6) + '">il y a 5 h</text><text x="' + (w - m.r) + '" y="' + (h - 6) + '" text-anchor="end">dernier relevé</text>';
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h); svg.setAttribute('width', w); svg.setAttribute('height', h); svg.innerHTML = s;
+  }
+  function showRul(seq, ref, note) {
+    showMsg('#rul-err', '');
+    var rul = rulPredict(seq, ref), rel = seq.map(function (r) { return rulRel(r, ref); });
+    var rmsRel = rel.slice(-6).reduce(function (a, r) { return a + r[0]; }, 0) / 6;
+    var cls, t, d;
+    if (rul < 1) { cls = 'crit'; t = 'Arrêt recommandé'; d = 'Planifier l\'arrêt et le remplacement du roulement dès que possible.'; }
+    else if (rul < 2.5) { cls = 'warn'; t = 'Surveillance'; d = 'Dégradation en cours : rapprocher les contrôles, préparer la pièce de rechange et l\'intervention.'; }
+    else { cls = 'ok'; t = 'Normal'; d = 'Aucune dégradation détectée. Poursuivre la surveillance habituelle.'; }
+    $('#rul-val').innerHTML = rul >= 2.5 ? '&gt; 2,5 <small>jours</small>' : nf(rul, 1) + ' <small>jours</small>';
+    $('#rul-unc').textContent = rul >= 2.5 ? 'au-delà de ce que le modèle sait estimer' : 'estimation à plus ou moins 1 jour près';
+    $('#rul-rms').textContent = 'Niveau de vibration : × ' + nf(rmsRel, 2) + ' par rapport au roulement neuf.';
+    $('#rul-bar').className = 'rbar ' + cls; $('#rul-barf').style.width = (clamp(rul / 2.5, 0, 1) * 100) + '%';
+    $('#rul-reco').className = 'reco ' + cls; $('#rul-reco-t').textContent = t + ' : durée restante ' + (rul >= 2.5 ? 'supérieure à 2,5' : nf(rul, 1)) + ' jour(s).'; $('#rul-reco-d').textContent = d;
+    $('#rul-meta').textContent = note;
+    var ht = '<tr><th>#</th><th class="num">RMS (g)</th><th class="num">Énergie</th><th class="num">Entropie</th><th class="num">Kurtosis</th><th class="num">RMS / neuf</th></tr>';
+    ht += '<tr><td>Réf. neuf</td><td class="num">' + nf(ref[0], 4) + '</td><td class="num">' + nf(ref[1], 1) + '</td><td class="num">' + nf(ref[2], 3) + '</td><td class="num">' + nf(ref[3], 3) + '</td><td class="num">1,00</td></tr>';
+    seq.forEach(function (r, i) { ht += '<tr><td>' + (i + 1) + '</td><td class="num">' + nf(r[0], 4) + '</td><td class="num">' + nf(r[1], 1) + '</td><td class="num">' + nf(r[2], 3) + '</td><td class="num">' + nf(r[3], 3) + '</td><td class="num">' + nf(rel[i][0], 2) + '</td></tr>'; });
+    $('#rul-table').innerHTML = ht;
+    $('#rul-res').hidden = false;
+    drawRulChart(rel.map(function (r) { return r[0]; }));
+    RUL_LAST = { rul: rul };
+    $('#rul-limits').textContent = rulLimitsText();
+  }
+  var RUL_LAST = null;
+  async function rulFeaturesOf(list, col, progress) {
+    var out = [];
+    for (var i = 0; i < list.length; i++) {
+      var sg = parseSignal(await readText(list[i]), col);
+      if (sg.length < 4096) throw new Error('fichier ' + list[i].name + ' trop court (' + sg.length + ' points)');
+      out.push(rulFeatures(sg));
+      if (i % 10 === 0) { progress(i, list.length); await pause(); }
+    }
+    return out;
+  }
+  async function rulFromFiles(fileList) {
+    var M = rulModel(), NB = M.n_base, WN = M.window, col = parseInt($('#rul-col').value, 10), note = $('#rul-note');
+    var list = Array.prototype.slice.call(fileList).filter(function (f) { return f.size > 0 && !/^\./.test(f.name); })
+      .sort(function (a, b) { return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; });
+    $('#rul-res').hidden = true; note.hidden = true;
+    if (!list.length) return;
+    if (list.length < NB + WN) {
+      showMsg('#rul-err', list.length + ' fichier(s) seulement. Il en faut au moins ' + (NB + WN) + ' à la suite : les ' + NB + ' premiers depuis la mise en service (référence « roulement neuf ») et les ' + WN + ' plus récents. Sans cette suite, la durée restante ne peut pas être estimée de façon fiable.');
+      return;
+    }
+    try {
+      note.hidden = false;
+      var prog = function (i, n) { note.textContent = 'Calcul des indicateurs : ' + i + ' / ' + n + ' fichiers…'; };
+      var refList = list.slice(0, NB);
+      var refFeats = (await rulFeaturesOf(refList, col, prog)).filter(function (r) { return r[0] >= 0.01; });
+      var seq = [], flats = 0, k = list.length - 1;
+      while (seq.length < WN && k >= NB) {
+        var r = (await rulFeaturesOf([list[k]], col, function () {}))[0];
+        if (r[0] >= 0.01) seq.unshift(r); else flats++;
+        k--;
+      }
+      if (seq.length < WN || refFeats.length < NB / 2) throw new Error('pas assez de relevés valides (signaux plats ?)');
+      var msg = list.length + ' fichiers · référence : ' + refList[0].name + ' à ' + refList[NB - 1].name + ' · analysés : ' + list[k + 1].name + ' à ' + list[list.length - 1].name + (flats ? ' · ' + flats + ' relevé(s) plat(s) ignoré(s) (capteur arrêté ?)' : '');
+      note.textContent = 'Terminé. ' + msg;
+      showRul(seq, rulRef(refFeats), msg);
+    } catch (err) { note.hidden = true; showMsg('#rul-err', 'Lecture impossible : ' + err.message); }
+  }
+  (function () {
+    $('#rul-pick-dir').addEventListener('click', function () { $('#rul-dir').click(); });
+    $('#rul-pick-files').addEventListener('click', function () { $('#rul-files').click(); });
+    $('#rul-dir').addEventListener('change', function (e) { rulFromFiles(e.target.files); e.target.value = ''; });
+    $('#rul-files').addEventListener('change', function (e) { rulFromFiles(e.target.files); e.target.value = ''; });
+    dropZone($('#rul-drop'), rulFromFiles);
+    $('#rul-demo-h').addEventListener('click', function () { var M = rulModel(); showMsg('#rul-err', ''); showRul(M.demo.healthy, rulRef(M.demo.ref), 'Exemple : essai IMS n°2, roulement 1, relevés 301 à 330 (roulement sain).'); });
+    $('#rul-demo-d').addEventListener('click', function () { var M = rulModel(); showMsg('#rul-err', ''); showRul(M.demo.degraded, rulRef(M.demo.ref), 'Exemple : essai IMS n°2, roulement 1, 30 derniers relevés avant la casse.'); });
+  })();
+  function rulLimitsText() {
+    var l = rulModel().lofo.filter(function (r) { return r['Modèle'] === 'CNN-LSTM'; });
+    return 'Évalué sur un roulement jamais vu (entraînement sur trois pannes IMS, test sur la quatrième, en tournant), l\'erreur moyenne du modèle pendant la phase de dégradation est de ' + l.map(function (r) { return nf(r['MAE dégradation (j)'], 2) + ' jour'; }).join(', ') + '. La durée restante est une estimation à plus ou moins 1 jour : elle sert à déclencher la surveillance puis l\'arrêt, pas à planifier à l\'heure près. Modèle appris sur un banc d\'essai (2 000 tr/min, 6 000 lb) : à revalider sur une autre machine.';
+  }
+
   /* ---------- rendu et boucle ---------- */
-  function renderLive() { $('#pos').value = S.i; renderBanner(); renderCards(); renderLog(); moveCursor(); }
+  function renderLive() { $('#pos').value = S.i; renderBanner(); renderSyn(); renderCards(); renderWO(); renderLog(); moveCursor(); }
   function renderAll() {
     $('#pos').value = S.i;
-    renderBanner(); renderCards(); renderLead(); renderLog();
+    renderBanner(); renderSyn(); renderCards(); renderWO(); renderLead(); renderLog();
     drawChart(); drawTimeline(); renderModels();
   }
   function setPlaying(p) { S.playing = p; $('#play').textContent = p ? 'Pause' : (S.i >= N - 1 ? 'Rejouer' : 'Lecture'); if (p) { last = null; requestAnimationFrame(loop); } }
@@ -707,13 +1294,24 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
   }
 
   /* ---------- onglets, commandes ---------- */
-  var TABS = ['supervision', 'modeles', 'simulateur', 'limites'];
+  var TABS = ['supervision', 'rul', 'classe', 'modeles', 'simulateur', 'limites'];
+  var PAGES = {
+    supervision: ['LIGNE-2 / 4 PALIERS / 2 000 tr/min', 'Supervision de la ligne d\'arbre', 'Rejeu de l\'essai IMS n° 2 : quatre roulements Rexnord ZA-2115 sur un même arbre, 984 acquisitions d\'une seconde toutes les 10 minutes, du 12 au 19 février 2004.'],
+    rul: ['PRÉDIRE', 'Durée de vie restante', 'Déposez les fichiers de vibration d\'un roulement. La page vous dit combien de temps il lui reste avant la panne.'],
+    classe: ['PRÉDIRE', 'État d\'un roulement', 'Déposez un seul fichier de vibration. La page répond, pour chacun des quatre roulements : normal ou anormal.'],
+    modeles: ['COMPRENDRE', 'Comparer les modèles', 'Six modèles de classification essayés sur les labels de la règle des seuils, évalués de trois façons.'],
+    simulateur: ['COMPRENDRE', 'Simulateur de seuils', 'Faire varier les mesures d\'un roulement pour voir quand la règle des seuils déclenche.'],
+    limites: ['COMPRENDRE', 'Limites de l\'étude', 'Ce que les résultats montrent, et ce qu\'ils ne montrent pas.']
+  };
   function showTab(name) {
     if (TABS.indexOf(name) < 0) name = 'supervision';
     S.tab = name;
     TABS.forEach(function (t) { $('#p-' + t).hidden = t !== name; $('#t-' + t).setAttribute('aria-selected', t === name ? 'true' : 'false'); $('#t-' + t).tabIndex = t === name ? 0 : -1; });
+    $('#ph-tag').textContent = PAGES[name][0]; $('#ph-h1').textContent = PAGES[name][1]; $('#ph-lead').textContent = PAGES[name][2];
+    document.title = PAGES[name][1] + ' · Ligne d\'arbre n° 2';
     if (name === 'supervision') { drawChart(); drawTimeline(); }
     if (name === 'simulateur') { if (!Object.keys(SIM.v).length) simLoad(S.i); renderSim(); }
+    if (name === 'rul' && RUL_LAST) $('#rul-limits').textContent = rulLimitsText();
   }
   document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('click', function () { var n = b.getAttribute('data-tab'); try { history.replaceState(null, '', '#' + n); } catch (e) { location.hash = n; } showTab(n); }); });
   window.addEventListener('hashchange', function () { showTab(location.hash.slice(1)); });
@@ -751,6 +1349,6 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
   renderLimits();
   renderAll();
   showTab(location.hash.slice(1));
-  window.__twin = { D: D, S: S, EP: EP, STOP_I: STOP_I };
+  window.__twin = { D: D, S: S, EP: EP, STOP_I: STOP_I, classFeatures: classFeatures, predictClass: predictClass, rulFeatures: rulFeatures, rulPredict: rulPredict, rulRef: rulRef, rulModel: rulModel, parseColumns: parseColumns };
 })();
 </script>
