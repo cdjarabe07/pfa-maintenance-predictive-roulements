@@ -1,16 +1,30 @@
 {
+  "id": "/",
   "name": "Jumeau numérique des roulements",
   "short_name": "Jumeau roulements",
   "description": "Rejeu d'un essai réel de roulements, durée de vie restante, état d'un roulement et comparaison de modèles.",
   "lang": "fr",
+  "dir": "ltr",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#06090d",
   "theme_color": "#06090d",
+  "categories": ["education", "science", "productivity"],
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Ouvrir le jumeau numérique", "short_name": "Jumeau", "url": "/jumeau_roulements.html", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
+  ],
+  "screenshots": [
+    { "src": "screenshots/accueil-large.png", "sizes": "1280x720", "type": "image/png", "form_factor": "wide", "label": "Page d'accueil du projet" },
+    { "src": "screenshots/supervision-large.png", "sizes": "1280x720", "type": "image/png", "form_factor": "wide", "label": "Supervision des quatre roulements en rejeu" },
+    { "src": "screenshots/duree-de-vie-large.png", "sizes": "1280x720", "type": "image/png", "form_factor": "wide", "label": "Estimation de la durée de vie restante" },
+    { "src": "screenshots/accueil-mobile.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow", "label": "Page d'accueil sur téléphone" },
+    { "src": "screenshots/supervision-mobile.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow", "label": "Supervision sur téléphone" }
   ]
 }

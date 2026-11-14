@@ -162,5 +162,6 @@ h1 strong{font-weight:600;background:linear-gradient(92deg,#fff 0%,#bfeee9 55%,v
   window.addEventListener('pageshow', function(){ document.getElementById('veil').classList.remove('on'); });
 })();
 </script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
 </body>
 </html>
