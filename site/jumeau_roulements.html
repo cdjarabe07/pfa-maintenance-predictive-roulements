@@ -372,6 +372,122 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
   body.pwo .row-wo > *:not(.wo) { display: none !important; }
   body.pwo .row-wo { display: block; margin: 0; }
 }
+
+/* ---------- finition : Durée de vie restante, État d'un roulement, Modèles, Limites ---------- */
+.split { display: grid; grid-template-columns: minmax(300px, 370px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.col-in, .col-out { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.col-in.card .msg { margin-top: 0; }
+.split .card + .card { margin-top: 0; }
+.col-in .field select { width: 100%; }
+.lbl { font-size: 12px; color: var(--ink-3); margin-bottom: 4px; }
+.drop.compact { padding: 16px 14px; gap: 8px; }
+.drop.compact .t { font-size: 15px; }
+.drop .hint { font-size: 12px; color: var(--ink-3); max-width: 34ch; }
+.col-in .controls { flex-direction: column; align-items: stretch; gap: 8px; }
+.col-in .controls .btn { width: 100%; justify-content: center; }
+.col-in .side-note { margin-top: 2px; }
+.col-in .side-note p { font-size: 13px; line-height: 1.55; }
+.empty-state { border-style: dashed; background: rgba(255, 255, 255, .015); }
+.empty-state h2 { margin-bottom: 6px; }
+#rul-res:not([hidden]) + .empty-state, #cl-res:not([hidden]) + .empty-state { display: none; }
+.rhero { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: flex-end; justify-content: space-between; margin-top: 6px; }
+.rhero .k { font-size: 13px; color: var(--ink-2); }
+.rhero .n { font-size: 56px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.rhero .n small { font-size: 22px; font-weight: 400; letter-spacing: 0; color: var(--ink-2); }
+.empty-state .rhero .n { color: var(--ink-3); font-size: 36px; }
+.empty-state .side-note { margin-top: 18px; }
+.drop.compact .row .btn { flex: 1 1 140px; }
+.rhero .reco { margin-top: 0; flex: 1 1 260px; max-width: 480px; }
+.scale { margin-top: 20px; }
+.scale > .k { font-size: 12px; color: var(--ink-3); }
+.scale .rbar { height: 20px; margin-top: 8px; }
+.rbar .band { position: absolute; top: -3px; bottom: -3px; border: 1px solid var(--ink-2); border-radius: 2px; background: rgba(255, 255, 255, .1); display: none; z-index: 1; }
+.rbar .mk { position: absolute; top: -6px; bottom: -6px; width: 2px; margin-left: -1px; background: var(--ink); display: none; z-index: 2; }
+.rticks { position: relative; height: 18px; margin-top: 2px; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.rticks span { position: absolute; top: 4px; transform: translateX(-50%); white-space: nowrap; }
+.rticks span::before { content: ""; position: absolute; left: 50%; top: -5px; width: 1px; height: 5px; background: var(--ink-3); }
+.rticks span:first-child { transform: none; } .rticks span:last-child { transform: translateX(-100%); }
+.rticks span:first-child::before { left: 0; } .rticks span:last-child::before { left: 100%; }
+.rzones { display: flex; font-size: 12px; margin-top: 2px; }
+.rzones span { padding-top: 3px; border-top: 2px solid currentColor; padding-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rzones span:nth-child(1) { color: var(--crit); } .rzones span:nth-child(2) { color: var(--warn); }
+.rkpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 18px; }
+.rfig { margin-top: 20px; }
+.methods { display: flex; flex-direction: column; gap: 6px; }
+.methods .mg { font-size: 11px; color: var(--ink-3); margin-top: 6px; }
+.methods .mg:first-child { margin-top: 0; }
+.meth { display: block; width: 100%; text-align: left; background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; color: var(--ink); font: inherit; cursor: pointer; min-height: 44px; }
+.meth:hover { border-color: var(--line-2); }
+.meth[aria-checked="true"] { border-color: var(--acc); background: rgba(69, 199, 189, .08); box-shadow: inset 3px 0 0 var(--acc); }
+.meth .nm { font-weight: 600; font-size: 14px; display: block; }
+.meth .sub { display: block; font-size: 12px; color: var(--ink-3); margin-top: 1px; font-variant-numeric: tabular-nums; }
+.cl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.read { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+.read h3 { margin-bottom: 6px; }
+.read .rd { display: grid; grid-template-columns: 120px 110px minmax(0, 1fr); gap: 4px 12px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 13px; align-items: baseline; }
+.read .rd:first-of-type { border-top: 0; }
+.read .rd b { font-weight: 600; }
+.read .rd .st { font-weight: 600; }
+.read .rd .st.ok { color: var(--ok); } .read .rd .st.crit { color: var(--crit); } .read .rd .st.off { color: var(--off); }
+.read .rd span:last-child { color: var(--ink-2); }
+.defs { display: grid; gap: 0; margin: 12px 0 0; }
+.defs > div { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.defs dt { font-weight: 600; } .defs dd { margin: 0; color: var(--ink-2); }
+.mhead { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; justify-content: space-between; padding: 12px 18px; }
+.mhead .k { font-size: 12px; color: var(--ink-3); }
+.mhead .nm { font-size: 22px; font-weight: 300; letter-spacing: -0.01em; }
+.mk4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; flex: 1 1 520px; max-width: 700px; }
+.mk4 .kpi .l { min-height: 2.6em; }
+.legend.lg3 { flex-direction: column; gap: 4px; margin: 0 0 10px; }
+.maxis { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 10px; padding: 0 9px; }
+.maxis .ax { position: relative; height: 16px; margin-right: 48px; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.maxis .ax i { position: absolute; top: 0; font-style: normal; transform: translateX(-50%); }
+.maxis .ax i:first-child { transform: none; } .maxis .ax i:last-child { transform: translateX(-100%); }
+.m .bar .tr { height: 12px; background: linear-gradient(90deg, transparent 24.7%, var(--line-2) 24.7% 25.3%, transparent 25.3% 49.7%, var(--line-2) 49.7% 50.3%, transparent 50.3% 74.7%, var(--line-2) 74.7% 75.3%, transparent 75.3%), var(--surface-3); }
+.m .bar .val { font-size: 12px; }
+.m .bar + .bar { margin-top: 3px; }
+.mname { font-size: 13px; }
+.mrow[aria-current="true"] .mname { font-weight: 600; }
+.concl { border-left: 3px solid var(--acc); }
+.concl h2 { margin-bottom: 6px; }
+.concl p { color: var(--ink-2); max-width: 110ch; line-height: 1.6; }
+.report { padding: 0; }
+.report .grp { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 8px 32px; padding: 20px 22px; border-top: 1px solid var(--line); }
+.report .grp:first-child { border-top: 0; }
+.report .gh h2 { font-size: 16px; }
+.report .gh p { font-size: 12px; color: var(--ink-3); margin-top: 4px; max-width: 30ch; }
+.report .lim { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 0 6px; padding: 12px 0; border-top: 1px solid var(--line); }
+.report .lim:first-child { border-top: 0; padding-top: 0; }
+.report .lim:last-child { padding-bottom: 0; }
+.report .ln { font-family: var(--mono); font-size: 12px; color: var(--acc); padding-top: 2px; }
+.report .lim h3 { font-size: 15px; }
+.report .lim p { margin-top: 6px; color: var(--ink-2); max-width: 74ch; line-height: 1.6; }
+.report .lim p b { color: var(--ink); font-weight: 600; }
+@media (max-width: 1100px) { .rkpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .mk4 { flex-basis: 100%; max-width: none; } }
+@media (max-width: 900px) {
+  .split { grid-template-columns: minmax(0, 1fr); }
+  .report .grp { grid-template-columns: minmax(0, 1fr); padding: 16px 16px; }
+  .report .gh p { max-width: none; }
+}
+@media (max-width: 700px) {
+  .mrow { grid-template-columns: minmax(0, 1fr); }
+  .cl-grid { grid-template-columns: minmax(0, 1fr); }
+  .mk4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .read .rd { grid-template-columns: 96px minmax(0, 1fr); } .read .rd span:last-child { grid-column: 1 / -1; }
+  .maxis { grid-template-columns: minmax(0, 1fr); } .maxis > span { display: none; }
+}
+@media (max-width: 520px) {
+  .rkpis { grid-template-columns: minmax(0, 1fr); }
+  .rhero .n { font-size: 46px; }
+  .defs > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .rticks span { font-size: 10px; }
+}
+/* évite tout débordement des éléments masqués ou serrés */
+.col-in .field { position: relative; }
+.hid { left: 0; top: 0; }
+.brg-head { flex-wrap: wrap; }
+.brg-head > div { min-width: 0; }
+@media print { .split { display: block; } .empty-state { display: none; } }
 </style>
 </head>
 <body>
@@ -504,131 +620,162 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
       </div>
     </section>
 
-    <!-- DURÉE DE VIE RESTANTE -->
+<!-- DURÉE DE VIE RESTANTE -->
     <section class="panel" id="p-rul" role="tabpanel" aria-labelledby="t-rul" hidden>
-      <div class="card" id="rul-in">
-        <div class="pred">
-          <div>
-            <div class="fields">
-              <div class="field"><label for="rul-col">Quel roulement ?</label>
-                <select id="rul-col">
-                  <option value="0">Roulement 1 (colonne 1)</option><option value="1">Roulement 2 (colonne 2)</option>
-                  <option value="2">Roulement 3 (colonne 3)</option><option value="3">Roulement 4 (colonne 4)</option>
-                  <option value="4">Colonne 5</option><option value="5">Colonne 6</option><option value="6">Colonne 7</option><option value="7">Colonne 8</option>
-                </select></div>
+      <div class="split">
+        <div class="col-in card" id="rul-in">
+          <div class="field"><label for="rul-col">Quel roulement ?</label>
+            <select id="rul-col">
+              <option value="0">Roulement 1 (colonne 1)</option><option value="1">Roulement 2 (colonne 2)</option>
+              <option value="2">Roulement 3 (colonne 3)</option><option value="3">Roulement 4 (colonne 4)</option>
+              <option value="4">Colonne 5</option><option value="5">Colonne 6</option><option value="6">Colonne 7</option><option value="7">Colonne 8</option>
+            </select></div>
+          <div class="drop compact" id="rul-drop">
+            <div class="t">Glissez ici le dossier des fichiers</div>
+            <div class="row">
+              <button class="btn" id="rul-pick-dir" type="button">Choisir un dossier</button>
+              <button class="btn ghost" id="rul-pick-files" type="button">Choisir des fichiers</button>
             </div>
-            <div class="drop" id="rul-drop">
-              <div class="t">Glissez ici le dossier des fichiers</div>
-              <div class="muted">ou</div>
-              <div class="row">
-                <button class="btn" id="rul-pick-dir" type="button">Choisir un dossier</button>
-                <button class="btn ghost" id="rul-pick-files" type="button">Choisir des fichiers</button>
-              </div>
-              <div class="muted small">Rien n'est envoyé : tout se calcule dans votre navigateur.</div>
-              <input class="hid" type="file" id="rul-dir" webkitdirectory multiple tabindex="-1" aria-hidden="true">
-              <input class="hid" type="file" id="rul-files" multiple tabindex="-1" aria-hidden="true">
+            <div class="hint">Rien n'est envoyé : tout se calcule dans votre navigateur.</div>
+            <input class="hid" type="file" id="rul-dir" webkitdirectory multiple tabindex="-1" aria-hidden="true">
+            <input class="hid" type="file" id="rul-files" multiple tabindex="-1" aria-hidden="true">
+          </div>
+          <div class="controls" id="rul-ex">
+            <span class="muted small">Sans données :</span>
+            <button class="btn ghost" id="rul-demo-h" type="button">Exemple : roulement sain</button>
+            <button class="btn ghost" id="rul-demo-d" type="button">Exemple : roulement dégradé</button>
+          </div>
+          <div class="msg info" id="rul-note" hidden></div>
+          <div class="msg err" id="rul-err" hidden></div>
+        </div>
+
+        <div class="col-out" id="rul-right">
+          <div class="card result fig" id="rul-res" hidden>
+            <div class="sec-head"><h2>Résultat</h2><span class="muted small" id="rul-meta"></span></div>
+            <div class="rhero">
+              <div><div class="k">Il reste environ</div><div class="n" id="rul-val">—</div><div class="k" id="rul-unc"></div></div>
+              <div class="reco ok" id="rul-reco"><span id="rul-reco-t"></span><small id="rul-reco-d"></small></div>
             </div>
-            <div class="controls" style="margin-top:12px" id="rul-ex">
-              <span class="muted small">Pas de données sous la main ?</span>
-              <button class="btn ghost" id="rul-demo-h" type="button">Exemple : roulement sain</button>
-              <button class="btn ghost" id="rul-demo-d" type="button">Exemple : roulement dégradé</button>
+            <div class="scale">
+              <div class="k">Échelle de durée restante, en jours</div>
+              <div class="rbar" id="rul-bar"><div class="band" id="rul-band" title="Plage de plus ou moins 1 jour"></div><div class="f" id="rul-barf"></div><div class="mk" id="rul-mk"></div></div>
+              <div class="rticks" aria-hidden="true"><span style="left:0">0</span><span style="left:20%">0,5</span><span style="left:40%">1</span><span style="left:60%">1,5</span><span style="left:80%">2</span><span style="left:100%">≥ 2,5</span></div>
+              <div class="rzones" aria-hidden="true"><span style="width:40%">Arrêt recommandé</span><span style="width:60%">Surveillance</span></div>
+              <div class="k" id="rul-rms" style="margin-top:8px"></div>
+            </div>
+            <div class="rkpis">
+              <div class="kpi"><div class="l">Incertitude de l'estimation</div><div class="x">± 1 jour</div></div>
+              <div class="kpi"><div class="l">Erreur moyenne, roulement jamais vu</div><div class="x" id="rul-k-mae">—</div></div>
+              <div class="kpi"><div class="l">Relevés analysés</div><div class="x" id="rul-k-win">—</div></div>
+            </div>
+            <div class="rfig"><div class="sec-head" style="margin-bottom:6px"><div class="ttl"><span class="fig-n">Fig. 1</span><h2>Vibration sur les 30 derniers relevés (5 h)</h2></div></div><div class="chart-box"><svg id="rul-chart" role="img" aria-label="Vibration relative au roulement neuf sur les 30 derniers relevés"></svg></div><p class="cap"><b>Fig. 1.</b> Vibration rapportée à celle du roulement neuf (1 = neuf).</p></div>
+            <details class="more"><summary>Voir les calculs intermédiaires</summary><div class="tbl-wrap"><table id="rul-table"></table></div></details>
+            <p class="note" id="rul-limits"></p>
+          </div>
+          <div class="card empty-state" id="rul-empty">
+            <h2>Résultat</h2>
+            <p class="muted">En attente des relevés. Déposez au moins 230 fichiers consécutifs d'un roulement, ou lancez un exemple.</p>
+            <div class="rhero"><div><div class="k">Il reste environ</div><div class="n">—</div></div></div>
+            <div class="scale">
+              <div class="k">Échelle de durée restante, en jours</div>
+              <div class="rbar"></div>
+              <div class="rticks" aria-hidden="true"><span style="left:0">0</span><span style="left:20%">0,5</span><span style="left:40%">1</span><span style="left:60%">1,5</span><span style="left:80%">2</span><span style="left:100%">≥ 2,5</span></div>
+              <div class="rzones" aria-hidden="true"><span style="width:40%">Arrêt recommandé</span><span style="width:60%">Surveillance</span></div>
+            </div>
+            <p class="cap">Moins d'un jour : arrêt recommandé. Entre 1 et 2,5 jours : surveillance. Au-delà, le modèle ne sait plus estimer et répond « normal ». L'estimation est à plus ou moins 1 jour.</p>
+            <div class="side-note" id="rul-why">
+              <h3>Pourquoi un seul fichier ne suffit pas</h3>
+              <p>Un fichier montre l'état du roulement à un instant. La durée de vie restante se lit dans la façon dont il vieillit : il faut une suite de fichiers pris les uns après les autres, au moins <b>230 relevés</b>, soit environ un jour et demi de mesures.</p>
+              <p>Les 200 premiers servent à apprendre ce qu'est un roulement neuf, les 30 derniers sont analysés. Pour juger l'état à partir d'un seul fichier, utilisez la page « État d'un roulement ».</p>
             </div>
           </div>
-          <div class="side-note" id="rul-why">
-            <h3>Pourquoi un seul fichier ne suffit pas</h3>
-            <p>Un fichier montre l'état du roulement à un instant. La durée de vie restante se lit dans la façon dont il vieillit : il faut donc une suite de fichiers pris les uns après les autres, au moins <b>230 relevés</b>, soit environ un jour et demi de mesures.</p>
-            <p>Les 200 premiers servent à apprendre ce qu'est un roulement neuf, les 30 derniers sont analysés. Pour juger l'état à partir d'un seul fichier, utilisez la page « État d'un roulement ».</p>
-          </div>
         </div>
-        <div class="msg info" id="rul-note" hidden></div>
-        <div class="msg err" id="rul-err" hidden></div>
-      </div>
-      <div class="card result fig" id="rul-res" hidden>
-        <div class="sec-head"><h2>Résultat</h2><span class="muted small" id="rul-meta"></span></div>
-        <div class="vbig">
-          <div><div class="k">Il reste environ</div><div class="n" id="rul-val">—</div><div class="k" id="rul-unc"></div></div>
-          <div style="flex:1 1 300px;min-width:0"><div class="k">Avant la panne</div><div class="rbar" id="rul-bar"><div class="f" id="rul-barf"></div></div><div class="rscale" aria-hidden="true"><span style="left:0">0</span><span style="left:40%">1 j : arrêt</span><span style="left:100%">2,5 j ou plus</span></div><div class="k" style="margin-top:6px" id="rul-rms"></div></div>
-        </div>
-        <div class="reco ok" id="rul-reco"><span id="rul-reco-t"></span><small id="rul-reco-d"></small></div>
-        <div style="margin-top:18px"><div class="sec-head" style="margin-bottom:6px"><div class="ttl"><span class="fig-n">Fig. 1</span><h2>Vibration sur les 30 derniers relevés (5 h)</h2></div></div><div class="chart-box"><svg id="rul-chart" role="img" aria-label="Vibration relative au roulement neuf sur les 30 derniers relevés"></svg></div><p class="cap"><b>Fig. 1.</b> Vibration rapportée à celle du roulement neuf (1 = neuf).</p></div>
-        <details class="more"><summary>Voir les calculs intermédiaires</summary><div class="tbl-wrap"><table id="rul-table"></table></div></details>
-        <p class="note" id="rul-limits"></p>
       </div>
     </section>
 
     <!-- ÉTAT D'UN ROULEMENT -->
     <section class="panel" id="p-classe" role="tabpanel" aria-labelledby="t-classe" hidden>
-      <div class="card" id="cl-in">
-        <div class="pred">
-          <div>
-            <div class="fields">
-              <div class="field"><label for="cl-model">Méthode</label>
-                <select id="cl-model"></select></div>
-            </div>
-            <div class="drop" id="cl-drop">
-              <div class="t">Glissez ici un fichier de mesure</div>
-              <div class="muted">ou</div>
-              <div class="row"><button class="btn" id="cl-pick" type="button">Choisir un fichier</button></div>
-              <div class="muted small">Un relevé d'une seconde : 20 480 lignes, une colonne par roulement. Rien n'est envoyé.</div>
-              <input class="hid" type="file" id="cl-file" tabindex="-1" aria-hidden="true">
-            </div>
-            <div class="controls" style="margin-top:12px" id="cl-ex">
-              <span class="muted small">Sans fichier :</span>
-              <button class="btn ghost" id="cl-ex-h" type="button">Exemple : relevé du 13 février</button>
-              <button class="btn ghost" id="cl-ex-d" type="button">Exemple : relevé du 19 février</button>
-              <button class="btn ghost" id="cl-ex-now" type="button">Instant de la supervision</button>
-            </div>
+      <div class="split">
+        <div class="col-in card" id="cl-in">
+          <div class="field"><div class="lbl" id="cl-model-l">Méthode d'évaluation</div>
+            <select id="cl-model" class="hid"></select>
+            <div class="methods" id="cl-seg" role="radiogroup" aria-labelledby="cl-model-l"></div>
           </div>
-          <div class="side-note" id="cl-why">
-            <h3>Ce que fait cette page</h3>
-            <p>Elle calcule quatre mesures sur chaque colonne du fichier (niveau de vibration, énergie, désordre du signal, pics) et dit si chaque roulement vibre comme d'habitude ou non.</p>
-            <p>Elle est réglée sur les quatre roulements de cet essai. Pour une autre machine, la réponse ne serait pas fiable : chaque roulement a son propre niveau normal.</p>
+          <div class="drop compact" id="cl-drop">
+            <div class="t">Glissez ici un fichier de mesure</div>
+            <div class="row"><button class="btn" id="cl-pick" type="button">Choisir un fichier</button></div>
+            <div class="hint">Un relevé d'une seconde : 20 480 lignes, une colonne par roulement. Rien n'est envoyé.</div>
+            <input class="hid" type="file" id="cl-file" tabindex="-1" aria-hidden="true">
+          </div>
+          <div class="controls" id="cl-ex">
+            <span class="muted small">Sans fichier :</span>
+            <button class="btn ghost" id="cl-ex-h" type="button">Exemple : relevé du 13 février</button>
+            <button class="btn ghost" id="cl-ex-d" type="button">Exemple : relevé du 19 février</button>
+            <button class="btn ghost" id="cl-ex-now" type="button">Instant de la supervision</button>
+          </div>
+          <div class="msg err" id="cl-err" hidden></div>
+        </div>
+
+        <div class="col-out" id="cl-right">
+          <div class="card result fig" id="cl-res" hidden>
+            <div class="sec-head"><h2>Résultat</h2><span class="muted small" id="cl-meta"></span></div>
+            <div class="reco ok" id="cl-sum"><span id="cl-sum-t"></span><small id="cl-sum-d"></small></div>
+            <div class="cl-grid" id="cl-cards"></div>
+            <div class="read" id="cl-read"></div>
+            <p class="cap">Trait : valeur du relevé. Zone verte : plage normale de ce roulement. Une valeur hors plage passe en orange ; une flèche indique qu'elle dépasse l'échelle du graphique.</p>
+          </div>
+          <div class="card empty-state" id="cl-empty">
+            <h2>Ce que la page évalue</h2>
+            <p class="muted">Elle calcule quatre mesures sur chaque colonne du fichier et dit si le roulement vibre comme d'habitude. Elle n'est valable que pour les quatre roulements de cet essai : chaque roulement a son propre niveau normal.</p>
+            <dl class="defs" id="cl-why">
+              <div><dt>Vibration (RMS)</dt><dd>Le niveau moyen de vibration.</dd></div>
+              <div><dt>Énergie</dt><dd>La quantité totale de vibration sur la seconde.</dd></div>
+              <div><dt>Désordre du signal</dt><dd>Baisse quand la vibration se concentre sur quelques fréquences, comme le fait un défaut.</dd></div>
+              <div><dt>Pics de vibration</dt><dd>Monte quand il y a des chocs ponctuels, signe typique d'un écaillage de la bague.</dd></div>
+            </dl>
           </div>
         </div>
-        <div class="msg err" id="cl-err" hidden></div>
-      </div>
-      <div class="card result fig" id="cl-res" hidden>
-        <div class="sec-head"><h2>Résultat</h2><span class="muted small" id="cl-meta"></span></div>
-        <div class="reco ok" id="cl-sum"><span id="cl-sum-t"></span><small id="cl-sum-d"></small></div>
-        <div class="cl-grid" id="cl-cards"></div>
-        <p class="cap">Trait : valeur du relevé. Zone verte : plage normale de ce roulement. Une valeur hors plage passe en orange ; une flèche indique qu'elle dépasse l'échelle du graphique.</p>
       </div>
     </section>
 
     <!-- MODÈLES -->
     <section class="panel" id="p-modeles" role="tabpanel" aria-labelledby="t-modeles" hidden>
-      <div class="cols2 m">
+      <div class="card mhead" id="m-head">
+        <div><div class="k">Modèle choisi</div><div class="nm" id="m-sel"></div></div>
+        <div class="mk4" id="m-k4"></div>
+      </div>
+      <div class="cols2 m" style="margin-top:14px">
         <div class="card fig" id="m-card">
           <div class="sec-head" style="margin-bottom:4px"><div class="ttl"><span class="fig-n">Fig. 1</span><h2>Le même modèle, trois protocoles</h2></div></div>
-          <p class="muted small" style="margin:0 0 10px">Score F1 (de 0 à 1, 1 = aucune erreur) sur les étiquettes de la règle des seuils. Cliquer sur un modèle pour le choisir.</p>
-          <div class="legend" style="margin:0 0 8px">
-            <span><i class="k1" style="background:var(--c1)"></i>Test classique, tous les roulements mélangés (notebook)</span>
+          <p class="muted small" style="margin:0 0 10px">Score F1 : de 0 à 1, 1 = aucune erreur, calculé sur les étiquettes de la règle des seuils. Cliquer sur un modèle pour le choisir.</p>
+          <div class="legend lg3">
+            <span><i style="background:var(--c1)"></i>Test classique, tous les roulements mélangés (notebook)</span>
             <span><i style="background:var(--c2)"></i>Roulement jamais vu, mesures brutes</span>
             <span><i style="background:var(--c3)"></i>Roulement jamais vu, réglé sur son début d'essai (20 %)</span>
           </div>
+          <div class="maxis" aria-hidden="true"><span></span><div class="ax"><i style="left:0">0</i><i style="left:25%">0,25</i><i style="left:50%">0,5</i><i style="left:75%">0,75</i><i style="left:100%">1</i></div></div>
           <div id="mbars"></div>
-          <p class="note" id="mnote"></p>
+          <p class="cap" id="mnote"></p>
         </div>
-        <div class="stack">
-          <div class="card fig" id="cm-card">
-            <div class="sec-head" style="margin-bottom:0">
-              <div class="ttl"><span class="fig-n">Fig. 2</span><h2 id="cm-title">Où le modèle se trompe</h2></div>
-              <div class="field inl">
-                <label for="cmscope">Portée</label>
-                <select id="cmscope"></select>
-              </div>
+        <div class="card fig" id="cm-card">
+          <div class="sec-head" style="margin-bottom:0">
+            <div class="ttl"><span class="fig-n">Fig. 2</span><h2 id="cm-title">Où le modèle se trompe</h2></div>
+            <div class="field inl">
+              <label for="cmscope">Portée</label>
+              <select id="cmscope"></select>
             </div>
-            <div class="cm" id="cm"></div>
-            <div class="kpis" id="kpis"></div>
-            <p class="note">Chaque relevé est jugé par un modèle qui ne l'a pas vu à l'entraînement (validation croisée en 5 parties). Lignes : étiquette de la règle, colonnes : réponse du modèle.</p>
           </div>
-          <div class="card" id="gap-card">
-            <h2 style="margin-bottom:6px">Ce que montre l'écart</h2>
-            <p class="muted" id="gapsum"></p>
-          </div>
+          <div class="cm" id="cm"></div>
+          <div class="kpis" id="kpis"></div>
+          <p class="cap">Chaque relevé est jugé par un modèle qui ne l'a pas vu à l'entraînement (validation croisée en 5 parties). Lignes : étiquette de la règle, colonnes : réponse du modèle.</p>
         </div>
       </div>
+      <div class="card concl" id="gap-card" style="margin-top:14px">
+        <h2>Ce que montre l'écart</h2>
+        <p id="gapsum"></p>
+      </div>
     </section>
+
 
     <!-- SIMULATEUR -->
     <section class="panel" id="p-simulateur" role="tabpanel" aria-labelledby="t-simulateur" hidden>
@@ -652,7 +799,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
 
     <!-- LIMITES -->
     <section class="panel" id="p-limites" role="tabpanel" aria-labelledby="t-limites" hidden>
-      <div class="card prose" id="limits"></div>
+      <div class="card report" id="limits"></div>
     </section>
   </main>
 </div>
@@ -918,6 +1065,9 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     var leads = D.models.map(function (n) { return hToStop(EP[n][B[0]].on[0]); });
     $('#gapsum').innerHTML = 'Dans le test classique, les modèles reproduisent la règle avec un score F1 de ' + nf(ra[0], 2) + ' à ' + nf(ra[1], 2) + '. Entraînés sur trois roulements et testés sur le quatrième avec les mesures brutes, ils tombent à ' + nf(rb[0], 2) + ' à ' + nf(rb[1], 2) + '. Quand chaque roulement est d\'abord réglé sur son début d\'essai (20 %, état neuf), ils remontent à ' + nf(rc[0], 2) + ' à ' + nf(rc[1], 2) + '. Sur le roulement 1, tous donnent l\'alerte entre ' + nf(Math.min.apply(null, leads), 1) + ' h et ' + nf(Math.max.apply(null, leads), 1) + ' h avant l\'arrêt, comme la règle elle-même.';
     $('#mnote').textContent = 'Score F1 sur les 3 936 relevés (test classique), ou moyenne des quatre roulements testés chacun à son tour (roulement jamais vu). Forêt aléatoire : écart de quelques millièmes avec le notebook, dû à la version de scikit-learn.';
+    $('#m-sel').textContent = mfr(S.model);
+    $('#m-k4').innerHTML = [['F1, test classique', nf(D.cv[S.model].overall.f1, 3)], ['F1, roulement jamais vu (mesures brutes)', nf(D.lobo[S.model].mean_f1, 3)], ['F1, roulement jamais vu (réglé sur le début)', nf(D.lobo_norm[S.model].mean_f1, 3)], ['Alerte avant l\'arrêt, roulement 1', nf(hToStop(EP[S.model][B[0]].on[0]), 1) + ' h']]
+      .map(function (k) { return '<div class="kpi"><div class="l">' + k[0] + '</div><div class="x">' + k[1] + '</div></div>'; }).join('');
     var scope = $('#cmscope');
     if (!scope.options.length) { scope.innerHTML = '<option value="overall">Les 4 roulements</option>' + B.map(function (b, k) { return '<option value="' + b + '">Roulement ' + (k + 1) + '</option>'; }).join(''); scope.addEventListener('change', renderCM); }
     renderCM();
@@ -977,23 +1127,23 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
   function renderLimits() {
     var ra = f1Range(function (n) { return D.cv[n].overall.f1; }), rb = f1Range(function (n) { return D.lobo[n].mean_f1; }), rc = f1Range(function (n) { return D.lobo_norm[n].mean_f1; });
     var early = [1, 2, 3].map(function (k) { return D.lead[RULE][B[k]].early_false_snapshots; });
+    var n = 0;
+    function lim(h, p) { n++; return '<article class="lim"><span class="ln">L' + n + '</span><div><h3>' + h + '</h3><p>' + p + '</p></div></article>'; }
+    function grp(t, d, items) { return '<section class="grp"><div class="gh"><h2>' + t + '</h2><p>' + d + '</p></div><div class="gb">' + items + '</div></section>'; }
     $('#limits').innerHTML =
-      '<h3>Les quatre mesures</h3>' +
-      '<p><b>Vibration (RMS)</b> : le niveau moyen de vibration. <b>Énergie</b> : la quantité totale de vibration sur la seconde. <b>Désordre du signal</b> (entropie spectrale) : baisse quand la vibration se concentre sur quelques fréquences, comme le fait un défaut. <b>Pics de vibration</b> (kurtosis) : monte quand il y a des chocs ponctuels, signe typique d\'un écaillage de la bague.</p>' +
-      '<h3>Les anomalies sont définies par une règle, pas observées</h3>' +
-      '<p>Un relevé est étiqueté anormal quand l\'une des quatre mesures sort de la plage habituelle de son roulement (la plage est fixée par la règle statistique de l\'écart interquartile, avec un facteur 1,5). Les modèles reçoivent ces mêmes mesures : ils apprennent à reproduire la règle, d\'où un score F1 de ' + nf(ra[0], 2) + ' à ' + nf(ra[1], 2) + ' dans le test classique. Ce score mesure la fidélité à la règle, pas la détection d\'un défaut.</p>' +
-      '<h3>Un seul événement réel dans l\'essai</h3>' +
-      '<p>Seul le roulement 1 défaille (bague extérieure). Les anomalies des roulements 2 à 4 se concentrent dans les dernières heures, quand la panne se propage. Avant les 72 dernières heures, elles ne concernent que ' + early[0] + ', ' + early[1] + ' et ' + early[2] + ' relevés (roulements 2, 3 et 4) sur ' + D.lead[RULE][B[1]].early_snapshots + '. Les étiquettes suivent donc surtout la fin de l\'essai. Les deux derniers relevés, pris machine arrêtée, sont aussi classés anormaux par la règle : l\'interface les affiche comme arrêt.</p>' +
-      '<h3>Sur un roulement jamais vu, les scores baissent</h3>' +
-      '<p>Entraînés sur trois roulements et testés sur le quatrième, avec les mesures brutes, les modèles obtiennent un score F1 moyen de ' + nf(rb[0], 2) + ' à ' + nf(rb[1], 2) + '. Les seuils sont propres à chaque roulement et les niveaux de vibration diffèrent d\'un roulement à l\'autre. En réglant chacun sur son début d\'essai (20 %, état neuf), le score remonte à ' + nf(rc[0], 2) + ' à ' + nf(rc[1], 2) + '. Ce réglage est possible en exploitation, contrairement à des seuils calculés sur tout l\'essai.</p>' +
-      '<h3>Le test sur l\'essai n° 1 n\'est pas concluant</h3>' +
-      '<p>Les seuils fixés sur l\'essai n° 2 classent anormaux les 2 156 relevés du roulement 3 de l\'essai n° 1, et certains modèles répondent « anormal » partout. Il n\'y a rien à en conclure sur les modèles, sinon que les seuils ne se transportent pas d\'un essai à l\'autre.</p>' +
-      '<h3>La durée de vie restante demande un historique</h3>' +
-      '<p>Le modèle lit une trajectoire de 30 relevés (5 heures) comparée à l\'état neuf, estimé sur les 200 premiers relevés. Il faut donc au moins 230 fichiers à la suite : un seul fichier ne permet pas d\'estimer la durée restante. L\'estimation est à plus ou moins 1 jour près.</p>' +
-      '<h3>L\'état d\'un roulement ne vaut que pour ces quatre roulements</h3>' +
-      '<p>La page « État d\'un roulement » juge un fichier avec les seuils de cet essai. Les niveaux de vibration normaux changent d\'un roulement à l\'autre et d\'une machine à l\'autre : sur une autre machine, il faudrait refaire les seuils à partir d\'une période de référence.</p>' +
-      '<h3>Quatre mesures, trois informations</h3>' +
-      '<p>L\'énergie vaut 20 480 × RMS² : les deux mesures portent presque la même information. Pour aller plus loin, il faudrait une vérité terrain (l\'instant réel de la panne) plutôt qu\'une règle statistique, et des mesures liées aux fréquences de défaut du roulement.</p>';
+      grp('Repères', 'Les mesures utilisées dans toute l\'étude.',
+        '<article class="lim"><span class="ln"></span><div><h3>Les quatre mesures</h3>' +
+        '<p><b>Vibration (RMS)</b> : le niveau moyen de vibration. <b>Énergie</b> : la quantité totale de vibration sur la seconde. <b>Désordre du signal</b> (entropie spectrale) : baisse quand la vibration se concentre sur quelques fréquences, comme le fait un défaut. <b>Pics de vibration</b> (kurtosis) : monte quand il y a des chocs ponctuels, signe typique d\'un écaillage de la bague.</p></div></article>') +
+      grp('Constats', 'Ce que montrent les résultats de l\'étude, et ce qu\'ils ne montrent pas.',
+        lim('Les anomalies sont définies par une règle, pas observées', 'Un relevé est étiqueté anormal quand l\'une des quatre mesures sort de la plage habituelle de son roulement (la plage est fixée par la règle statistique de l\'écart interquartile, avec un facteur 1,5). Les modèles reçoivent ces mêmes mesures : ils apprennent à reproduire la règle, d\'où un score F1 de ' + nf(ra[0], 2) + ' à ' + nf(ra[1], 2) + ' dans le test classique. Ce score mesure la fidélité à la règle, pas la détection d\'un défaut.') +
+        lim('Un seul événement réel dans l\'essai', 'Seul le roulement 1 défaille (bague extérieure). Les anomalies des roulements 2 à 4 se concentrent dans les dernières heures, quand la panne se propage. Avant les 72 dernières heures, elles ne concernent que ' + early[0] + ', ' + early[1] + ' et ' + early[2] + ' relevés (roulements 2, 3 et 4) sur ' + D.lead[RULE][B[1]].early_snapshots + '. Les étiquettes suivent donc surtout la fin de l\'essai. Les deux derniers relevés, pris machine arrêtée, sont aussi classés anormaux par la règle : l\'interface les affiche comme arrêt.') +
+        lim('Sur un roulement jamais vu, les scores baissent', 'Entraînés sur trois roulements et testés sur le quatrième, avec les mesures brutes, les modèles obtiennent un score F1 moyen de ' + nf(rb[0], 2) + ' à ' + nf(rb[1], 2) + '. Les seuils sont propres à chaque roulement et les niveaux de vibration diffèrent d\'un roulement à l\'autre. En réglant chacun sur son début d\'essai (20 %, état neuf), le score remonte à ' + nf(rc[0], 2) + ' à ' + nf(rc[1], 2) + '. Ce réglage est possible en exploitation, contrairement à des seuils calculés sur tout l\'essai.') +
+        lim('Le test sur l\'essai n° 1 n\'est pas concluant', 'Les seuils fixés sur l\'essai n° 2 classent anormaux les 2 156 relevés du roulement 3 de l\'essai n° 1, et certains modèles répondent « anormal » partout. Il n\'y a rien à en conclure sur les modèles, sinon que les seuils ne se transportent pas d\'un essai à l\'autre.')) +
+      grp('Contraintes méthodologiques', 'Conditions à respecter pour utiliser la durée restante et l\'état d\'un roulement.',
+        lim('La durée de vie restante demande un historique', 'Le modèle lit une trajectoire de 30 relevés (5 heures) comparée à l\'état neuf, estimé sur les 200 premiers relevés. Il faut donc au moins 230 fichiers à la suite : un seul fichier ne permet pas d\'estimer la durée restante. L\'estimation est à plus ou moins 1 jour près.') +
+        lim('L\'état d\'un roulement ne vaut que pour ces quatre roulements', 'La page « État d\'un roulement » juge un fichier avec les seuils de cet essai. Les niveaux de vibration normaux changent d\'un roulement à l\'autre et d\'une machine à l\'autre : sur une autre machine, il faudrait refaire les seuils à partir d\'une période de référence.')) +
+      grp('Perspectives', 'Ce qu\'il faudrait pour aller plus loin.',
+        lim('Quatre mesures, trois informations', 'L\'énergie vaut 20 480 × RMS² : les deux mesures portent presque la même information. Pour aller plus loin, il faudrait une vérité terrain (l\'instant réel de la panne) plutôt qu\'une règle statistique, et des mesures liées aux fréquences de défaut du roulement.'));
   }
 
   /* ---------- synoptique et bon de travail ---------- */
@@ -1115,6 +1265,11 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     ['dragleave', 'drop'].forEach(function (n) { el.addEventListener(n, function (e) { e.preventDefault(); el.classList.remove('over'); }); });
     el.addEventListener('drop', function (e) { filesFromDrop(e).then(onFiles); });
   }
+  function reveal(el) {
+    if (window.innerWidth > 900 || el.hidden) return;
+    var r = el.getBoundingClientRect();
+    if (r.top > window.innerHeight * 0.6 || r.top < 0) el.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  }
   function showMsg(id, msg) { var e = $(id); e.hidden = !msg; e.textContent = msg || ''; }
 
   /* ---------- État d'un roulement : un fichier -> les quatre roulements ---------- */
@@ -1195,10 +1350,19 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     else { box.className = 'reco ok'; box.style.background = box.style.color = ''; t = 'Les quatre roulements vibrent comme d\'habitude'; d = 'Méthode : ' + CNAME[method] + '.'; }
     $('#cl-sum-t').textContent = t; $('#cl-sum-d').textContent = d;
     $('#cl-meta').textContent = meta;
+    var rd = '<h3>Interprétation</h3>';
+    B.forEach(function (b, k) {
+      var x = vals[k], stopped = x[0] < 0.01, pred = stopped ? 0 : predictClass(method, b, x);
+      var outs = FKEYS.filter(function (f, i) { var t = D.thr[b][f]; return x[i] < t.lo || x[i] > t.hi; }).map(function (f) { return FL[f]; });
+      var st = stopped ? ['off', 'À l\'arrêt'] : pred ? ['crit', 'Anormal'] : ['ok', 'Normal'];
+      var det = stopped ? 'Vibration quasi nulle : machine à l\'arrêt.' : (outs.length ? 'Hors plage : ' + outs.join(', ') + '.' : 'Les quatre mesures sont dans leur plage normale.');
+      rd += '<div class="rd"><b>Roulement ' + (k + 1) + '</b><span class="st ' + st[0] + '">' + st[1] + '</span><span>' + det + '</span></div>';
+    });
+    $('#cl-read').innerHTML = rd;
     $('#cl-res').hidden = false;
   }
   var CL_LAST = null;
-  function classFromVals(vals, meta) { CL_LAST = { vals: vals, meta: meta }; showMsg('#cl-err', ''); renderClassResult(vals, meta); }
+  function classFromVals(vals, meta) { CL_LAST = { vals: vals, meta: meta }; showMsg('#cl-err', ''); renderClassResult(vals, meta); reveal($('#cl-res')); }
   function classFromIndex(i, label) { classFromVals(B.map(function (b) { return FKEYS.map(function (f) { return D.series[b][f][i]; }); }), label + ' : mesures déjà calculées dans les données de l\'étude (pas de signal brut).'); }
   async function classFromFile(list) {
     var f = list && list[0]; if (!f) return;
@@ -1213,9 +1377,28 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     } catch (err) { showMsg('#cl-err', 'Lecture impossible : ' + err.message); }
   }
   (function () {
-    $('#cl-model').innerHTML = CM.map(function (m) { return '<option value="' + m + '">' + CNAME[m] + '</option>'; }).join('');
-    $('#cl-model').value = 'Decision Tree';
-    $('#cl-model').addEventListener('change', function () { if (CL_LAST) renderClassResult(CL_LAST.vals, CL_LAST.meta); });
+    var sel = $('#cl-model');
+    sel.innerHTML = CM.map(function (m) { return '<option value="' + m + '">' + CNAME[m] + '</option>'; }).join('');
+    sel.value = 'Decision Tree'; sel.tabIndex = -1; sel.setAttribute('aria-hidden', 'true');
+    var seg = $('#cl-seg');
+    function segHTML() {
+      var h = '';
+      CM.forEach(function (m, k) {
+        if (k === 0) h += '<div class="mg">Référence</div>'; if (k === 1) h += '<div class="mg">Modèles appris : ils reproduisent la règle</div>';
+        var sub = m === RULE ? 'Définit les étiquettes de l\'étude' : 'F1 ' + nf(D.cv[m].overall.f1, 2) + ' test classique · ' + nf(D.lobo[m].mean_f1, 2) + ' roulement jamais vu';
+        h += '<button type="button" class="meth" role="radio" data-m="' + m + '" aria-checked="' + (sel.value === m) + '"><span class="nm">' + CNAME[m] + '</span><span class="sub">' + sub + '</span></button>';
+      });
+      seg.innerHTML = h;
+    }
+    segHTML();
+    seg.addEventListener('click', function (e) {
+      var b = e.target.closest('.meth'); if (!b) return;
+      sel.value = b.getAttribute('data-m'); sel.dispatchEvent(new Event('change'));
+    });
+    sel.addEventListener('change', function () {
+      seg.querySelectorAll('.meth').forEach(function (b) { b.setAttribute('aria-checked', b.getAttribute('data-m') === sel.value ? 'true' : 'false'); });
+      if (CL_LAST) renderClassResult(CL_LAST.vals, CL_LAST.meta);
+    });
     $('#cl-pick').addEventListener('click', function () { $('#cl-file').click(); });
     $('#cl-file').addEventListener('change', function (e) { classFromFile(e.target.files); e.target.value = ''; });
     dropZone($('#cl-drop'), classFromFile);
@@ -1341,6 +1524,14 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     $('#rul-unc').textContent = rul >= 2.5 ? 'au-delà de ce que le modèle sait estimer' : 'estimation à plus ou moins 1 jour près';
     $('#rul-rms').textContent = 'Niveau de vibration : × ' + nf(rmsRel, 2) + ' par rapport au roulement neuf.';
     $('#rul-bar').className = 'rbar ' + cls; $('#rul-barf').style.width = (clamp(rul / 2.5, 0, 1) * 100) + '%';
+    var mk = $('#rul-mk'), bd = $('#rul-band');
+    mk.style.display = 'block'; mk.style.left = (clamp(rul / 2.5, 0, 1) * 100) + '%';
+    if (rul < 2.5) { var b0 = clamp((rul - 1) / 2.5, 0, 1), b1 = clamp((rul + 1) / 2.5, 0, 1); bd.style.display = 'block'; bd.style.left = (b0 * 100) + '%'; bd.style.width = ((b1 - b0) * 100) + '%'; }
+    else bd.style.display = 'none';
+    var mae = rulModel().lofo.filter(function (r) { return r['Modèle'] === 'CNN-LSTM'; }).map(function (r) { return r['MAE dégradation (j)']; });
+    var m0 = mae.length ? nf(Math.min.apply(null, mae), 2) : '', m1 = mae.length ? nf(Math.max.apply(null, mae), 2) : '';
+    $('#rul-k-mae').textContent = !mae.length ? '—' : (m0 === m1 ? m0 : m0 + ' à ' + m1) + ' j';
+    $('#rul-k-win').textContent = seq.length + ' (5 h)';
     $('#rul-reco').className = 'reco ' + cls; $('#rul-reco-t').textContent = t + ' : durée restante ' + (rul >= 2.5 ? 'supérieure à 2,5' : nf(rul, 1)) + ' jour(s).'; $('#rul-reco-d').textContent = d;
     $('#rul-meta').textContent = note;
     var ht = '<tr><th>#</th><th class="num">Vibration (g)</th><th class="num">Énergie</th><th class="num">Désordre</th><th class="num">Pics</th><th class="num">Vibration / neuf</th></tr>';
@@ -1349,6 +1540,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     $('#rul-table').innerHTML = ht;
     $('#rul-res').hidden = false;
     drawRulChart(rel.map(function (r) { return r[0]; }));
+    reveal($('#rul-res'));
     RUL_LAST = { rul: rul };
     $('#rul-limits').textContent = rulLimitsText();
   }
@@ -1508,16 +1700,17 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
       ['#rul-col', 'Choisir le roulement', 'Indiquez quelle colonne des fichiers correspond au roulement à analyser.'],
       ['#rul-why', 'Pourquoi plusieurs fichiers', 'La durée restante se lit dans l\'évolution du roulement, pas dans un seul instant. Il faut au moins 230 relevés à la suite : les 200 premiers définissent l\'état neuf, les 30 derniers sont analysés.'],
       ['#rul-ex', 'Sans données', 'Deux exemples tirés de l\'essai : un roulement sain et un roulement dégradé.'],
-      ['#rul-res', 'Le résultat', 'Durée restante estimée (à plus ou moins 1 jour), échelle avant la panne, recommandation et courbe de vibration des 30 derniers relevés.']
+      ['#rul-right', 'Le résultat', 'Durée restante estimée, placée sur une échelle graduée en jours (zones d\'arrêt et de surveillance, plage de plus ou moins 1 jour), recommandation, indicateurs de fiabilité et courbe de vibration des 30 derniers relevés.']
     ],
     classe: [
-      ['#cl-model', 'Choisir la méthode', 'Règle des seuils, arbre de décision, régression logistique ou Bayes naïf : les quatre répondent à la même question.'],
+      ['#cl-seg', 'Choisir la méthode', 'La règle des seuils sert de référence. L\'arbre de décision, la régression logistique et Bayes naïf sont des modèles appris pour la reproduire ; leurs scores F1 sont rappelés sous chaque nom.'],
       ['#cl-drop', 'Déposer un fichier', 'Un relevé d\'une seconde : 20 480 lignes, une colonne par roulement.'],
       ['#cl-ex', 'Exemples', 'Deux relevés réels de l\'essai, ou l\'instant affiché dans la supervision.'],
       ['#cl-why', 'Ce que fait cette page', 'Elle calcule quatre mesures par colonne et dit si chaque roulement vibre comme d\'habitude. Elle n\'est valable que pour les quatre roulements de cet essai.'],
-      ['#cl-res', 'Résultat par roulement', 'Normal ou anormal pour chacun, avec ses quatre mesures placées dans leur plage normale.']
+      ['#cl-right', 'Résultat par roulement', 'Normal ou anormal pour chacun, avec ses quatre mesures placées dans leur plage normale, puis une interprétation en une ligne par roulement.']
     ],
     modeles: [
+      ['#m-head', 'Le modèle choisi', 'Rappel de ses scores F1 dans les trois protocoles et de son avance sur l\'arrêt. Le modèle se choisit en cliquant sur une ligne de la figure 1.'],
       ['#m-card', 'Six modèles, trois façons de les juger', 'Chaque modèle essaie de reproduire la règle des seuils. Le score F1 baisse nettement quand le modèle doit juger un roulement qu\'il n\'a jamais vu.'],
       ['#cm-card', 'Où le modèle se trompe', 'Les relevés bien classés en vert, les erreurs en orange, pour le modèle choisi dans la liste.'],
       ['#gap-card', 'Ce que montre l\'écart', 'Un bon score dans le test classique ne prouve pas qu\'un modèle détecte de vrais défauts.']

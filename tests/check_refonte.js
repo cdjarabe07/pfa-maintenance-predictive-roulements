@@ -29,8 +29,15 @@ async function snap(pg, i, src) {
   for (const t of ['modeles', 'simulateur', 'limites']) {
     await a.click('#t-' + t); await b.click('#t-' + t);
     const ids = t === 'modeles' ? ['#mbars', '#cm', '#kpis', '#gapsum', '#mnote'] : t === 'simulateur' ? ['#sim', '#sim-verdict'] : ['#limits'];
-    let d = 0; for (const s of ids) if (norm(await a.textContent(s)) !== norm(await b.textContent(s))) { d++; console.log('  écart', t, s); }
-    ok(d === 0, `page ${t} : contenus numériques identiques`);
+    let d = 0;
+    if (t === 'limites') {
+      // la page est réorganisée par catégories : mêmes titres et mêmes paragraphes, dans n'importe quel ordre
+      for (const sel of ['#limits h3', '#limits p']) {
+        const x = (await a.$$eval(sel, e => e.filter(n => !n.closest('.gh')).map(n => n.textContent.replace(/\s+/g, ' ').trim()))).sort(), y = (await b.$$eval(sel, e => e.filter(n => !n.closest('.gh')).map(n => n.textContent.replace(/\s+/g, ' ').trim()))).sort();
+        if (JSON.stringify(x) !== JSON.stringify(y)) { d++; console.log('  écart', t, sel); }
+      }
+    } else for (const s of ids) if (norm(await a.textContent(s)) !== norm(await b.textContent(s))) { d++; console.log('  écart', t, s); }
+    ok(d === 0, t === 'limites' ? 'page limites : mêmes titres et mêmes paragraphes (réorganisés par catégorie)' : `page ${t} : contenus numériques identiques`);
   }
   // 3. prédictions : résultats identiques
   for (const [btn, res, sel] of [['#rul-demo-d', '#rul-res', ['#rul-val', '#rul-reco-t', '#rul-rms', '#rul-unc']], ['#rul-demo-h', '#rul-res', ['#rul-val', '#rul-reco-t', '#rul-rms', '#rul-unc']]]) {
