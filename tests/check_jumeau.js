@@ -14,7 +14,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'ÉCHEC ') + m); if (!c) fails
   const errs = [];
   pg.on('pageerror', e => errs.push(String(e)));
   pg.on('console', m => { if (m.type() === 'error' && !/fonts\.g|ERR_|net::/.test(m.text())) errs.push(m.text()); });
-  await pg.goto('file://' + path.join(root, 'site', 'jumeau_roulements.html'));
+  await pg.goto('file://' + path.join(root, 'site', 'jumeau_roulements.html') + '?sans-visite');
   await pg.waitForFunction(() => window.__twin);
 
   // 1. variables calculées depuis un fichier brut = valeurs du CSV
@@ -119,7 +119,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'ÉCHEC ') + m); if (!c) fails
     await pg.screenshot({ path: path.join(shots, 'supervision.png'), fullPage: true });
     for (const t of ['modeles', 'simulateur', 'limites']) { await pg.click('#t-' + t); await pg.screenshot({ path: path.join(shots, t + '.png'), fullPage: true }); }
     const mob = await (await br.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })).newPage();
-    await mob.goto('file://' + path.join(root, 'site', 'jumeau_roulements.html'));
+    await mob.goto('file://' + path.join(root, 'site', 'jumeau_roulements.html') + '?sans-visite');
     await mob.waitForFunction(() => window.__twin);
     const sw = await mob.evaluate(() => document.documentElement.scrollWidth);
     ok(sw <= 392, 'mobile : pas de défilement horizontal de la page (largeur ' + sw + ')');

@@ -37,6 +37,7 @@ chaque roulement).
 python classification/prep_twin_data.py classification/bearing_features_labels_2nd_test.csv classification/twin_data.json   # ≈ 30 s
 python classification/build_jumeau.py                                                                                      # écrit site/jumeau_roulements.html
 python tests/make_jumeau_cases.py /tmp/cases && node tests/check_jumeau.js /tmp/cases                                       # vérifications
+node tests/check_refonte.js                                                                                                   # non-régression : mêmes chiffres que sauvegardes/, visite guidée, tailles d'écran
 ```
 
 `prep_twin_data.py` vérifie que les seuils IQR redonnent exactement les labels du CSV, reproduit la validation croisée 5 plis

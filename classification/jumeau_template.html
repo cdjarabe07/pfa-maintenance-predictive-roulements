@@ -2,23 +2,24 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap">
 <style>
-/* Thème de la page d'accueil : fond presque noir, accent turquoise, IBM Plex, filets fins.
-   La couleur sert aux données (4 roulements) et à l'état : normal (vert), écart isolé (jaune), alerte (orange), arrêt (gris). Le texte dit toujours l'état aussi. */
+/* Direction « Hybrid Engineering & Research » : planche d'ingénierie (quadrillage, repères, cartouche, schéma de la machine)
+   + cahier de laboratoire (figures numérotées, légendes, unités). Fond sombre et accent turquoise de la page d'accueil.
+   La couleur sert aux données (4 roulements) et à l'état : normal (vert), écart isolé (jaune), alerte (orange), arrêt (gris).
+   L'état est toujours aussi écrit en toutes lettres. */
 :root {
   color-scheme: dark;
-  --bg: #06090d;
-  --surface: rgba(13, 19, 26, 0.88);
-  --surface-2: #1a232d;
-  --ink: #e9eef3;
-  --ink-2: #a3b0bc;
-  --ink-3: #8593a1;
-  --line: rgba(255, 255, 255, 0.10);
-  --line-2: rgba(255, 255, 255, 0.22);
-  --side: rgba(7, 11, 15, 0.86);
-  --side-ink: #e9eef3;
-  --side-mute: #8593a1;
+  --bg: #070b10;
+  --surface: #0d141b;
+  --surface-2: #131c26;
+  --surface-3: #1a2531;
+  --ink: #e8eef3;
+  --ink-2: #a8b6c2;
+  --ink-3: #8795a3;
+  --line: rgba(150, 185, 205, 0.15);
+  --line-2: rgba(150, 185, 205, 0.30);
+  --side: #080d12;
   --signal: #45c7bd;
   --acc: #45c7bd; --acc-2: #2b9fb7; --on-acc: #04211f;
   --ok: #6fdcae;   --ok-bg: #0f2b22;  --ok-fill: #2f9e78;
@@ -26,6 +27,7 @@
   --crit: #ff9f55; --crit-bg: #33200b; --crit-fill: #e0832b;
   --off: #b3bec9;  --off-bg: #1f2832;
   --c1: #6ab0ff; --c2: #c697f5; --c3: #f4a6c7; --c4: #dcb96f;
+  --r: 6px;
   --ease: cubic-bezier(.2, .7, .2, 1);
   --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
@@ -33,105 +35,156 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-h1, h2, h3 { margin: 0; font-weight: 600; text-wrap: balance; }
-h1 { font-size: clamp(30px, 4vw, 46px); line-height: 1.08; letter-spacing: -0.8px; font-weight: 300; margin: 14px 0 12px; }
-h1 strong { font-weight: 600; background: linear-gradient(92deg, #fff 0%, #bfeee9 55%, var(--acc) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-h2 { font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; }
-h3 { font-size: 14px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(28px, 3.1vw, 42px); line-height: 1.1; letter-spacing: -0.02em; font-weight: 300; }
+h2 { font-size: 15px; font-weight: 600; letter-spacing: 0; }
+h3 { font-size: 14px; font-weight: 600; }
 p { margin: 0; }
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .muted { color: var(--ink-2); }
 .small { font-size: 12px; }
-:focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; border-radius: 3px; }
-.side :focus-visible { outline-color: var(--signal); }
-
-/* gabarit : menu à gauche */
-.app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
-.side { background: var(--side); border-right: 1px solid var(--line); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); z-index: 2; color: var(--side-ink); padding: 26px 18px; display: flex; flex-direction: column; gap: 26px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
-.side .brand { display: flex; gap: 12px; align-items: center; }
-.side .brand .mark { width: 30px; height: 30px; flex: none; }
-.side .brand b { display: block; font-size: 16px; font-weight: 500; letter-spacing: 0.2px; }
-.side .brand span { font-family: var(--mono); font-size: 12px; color: var(--side-mute); }
-.nav { display: flex; flex-direction: column; gap: 3px; }
-.nav .grp { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--side-mute); padding: 16px 12px 6px; }
-.nav .grp:first-child { padding-top: 0; }
-.tab { background: none; border: 0; text-align: left; padding: 10px 12px; border-radius: 3px; cursor: pointer; color: var(--side-ink); font: inherit; font-size: 15px; min-height: 42px; }
-.tab:hover { background: rgba(255, 255, 255, 0.06); }
-.tab[aria-selected="true"] { background: rgba(69, 199, 189, 0.12); color: var(--acc); font-weight: 600; box-shadow: inset 2px 0 0 var(--acc); }
-.side .foot { margin-top: auto; font-size: 12px; line-height: 1.5; color: var(--side-mute); }
-.side .foot a { color: var(--side-ink); }
-.main { padding: 26px 34px 48px; min-width: 0; max-width: 1240px; width: 100%; }
-@media (max-width: 900px) {
-  .app { grid-template-columns: minmax(0, 1fr); }
-  .side { position: static; height: auto; padding: 14px 14px 10px; gap: 10px; }
-  .side .foot { display: none; }
-  .nav { flex-direction: row; overflow-x: auto; gap: 4px; }
-  .nav .grp { display: none; }
-  .tab { white-space: nowrap; font-size: 14px; padding: 9px 12px; }
-  .main { padding: 18px 16px 40px; }
-}
-
-.ph { border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; }
-.ph .tag { display: inline-flex; align-items: center; gap: 10px; font: 500 12px/1 var(--mono); letter-spacing: 2px; text-transform: uppercase; color: var(--acc); }
-.ph .tag::before { content: ""; width: 26px; height: 1px; background: var(--acc); }
-.ph p { color: var(--ink-2); max-width: 62ch; margin-top: 0; font-size: 16px; }
-.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.field label { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
-select, button { font: inherit; color: var(--ink); }
-select { background: var(--surface); border: 1px solid var(--line-2); border-radius: 8px; padding: 9px 28px 9px 10px; min-width: 0; max-width: 100%; min-height: 40px; }
+:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; border-radius: 3px; }
 .panel[hidden] { display: none; }
 
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; min-width: 0; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+/* planche : quadrillage fin + photo du roulement fondue */
+.bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background-image: linear-gradient(rgba(120, 170, 190, .045) 1px, transparent 1px), linear-gradient(90deg, rgba(120, 170, 190, .045) 1px, transparent 1px),
+    linear-gradient(rgba(120, 170, 190, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(120, 170, 190, .06) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px; background-position: -1px -1px; }
+.bg img { position: absolute; top: 50%; right: -12vh; height: min(90vh, 60vw); width: auto; opacity: .32; transform: translateY(-50%);
+  -webkit-mask-image: radial-gradient(ellipse 52% 50% at 62% 52%, #000 55%, transparent 100%); mask-image: radial-gradient(ellipse 52% 50% at 62% 52%, #000 55%, transparent 100%); }
+.bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7, 11, 16, .55) 0%, rgba(7, 11, 16, 0) 22%, rgba(7, 11, 16, 0) 70%, var(--bg) 100%); }
+.grain { display: none; }
+
+/* gabarit */
+.app { position: relative; z-index: 2; display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; }
+.side { background: rgba(8, 13, 18, .92); border-right: 1px solid var(--line); padding: 22px 16px 18px; display: flex; flex-direction: column; gap: 20px; position: sticky; top: 0; height: 100vh; overflow-y: auto; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.brand { display: flex; gap: 12px; align-items: center; }
+.brand .mark { width: 30px; height: 30px; flex: none; }
+.brand b { display: block; font-size: 15px; font-weight: 500; line-height: 1.2; }
+.brand span { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.mstate { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); padding: 10px 12px; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; }
+.mstate .led { width: 10px; height: 10px; border-radius: 50%; background: var(--ok-fill); box-shadow: 0 0 0 3px rgba(47, 158, 120, .2); grid-row: span 2; }
+.mstate[data-s="warn"] .led { background: var(--warn-fill); box-shadow: 0 0 0 3px rgba(217, 178, 0, .2); }
+.mstate[data-s="crit"] .led { background: var(--crit-fill); box-shadow: 0 0 0 3px rgba(224, 131, 43, .25); }
+.mstate[data-s="off"] .led { background: #6c7a88; box-shadow: 0 0 0 3px rgba(108, 122, 136, .25); }
+.mstate b { font-size: 13px; font-weight: 600; }
+.mstate span { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav .grp { font-size: 12px; color: var(--ink-3); padding: 14px 10px 5px; border-top: 1px solid var(--line); margin-top: 8px; }
+.nav .grp:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
+.tab { background: none; border: 0; text-align: left; padding: 9px 10px; border-radius: 4px; cursor: pointer; color: var(--ink-2); font: inherit; font-size: 14px; min-height: 38px; display: flex; align-items: center; gap: 10px; }
+.tab svg { width: 17px; height: 17px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: .85; }
+.tab:hover { background: rgba(255, 255, 255, .05); color: var(--ink); }
+.tab[aria-selected="true"] { background: rgba(69, 199, 189, .11); color: var(--acc); font-weight: 600; box-shadow: inset 2px 0 0 var(--acc); }
+.tab.tour { color: var(--ink); border: 1px solid var(--line-2); margin-top: 4px; }
+.tab.tour:hover { border-color: var(--acc); color: var(--acc); }
+.side .foot { margin-top: auto; font-size: 12px; line-height: 1.5; color: var(--ink-3); }
+.side .foot a { color: var(--ink-2); }
+.main { padding: 22px 32px 56px; min-width: 0; max-width: 1560px; width: 100%; }
+
+/* en-tête de page + cartouche */
+.ph { display: flex; flex-wrap: wrap; gap: 14px 40px; align-items: flex-end; justify-content: space-between; padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid var(--line-2); }
+.ph-l { min-width: 0; flex: 1 1 520px; }
+.ph .tag { font-family: var(--mono); font-size: 12px; color: var(--acc); margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.ph .tag::before { content: ""; width: 22px; height: 1px; background: var(--acc); }
+.ph p { color: var(--ink-2); max-width: 66ch; margin-top: 8px; font-size: 15px; }
+.cart { margin: 0; display: grid; grid-template-columns: repeat(2, auto); border: 1px solid var(--line-2); border-radius: 3px; background: rgba(13, 20, 27, .7); }
+.cart > div { padding: 6px 12px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-width: 130px; }
+.cart > div:nth-child(2n) { border-right: 0; }
+.cart > div:nth-last-child(-n+2) { border-bottom: 0; }
+.cart dt { font-size: 11px; color: var(--ink-3); }
+.cart dd { margin: 0; font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+
+/* cartes et figures */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; min-width: 0; position: relative; }
 .card + .card { margin-top: 14px; }
 .stack { display: flex; flex-direction: column; gap: 14px; }
 .stack > .card + .card, .cols2 > .card + .card { margin-top: 0; }
+.fig::before, .fig::after { content: ""; position: absolute; width: 9px; height: 9px; border: 0 solid var(--acc); opacity: .7; pointer-events: none; }
+.fig::before { left: -1px; top: -1px; border-width: 2px 0 0 2px; }
+.fig::after { right: -1px; bottom: -1px; border-width: 0 2px 2px 0; }
+.sec-head { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.sec-head .ttl { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.fig-n { font-family: var(--mono); font-size: 12px; color: var(--acc); white-space: nowrap; }
+.cap { font-size: 12px; color: var(--ink-3); margin-top: 10px; max-width: 90ch; }
+.cap b { color: var(--ink-2); font-weight: 500; }
 
-/* bandeau */
-.banner { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; justify-content: space-between; border-radius: 12px; padding: 16px 20px; border: 1px solid var(--line); border-left-width: 1px; background: var(--surface); }
-.banner .big { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-.dot { width: 12px; height: 12px; background: currentColor; flex: none; }
-.banner[data-s="ok"] { border-color: var(--ok-fill); } .banner[data-s="ok"] .big { color: var(--ok); }
-.banner[data-s="warn"] { border-color: var(--warn-fill); background: var(--warn-bg); } .banner[data-s="warn"] .big { color: var(--warn); }
-.banner[data-s="crit"] { border-color: var(--crit-fill); background: var(--crit-bg); } .banner[data-s="crit"] .big { color: var(--crit); }
-.banner[data-s="off"] { border-color: var(--off); background: var(--off-bg); } .banner[data-s="off"] .big { color: var(--off); }
+/* bandeau d'état */
+.banner { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; justify-content: space-between; border-radius: var(--r); padding: 12px 18px; border: 1px solid var(--line); border-left: 4px solid var(--ok-fill); background: var(--surface); }
+.banner .big { font-size: 19px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.dot { width: 11px; height: 11px; background: currentColor; flex: none; border-radius: 50%; }
+.banner[data-s="ok"] .big { color: var(--ok); }
+.banner[data-s="warn"] { border-left-color: var(--warn-fill); background: var(--warn-bg); } .banner[data-s="warn"] .big { color: var(--warn); }
+.banner[data-s="crit"] { border-color: var(--crit-fill); border-left-width: 4px; background: var(--crit-bg); } .banner[data-s="crit"] .big { color: var(--crit); }
+.banner[data-s="off"] { border-left-color: #6c7a88; background: var(--off-bg); } .banner[data-s="off"] .big { color: var(--off); }
 .clock { text-align: right; }
-.clock .t { font-family: var(--mono); font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.clock .t { font-family: var(--mono); font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; }
 
-/* commandes */
-.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 14px; }
-.btn { background: var(--acc); color: var(--on-acc); border: 1px solid var(--acc); border-radius: 999px; padding: 9px 20px; font-weight: 600; cursor: pointer; min-width: 92px; min-height: 42px; box-shadow: 0 8px 24px -12px rgba(69, 199, 189, 0.7); transition: transform .3s var(--ease), box-shadow .3s var(--ease), background .3s; }
-.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line-2); font-weight: 500; min-width: 0; box-shadow: none; }
-.btn.ghost:hover { background: rgba(255, 255, 255, 0.06); opacity: 1; transform: none; }
-.btn:hover { background: #5dd6cc; transform: translateY(-1px); box-shadow: 0 0 0 4px rgba(69, 199, 189, 0.12), 0 12px 28px -12px rgba(69, 199, 189, 0.8); }
-.slider { flex: 1 1 260px; min-width: 0; display: flex; }
-input[type=range] { width: 100%; accent-color: var(--acc); min-width: 0; }
+/* commandes de lecture */
+.ctl { margin-top: 12px; padding: 12px 16px 8px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; }
+.ctl .controls { margin-bottom: 8px; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field.inl { flex-direction: row; align-items: center; gap: 8px; }
+.field label { font-size: 12px; color: var(--ink-3); }
+select, button { font: inherit; color: var(--ink); }
+select { background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 4px; padding: 8px 28px 8px 10px; min-width: 0; max-width: 100%; min-height: 38px; }
+.btn { background: var(--acc); color: var(--on-acc); border: 1px solid var(--acc); border-radius: 4px; padding: 8px 18px; font-weight: 600; cursor: pointer; min-width: 92px; min-height: 38px; transition: background .2s, transform .2s var(--ease); }
+.btn:hover { background: #5dd6cc; }
+.btn:active { transform: translateY(1px); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line-2); font-weight: 500; min-width: 0; }
+.btn.ghost:hover { background: rgba(255, 255, 255, .06); border-color: var(--acc); }
+.sp { flex: 1 1 8px; }
+.slider { position: relative; padding-bottom: 20px; }
+input[type=range] { width: 100%; accent-color: var(--acc); min-width: 0; margin: 0; display: block; height: 22px; }
+.ticks { position: absolute; left: 0; right: 0; bottom: 0; height: 18px; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); pointer-events: none; }
+.ticks span { position: absolute; left: calc(8px + (100% - 16px) * var(--f)); transform: translateX(-50%); white-space: nowrap; }
+.ticks span::before { content: ""; position: absolute; left: 50%; top: -6px; width: 1px; height: 5px; background: var(--line-2); }
+.ticks span.mk-a { color: var(--crit); } .ticks span.mk-a::before { background: var(--crit-fill); height: 9px; top: -10px; width: 2px; }
+.ticks span.mk-s { color: var(--off); } .ticks span.mk-s::before { background: var(--off); height: 9px; top: -10px; width: 2px; }
 
-/* synoptique */
-.syn { display: flex; align-items: center; overflow-x: auto; padding: 10px 2px 6px; }
-.syn .motor { flex: 0 0 auto; width: 92px; height: 92px; border: 2px solid var(--ink-3); border-radius: 10px; background: var(--surface-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-weight: 700; }
-.syn .motor span { font-family: var(--mono); font-size: 12px; font-weight: 400; color: var(--ink-2); }
-.syn .shaft { flex: 1 0 22px; height: 14px; background: #2b3642; border-top: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); }
-.syn .load { flex: 0 0 auto; width: 92px; height: 80px; border-radius: 10px; border: 2px dashed var(--ink-3); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; font-weight: 600; padding: 6px; }
-.syn .pal { flex: 0 0 auto; width: 132px; border-radius: 10px; border: 2px solid var(--ok-fill); background: var(--ok-bg); padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; text-align: left; font: inherit; color: var(--ink); }
-.syn .pal .id { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
-.syn .pal b { font-size: 15px; }
-.syn .pal .st { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; }
-.syn .pal.warn { border-color: var(--warn-fill); background: var(--warn-bg); } .syn .pal.warn .st { color: var(--warn); }
-.syn .pal.crit { border: 3px solid var(--crit-fill); border-radius: 10px; background: var(--crit-bg); padding: 9px 11px; } .syn .pal.crit .st { color: var(--crit); }
-.syn .pal.off { border-color: var(--off); background: var(--off-bg); } .syn .pal.off .st { color: var(--off); }
+/* synoptique : coupe de la ligne d'arbre */
+.syn-wrap { overflow-x: auto; padding: 6px 2px 2px; }
+.syn { display: flex; align-items: center; min-width: 880px; padding-top: 22px; position: relative; }
+.syn .motor { flex: 0 0 auto; width: 112px; height: 84px; border: 1.5px solid var(--ink-3); border-radius: 6px; background: repeating-linear-gradient(90deg, var(--surface-2) 0 7px, #0f1720 7px 10px); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 7px; font-weight: 600; font-size: 13px; position: relative; }
+.syn .motor::after { content: ""; position: absolute; right: -9px; top: 28px; width: 9px; height: 28px; background: var(--surface-3); border: 1.5px solid var(--ink-3); border-left: 0; }
+.syn .motor span { font-family: var(--mono); font-size: 11px; font-weight: 400; color: var(--ink-3); }
+.syn .shaft { flex: 1 0 24px; height: 12px; background: linear-gradient(180deg, #52606e 0, #2a3541 45%, #1b2530 100%); border-top: 1px solid #7b8997; border-bottom: 1px solid #0a0f14; }
+.syn .load { flex: 0 0 96px; height: 12px; position: relative; background: linear-gradient(180deg, #52606e 0, #2a3541 45%, #1b2530 100%); border-top: 1px solid #7b8997; border-bottom: 1px solid #0a0f14; }
+.syn .load .lb { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); width: 110px; text-align: center; font-size: 12px; color: var(--ink-2); padding-top: 6px; }
+.syn .load svg { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); width: 26px; height: 40px; stroke: var(--ink-2); fill: none; stroke-width: 1.6; }
+.syn .pal { flex: 0 0 auto; width: 118px; border: 1px solid var(--line-2); border-radius: var(--r); background: var(--surface-2); padding: 8px 8px 9px; display: flex; flex-direction: column; align-items: center; gap: 1px; cursor: pointer; text-align: center; font: inherit; color: var(--ink); transition: border-color .2s, background .2s; }
+.syn .pal:hover { border-color: var(--acc); }
+.syn .pal .gly { width: 64px; height: 64px; display: block; margin-bottom: 4px; }
+.syn .pal .gly circle { fill: none; stroke-width: 1.6; }
+.syn .pal .gly .o1 { stroke: var(--sc); stroke-width: 3; } .syn .pal .gly .o2 { stroke: var(--ink-3); } .syn .pal .gly .i1 { stroke: var(--ink-3); } .syn .pal .gly .i2 { stroke: var(--sc); stroke-width: 2.4; }
+.syn .pal .gly .cage circle { fill: var(--surface-3); stroke: var(--ink-2); stroke-width: 1.2; }
+.syn .pal .gly .sh { fill: var(--sc); stroke: none; }
+.syn .pal .gly .cage { transform-origin: 32px 32px; }
+.syn[data-run="1"] .pal .gly .cage { animation: spin 7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.syn .pal .id { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.syn .pal b { font-size: 13px; font-weight: 600; }
+.syn .pal .st { font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--sc); }
+.syn .pal { --sc: var(--ok-fill); }
+.syn .pal.ok { --sc: var(--ok); }
+.syn .pal.warn { --sc: var(--warn-fill); border-color: var(--warn-fill); background: var(--warn-bg); } .syn .pal.warn .st { color: var(--warn); }
+.syn .pal.crit { --sc: var(--crit-fill); border: 2px solid var(--crit-fill); background: var(--crit-bg); padding: 7px 7px 8px; } .syn .pal.crit .st { color: var(--crit); }
+.syn .pal.off { --sc: #6c7a88; background: var(--off-bg); } .syn .pal.off .st { color: var(--off); }
 .syn .pal.ok .st { color: var(--ok); }
-.syn .pal[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--signal); }
+.syn .pal[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--acc); }
 
-/* cartes roulements */
-.grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-top: 14px; }
-.brg { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; border-top: 4px solid var(--bc); }
-.brg.sel { box-shadow: 0 0 0 3px var(--signal); }
+/* cartes de roulement : instruments */
+.grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 14px; }
+.brg { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px 10px; min-width: 0; border-top: 3px solid var(--bc); }
+.brg.sel { box-shadow: 0 0 0 2px var(--acc); }
 .brg-head { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
 .brg-head h3 { display: flex; align-items: center; gap: 8px; }
 .sw { width: 10px; height: 10px; border-radius: 2px; background: var(--bc); flex: none; }
-.brg .role { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
-.pill { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 2px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
-.pill::before { content: ""; width: 6px; height: 6px; background: currentColor; }
+.brg .role { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.pill { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; padding: 3px 8px; border-radius: 3px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.pill::before { content: ""; width: 6px; height: 6px; background: currentColor; border-radius: 50%; }
 .pill.ok { color: var(--ok); background: var(--ok-bg); }
 .pill.warn { color: var(--warn); background: var(--warn-bg); }
 .pill.crit { color: var(--crit); background: var(--crit-bg); }
@@ -139,9 +192,9 @@ input[type=range] { width: 100%; accent-color: var(--acc); min-width: 0; }
 .feat { margin-top: 10px; }
 .feat-row { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
 .feat-row .n { color: var(--ink-2); }
-.feat-row .v { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.feat-row .v { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 13px; }
 .feat-row .v.out { color: var(--crit); font-weight: 600; }
-.gauge { position: relative; height: 8px; background: var(--surface-2); margin-top: 4px; }
+.gauge { position: relative; height: 8px; background: var(--surface-3); margin-top: 5px; border-radius: 1px; }
 .gauge .band { position: absolute; top: 0; bottom: 0; background: var(--ok-bg); border-left: 1px solid var(--ok-fill); border-right: 1px solid var(--ok-fill); }
 .gauge .mk { position: absolute; top: -2px; width: 3px; height: 12px; background: var(--ink); transform: translateX(-50%); }
 .gauge .mk.out { background: var(--crit-fill); }
@@ -150,171 +203,204 @@ input[type=range] { width: 100%; accent-color: var(--acc); min-width: 0; }
 
 /* bon de travail */
 .wo { padding: 0; overflow: hidden; border-color: var(--acc); }
-.wo-h { background: var(--acc); color: var(--on-acc); padding: 11px 18px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.wo-h b { font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; }
+.wo-h { background: var(--acc); color: var(--on-acc); padding: 9px 18px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.wo-h b { font-size: 13px; font-weight: 600; }
 .wo-h span { font-family: var(--mono); font-size: 12px; font-weight: 600; }
-.wo-b { padding: 16px 18px; display: flex; flex-direction: column; gap: 11px; }
-.wo-r { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; font-size: 14px; line-height: 1.45; }
-.wo-r > span:first-child { color: var(--ink-2); }
+.wo-b { padding: 14px 18px 16px; display: flex; flex-direction: column; gap: 10px; }
+.wo-r { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 10px; font-size: 14px; line-height: 1.45; padding-bottom: 8px; border-bottom: 1px dashed var(--line); }
+.wo-r:last-of-type { border-bottom: 0; }
+.wo-r > span:first-child { color: var(--ink-3); font-size: 12px; padding-top: 2px; }
 .wo-r b { font-weight: 600; }
 .wo-none { color: var(--ink-2); }
 
 /* graphiques */
-.sec-head { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 999px; overflow: hidden; background: var(--surface); }
-.seg button { background: none; border: 0; padding: 8px 12px; cursor: pointer; color: var(--ink-2); font-size: 13px; min-height: 38px; }
+.seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 4px; overflow: hidden; background: var(--surface-2); }
+.seg button { background: none; border: 0; padding: 7px 12px; cursor: pointer; color: var(--ink-2); font-size: 13px; min-height: 36px; }
 .seg button + button { border-left: 1px solid var(--line); }
 .seg button[aria-pressed="true"] { background: var(--acc); color: var(--on-acc); font-weight: 600; }
 .chart-box { width: 100%; overflow: hidden; touch-action: pan-y; }
 svg text { font-family: var(--mono); font-size: 11px; fill: var(--ink-3); }
-svg .grid { stroke: var(--line); stroke-width: 1; }
+svg .grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 4; }
 svg .axis { stroke: var(--ink-3); stroke-width: 1; }
-svg .cur { stroke: var(--ink); stroke-width: 1.5; }
+svg .cur { stroke: var(--acc); stroke-width: 1.2; }
 svg .stop { fill: var(--off-bg); }
 svg .stopl { stroke: var(--off); stroke-dasharray: 4 3; }
-svg .rowbg { fill: #123428; }
+svg .rowbg { fill: #0f2a22; }
 svg .alert { fill: var(--crit-fill); }
 svg .lbl { fill: var(--ink); font-weight: 500; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink-2); margin-top: 8px; }
-.legend i { display: inline-block; width: 12px; height: 8px; margin-right: 6px; vertical-align: baseline; }
+.legend i { display: inline-block; width: 12px; height: 8px; margin-right: 6px; vertical-align: baseline; border-radius: 1px; }
 
 /* tableaux */
 .tbl-wrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-th { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; border-bottom: 2px solid var(--ink); }
-td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+th { font-size: 12px; color: var(--ink-3); font-weight: 500; border-bottom: 1px solid var(--line-2); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.num { font-family: var(--mono); }
 
 /* journal */
-.log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 320px; overflow-y: auto; }
-.log li { display: grid; grid-template-columns: 112px 1fr auto; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+.log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; }
+.log li { display: grid; grid-template-columns: 112px 1fr auto; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
 .log .when { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
 .log .rel { font-family: var(--mono); font-size: 12px; color: var(--ink-3); white-space: nowrap; }
 .log .tag { font-weight: 600; }
 .log .tag.crit { color: var(--crit); } .log .tag.ok { color: var(--ok); } .log .tag.off { color: var(--off); }
 .empty { color: var(--ink-3); padding: 10px 0; }
 .cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; margin-top: 14px; }
-@media (max-width: 860px) { .cols2 { grid-template-columns: minmax(0, 1fr); } .log li { grid-template-columns: 96px 1fr; } .log .rel { grid-column: 2; } }
+.cols2.row-wo { align-items: stretch; }
 
 /* modèles */
 .cols2.m { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); margin-top: 0; }
-.mrow { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; padding: 8px 6px; border-radius: 3px; cursor: pointer; align-items: center; border: 1px solid transparent; }
-.mrow:hover { background: rgba(255, 255, 255, 0.05); }
-.mrow[aria-current="true"] { border-color: var(--acc); background: rgba(69, 199, 189, 0.07); }
+.mrow { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 10px; padding: 8px 8px; border-radius: 4px; cursor: pointer; align-items: center; border: 1px solid transparent; }
+.mrow:hover { background: rgba(255, 255, 255, .05); }
+.mrow[aria-current="true"] { border-color: var(--acc); background: rgba(69, 199, 189, .07); }
 .mname { font-weight: 500; font-size: 13px; }
 .bars { display: flex; flex-direction: column; gap: 3px; }
 .bar { display: grid; grid-template-columns: minmax(0, 1fr) 40px; gap: 8px; align-items: center; }
-.bar .tr { position: relative; height: 12px; background: var(--surface-2); }
-.bar .f { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--w) * 100%); background: var(--bcol); }
+.bar .tr { position: relative; height: 10px; background: var(--surface-3); border-radius: 1px; }
+.bar .f { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--w) * 100%); background: var(--bcol); border-radius: 1px; }
 .bar .val { font-family: var(--mono); font-size: 11px; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
 .k1 { --bcol: var(--c1); } .k2 { --bcol: var(--c2); } .k3 { --bcol: var(--c3); }
 .cm { display: grid; grid-template-columns: auto 1fr 1fr; gap: 6px; align-items: stretch; margin-top: 10px; }
 .cm .h { font-size: 11px; color: var(--ink-3); display: flex; align-items: center; justify-content: center; text-align: center; padding: 2px; }
-.cm .c { border-radius: 8px; padding: 12px 8px; text-align: center; font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+.cm .c { border-radius: 4px; padding: 12px 8px; text-align: center; font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
 .cm .c small { display: block; font-family: var(--font); font-size: 11px; color: var(--ink-2); margin-top: 2px; }
 .cm .good { background: var(--ok-bg); color: var(--ok); }
 .cm .bad { background: var(--crit-bg); color: var(--crit); }
 .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-.kpi { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; }
-.kpi .l { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; }
+.kpi { background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; }
+.kpi .l { font-size: 11px; color: var(--ink-3); }
 .kpi .x { font-family: var(--mono); font-size: 16px; font-variant-numeric: tabular-nums; }
-@media (max-width: 860px) { .cols2.m { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 520px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mrow { grid-template-columns: minmax(0, 1fr); } h1 { font-size: 28px; } }
 
 /* simulateur */
-.sim-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 150px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.sim-row { display: grid; grid-template-columns: 170px minmax(0, 1fr) 190px; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .sim-row .nm { font-weight: 500; }
 .sim-row .rg { font-size: 12px; color: var(--ink-2); }
-@media (max-width: 640px) { .sim-row { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
-.chip { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 2px; display: inline-block; }
+.chip { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 3px; display: inline-block; }
 .chip.ok { color: var(--ok); background: var(--ok-bg); } .chip.crit { color: var(--crit); background: var(--crit-bg); }
-.verdict { margin-top: 14px; padding: 12px 14px; border-radius: 3px; font-weight: 600; }
+.verdict { margin-top: 14px; padding: 12px 14px; border-radius: 4px; font-weight: 600; border-left: 4px solid currentColor; }
 .verdict.ok { color: var(--ok); background: var(--ok-bg); } .verdict.crit { color: var(--crit); background: var(--crit-bg); }
 
 /* pages de prédiction */
-.pred { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: start; }
-@media (max-width: 860px) { .pred { grid-template-columns: minmax(0, 1fr); } }
-.drop { border: 1.5px dashed var(--line-2); background: rgba(255, 255, 255, 0.025); border-radius: 12px; padding: 28px 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; }
-.drop.over { background: rgba(69, 199, 189, 0.1); border-color: var(--acc); }
-.drop .t { font-size: 18px; font-weight: 600; }
+.pred { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.drop { border: 1.5px dashed var(--line-2); background: rgba(255, 255, 255, .02); border-radius: var(--r); padding: 30px 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; transition: background .2s, border-color .2s; }
+.drop.over { background: rgba(69, 199, 189, .1); border-color: var(--acc); }
+.drop .t { font-size: 18px; font-weight: 500; }
 .drop .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .fields { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; }
 .hid { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.side-note { border-left: 2px solid var(--acc); padding-left: 16px; }
 .side-note h3 { margin-bottom: 8px; font-size: 15px; }
 .side-note p { color: var(--ink-2); line-height: 1.6; }
 .side-note p + p { margin-top: 10px; }
-.msg { margin-top: 14px; padding: 12px 14px; border-radius: 3px; font-size: 14px; }
-.msg.err { background: var(--crit-bg); color: var(--crit); font-weight: 500; }
+.msg { margin-top: 14px; padding: 12px 14px; border-radius: 4px; font-size: 14px; }
+.msg.err { background: var(--crit-bg); color: var(--crit); font-weight: 500; border-left: 4px solid var(--crit-fill); }
 .msg.info { background: var(--surface-2); color: var(--ink-2); }
 .result { margin-top: 14px; }
-.vbig { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: flex-end; }
+.vbig { display: flex; flex-wrap: wrap; gap: 14px 36px; align-items: flex-end; }
 .vbig .k { font-size: 13px; color: var(--ink-2); }
-.vbig .n { font-size: 52px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.05; }
-.vbig .n small { font-size: 22px; font-weight: 600; }
-.rbar { position: relative; height: 14px; background: var(--surface-2); margin-top: 8px; }
+.vbig .n { font-size: 60px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.vbig .n small { font-size: 22px; font-weight: 400; font-family: var(--font); letter-spacing: 0; color: var(--ink-2); }
+.rbar { position: relative; height: 16px; border-radius: 2px; margin-top: 8px; background: linear-gradient(90deg, rgba(224, 131, 43, .28) 0 40%, rgba(217, 178, 0, .2) 40% 100%); border: 1px solid var(--line-2); }
 .rbar .f { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ok-fill); }
 .rbar.crit .f { background: var(--crit-fill); } .rbar.warn .f { background: var(--warn-fill); }
-.reco { margin-top: 14px; padding: 12px 14px; border-radius: 3px; font-size: 15px; font-weight: 600; }
+.rscale { position: relative; height: 18px; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.rscale span { position: absolute; top: 3px; transform: translateX(-50%); white-space: nowrap; }
+.rscale span::before { content: ""; position: absolute; left: 50%; top: -4px; width: 1px; height: 4px; background: var(--ink-3); }
+.rscale span:first-child { transform: none; } .rscale span:last-child { transform: translateX(-100%); }
+.rscale span:first-child::before { left: 0; } .rscale span:last-child::before { left: 100%; }
+.reco { margin-top: 14px; padding: 12px 14px; border-radius: 4px; font-size: 15px; font-weight: 600; border-left: 4px solid currentColor; }
 .reco.ok { background: var(--ok-bg); color: var(--ok); } .reco.warn { background: var(--warn-bg); color: var(--warn); } .reco.crit { background: var(--crit-bg); color: var(--crit); }
 .reco small { display: block; font-weight: 400; margin-top: 3px; color: var(--ink-2); font-size: 13px; }
-.cl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 14px; }
+.cl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 14px; }
 details.more { margin-top: 14px; }
 details.more summary { cursor: pointer; font-weight: 600; min-height: 32px; }
 details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
 
-/* limites */
-.prose { max-width: 72ch; }
-.prose h3 { margin-top: 18px; }
+/* limites : notes de l'étude */
+.prose { max-width: none; column-gap: 40px; }
+@media (min-width: 1280px) { .prose { column-count: 2; } }
+.prose h3 { margin-top: 20px; padding-left: 12px; border-left: 2px solid var(--acc); break-after: avoid; font-size: 15px; }
 .prose h3:first-child { margin-top: 0; }
-.prose p { margin-top: 6px; color: var(--ink-2); }
+.prose p { margin-top: 6px; color: var(--ink-2); max-width: 72ch; padding-left: 14px; break-inside: avoid; }
 .prose p b { color: var(--ink); font-weight: 600; }
 .note { font-size: 12px; color: var(--ink-3); margin-top: 10px; }
-/* fond : photo de roulement fondue, comme sur la page d'accueil */
-.bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-.bg img { position: absolute; top: 50%; right: -14vh; height: min(86vh, 56vw); width: auto; opacity: .55; transform: translateY(-50%);
-  -webkit-mask-image: radial-gradient(ellipse 52% 50% at 62% 52%, #000 58%, transparent 100%); mask-image: radial-gradient(ellipse 52% 50% at 62% 52%, #000 58%, transparent 100%); }
-.bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--bg) 0%, rgba(6, 9, 13, .6) 45%, rgba(6, 9, 13, .1) 100%), linear-gradient(180deg, rgba(6, 9, 13, .6) 0%, rgba(6, 9, 13, 0) 30%, rgba(6, 9, 13, 0) 60%, var(--bg) 100%); }
-.grain { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .05; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-.app { position: relative; z-index: 2; }
-@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.panel:not([hidden]) { animation: rise .5s var(--ease) both; }
+
+/* visite guidée */
+#tourShield { position: fixed; inset: 0; z-index: 90; }
+#tourHole { position: fixed; z-index: 91; border: 2px solid var(--acc); border-radius: 6px; box-shadow: 0 0 0 9999px rgba(3, 6, 9, .74), 0 0 24px rgba(69, 199, 189, .35); pointer-events: none; transition: left .3s var(--ease), top .3s var(--ease), width .3s var(--ease), height .3s var(--ease); }
+#tourPop { position: fixed; z-index: 92; width: min(380px, calc(100vw - 24px)); background: var(--surface-2); border: 1px solid var(--line-2); border-radius: var(--r); box-shadow: 0 16px 40px rgba(0, 0, 0, .55); padding: 14px 16px 14px; }
+#tourPop .st { font-family: var(--mono); font-size: 12px; color: var(--acc); }
+#tourPop h4 { margin: 4px 0 6px; font-size: 16px; font-weight: 600; }
+#tourPop p { margin: 0 0 12px; font-size: 14px; color: var(--ink-2); line-height: 1.55; }
+#tourPop .tn { display: flex; gap: 8px; align-items: center; }
+#tourPop .tn .sp { flex: 1; }
+
+@media (max-width: 1100px) { .cart { display: none; } }
+@media (max-width: 900px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; height: auto; padding: 12px 14px 10px; gap: 10px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .side .foot, .mstate { display: none; }
+  .nav { flex-direction: row; overflow-x: auto; gap: 4px; }
+  .nav .grp { display: none; }
+  .tab { white-space: nowrap; font-size: 14px; padding: 8px 12px; }
+  .tab svg { display: none; }
+  .tab.tour { margin-top: 0; }
+  .main { padding: 18px 14px 40px; }
+  .cols2, .cols2.m, .pred { grid-template-columns: minmax(0, 1fr); }
+  .log li { grid-template-columns: 96px 1fr; } .log .rel { grid-column: 2; }
+}
+@media (max-width: 700px) { .ticks span:not(.mk-a):not(.mk-s):nth-child(even) { display: none; } .ctl .controls .btn.ghost { flex: 1 1 auto; } }
+@media (max-width: 640px) { .sim-row { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+@media (max-width: 520px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mrow { grid-template-columns: minmax(0, 1fr); } .vbig .n { font-size: 48px; } }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.panel:not([hidden]) { animation: rise .35s var(--ease) both; }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
 @media print {
-  :root { color-scheme: light; --bg: #fff; --surface: #fff; --surface-2: #e6e8eb; --ink: #000; --ink-2: #333; --ink-3: #555; --line: #999; --line-2: #666; --acc: #000; --on-acc: #fff; --ok: #175640; --warn: #6b5600; --crit: #8a4a05; --off: #333; --ok-bg: #dcefe6; --warn-bg: #fff2bf; --crit-bg: #fdebd8; --off-bg: #e6e8eb; }
-  .bg, .grain { display: none !important; }
-  .card { backdrop-filter: none; -webkit-backdrop-filter: none; }
-  .side, .ph, .controls, .btn { display: none !important; }
+  :root { color-scheme: light; --bg: #fff; --surface: #fff; --surface-2: #eef0f2; --surface-3: #e2e5e8; --ink: #000; --ink-2: #333; --ink-3: #555; --line: #999; --line-2: #666; --acc: #000; --on-acc: #fff; --ok: #175640; --warn: #6b5600; --crit: #8a4a05; --off: #333; --ok-bg: #dcefe6; --warn-bg: #fff2bf; --crit-bg: #fdebd8; --off-bg: #e6e8eb; }
+  .bg, .grain, #tourShield, #tourHole, #tourPop { display: none !important; }
+  .side, .ph, .controls, .btn, .ctl { display: none !important; }
   .main { padding: 0; }
   body.pwo #p-supervision > *:not(.row-wo) { display: none !important; }
   body.pwo .row-wo > *:not(.wo) { display: none !important; }
   body.pwo .row-wo { display: block; margin: 0; }
 }
 </style>
-
 <div class="bg" aria-hidden="true"><img src="fond_roulement.jpg" alt=""></div>
-<div class="grain" aria-hidden="true"></div>
 <div class="app">
   <aside class="side">
-    <div class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#45c7bd" stroke-width="1.5"/><circle cx="14" cy="14" r="5.5" fill="none" stroke="#45c7bd" stroke-width="1.5"/><g fill="#45c7bd"><circle cx="14" cy="5.2" r="1.6"/><circle cx="22.8" cy="14" r="1.6"/><circle cx="14" cy="22.8" r="1.6"/><circle cx="5.2" cy="14" r="1.6"/><circle cx="20.2" cy="7.8" r="1.6"/><circle cx="20.2" cy="20.2" r="1.6"/><circle cx="7.8" cy="20.2" r="1.6"/><circle cx="7.8" cy="7.8" r="1.6"/></g></svg><div><b>Ligne d'arbre n° 2</b><span>Banc d'essai de roulements</span></div></div>
-    <nav class="nav" role="tablist" aria-label="Sections" aria-orientation="vertical">
+    <div class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#45c7bd" stroke-width="1.5"/><circle cx="14" cy="14" r="5.5" fill="none" stroke="#45c7bd" stroke-width="1.5"/><g fill="#45c7bd"><circle cx="14" cy="5.2" r="1.6"/><circle cx="22.8" cy="14" r="1.6"/><circle cx="14" cy="22.8" r="1.6"/><circle cx="5.2" cy="14" r="1.6"/><circle cx="20.2" cy="7.8" r="1.6"/><circle cx="20.2" cy="20.2" r="1.6"/><circle cx="7.8" cy="20.2" r="1.6"/><circle cx="7.8" cy="7.8" r="1.6"/></g></svg><div><b>Ligne d'arbre n° 2</b><span>Jumeau numérique</span></div></div>
+    <div class="mstate" id="mstate" data-s="ok" aria-live="polite"><span class="led"></span><b id="sd-state">Fonctionnement normal</b><span id="sd-time"></span></div>
+    <nav class="nav" role="tablist" aria-label="Espaces" aria-orientation="vertical">
       <div class="grp">Surveiller</div>
-      <button class="tab" role="tab" id="t-supervision" data-tab="supervision" type="button">Supervision</button>
+      <button class="tab" role="tab" id="t-supervision" data-tab="supervision" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>Supervision</button>
       <div class="grp">Prédire</div>
-      <button class="tab" role="tab" id="t-rul" data-tab="rul" type="button">Durée de vie restante</button>
-      <button class="tab" role="tab" id="t-classe" data-tab="classe" type="button">État d'un roulement</button>
+      <button class="tab" role="tab" id="t-rul" data-tab="rul" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Durée de vie restante</button>
+      <button class="tab" role="tab" id="t-classe" data-tab="classe" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg>État d'un roulement</button>
       <div class="grp">Comprendre</div>
-      <button class="tab" role="tab" id="t-modeles" data-tab="modeles" type="button">Comparer les modèles</button>
-      <button class="tab" role="tab" id="t-simulateur" data-tab="simulateur" type="button">Simulateur de seuils</button>
-      <button class="tab" role="tab" id="t-limites" data-tab="limites" type="button">Limites de l'étude</button>
+      <button class="tab" role="tab" id="t-modeles" data-tab="modeles" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Comparer les modèles</button>
+      <button class="tab" role="tab" id="t-simulateur" data-tab="simulateur" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h10M18 8h2M4 16h2M10 16h10"/><circle cx="16" cy="8" r="2"/><circle cx="8" cy="16" r="2"/></svg>Simulateur de seuils</button>
+      <button class="tab" role="tab" id="t-limites" data-tab="limites" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17.5v.1"/></svg>Limites de l'étude</button>
+      <div class="grp">Aide</div>
+      <button class="tab tour" id="t-visite" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Visite guidée</button>
     </nav>
     <div class="foot">Projet de fin d'année, génie industriel. Données NASA IMS rejouées, aucune mesure en direct.<br><a href="./">Accueil du site</a></div>
   </aside>
 
   <main class="main">
     <header class="ph">
-      <div class="tag" id="ph-tag"></div>
-      <h1 id="ph-h1"></h1>
-      <p id="ph-lead"></p>
+      <div class="ph-l">
+        <div class="tag" id="ph-tag"></div>
+        <h1 id="ph-h1"></h1>
+        <p id="ph-lead"></p>
+      </div>
+      <dl class="cart" aria-label="Fiche de l'essai">
+        <div><dt>Banc</dt><dd>Ligne d'arbre n° 2</dd></div>
+        <div><dt>Roulements</dt><dd>4 × Rexnord ZA-2115</dd></div>
+        <div><dt>Régime</dt><dd>2 000 tr/min</dd></div>
+        <div><dt>Acquisition</dt><dd>20 kHz, 1 s / 10 min</dd></div>
+      </dl>
     </header>
 
     <!-- SUPERVISION -->
@@ -330,29 +416,32 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
         </div>
       </div>
 
-      <div class="controls">
-        <button class="btn" id="play" type="button">Lecture</button>
-        <div class="field" style="flex-direction:row;align-items:center;gap:8px">
-          <label for="speed" style="text-transform:none;letter-spacing:0;font-size:13px">Vitesse</label>
-          <select id="speed">
-            <option value="6">1 h d'essai par seconde</option>
-            <option value="18" selected>3 h d'essai par seconde</option>
-            <option value="48">8 h d'essai par seconde</option>
-          </select>
+      <div class="card ctl" id="ctl">
+        <div class="controls">
+          <button class="btn" id="play" type="button">Lecture</button>
+          <div class="field inl">
+            <label for="speed">Vitesse</label>
+            <select id="speed">
+              <option value="6">1 h d'essai par seconde</option>
+              <option value="18" selected>3 h d'essai par seconde</option>
+              <option value="48">8 h d'essai par seconde</option>
+            </select>
+          </div>
+          <button class="btn ghost" id="go-alert" type="button">Première alerte du roulement 1</button>
+          <button class="btn ghost" id="go-stop" type="button">Arrêt machine</button>
+          <button class="btn ghost" id="go-start" type="button">Début</button>
+          <span class="sp"></span>
+          <div class="field inl">
+            <label for="src">État fourni par</label>
+            <select id="src"></select>
+          </div>
         </div>
-        <button class="btn ghost" id="go-alert" type="button">Première alerte du roulement 1</button>
-        <button class="btn ghost" id="go-stop" type="button">Arrêt machine</button>
-        <button class="btn ghost" id="go-start" type="button">Début</button>
-        <div class="field" style="flex-direction:row;align-items:center;gap:8px">
-          <label for="src" style="text-transform:none;letter-spacing:0;font-size:13px">État fourni par</label>
-          <select id="src"></select>
-        </div>
-        <div class="slider"><input id="pos" type="range" min="0" max="983" step="1" value="0" aria-label="Instant de l'essai"></div>
+        <div class="slider"><input id="pos" type="range" min="0" max="983" step="1" value="0" aria-label="Instant de l'essai"><div class="ticks" id="pos-ticks" aria-hidden="true"></div></div>
       </div>
 
-      <div class="card" style="margin-top:14px">
-        <div class="sec-head"><h2>Synoptique de la ligne</h2><span class="muted small">Cliquer sur un roulement pour le mettre en évidence</span></div>
-        <div class="syn" id="syn"></div>
+      <div class="card fig" id="syn-card" style="margin-top:14px">
+        <div class="sec-head"><div class="ttl"><span class="fig-n">Fig. 1</span><h2>Ligne d'arbre : état des quatre roulements</h2></div><span class="muted small">Cliquer sur un roulement pour le mettre en évidence</span></div>
+        <div class="syn-wrap"><div class="syn" id="syn" data-run="0"></div></div>
       </div>
 
       <div class="grid4" id="cards"></div>
@@ -362,30 +451,31 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
           <div class="wo-h"><b>Bon de travail suggéré</b><span id="wo-ref"></span></div>
           <div class="wo-b" id="wo-body"></div>
         </div>
-        <div class="card">
+        <div class="card" id="log-card">
           <h2 style="margin-bottom:6px">Journal des événements</h2>
           <ul class="log" id="log"></ul>
         </div>
       </div>
 
-      <div class="card" style="margin-top:14px">
+      <div class="card fig" id="fig-chart" style="margin-top:14px">
         <div class="sec-head">
-          <h2>Évolution des quatre roulements</h2>
+          <div class="ttl"><span class="fig-n">Fig. 2</span><h2>Évolution des quatre roulements</h2></div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-            <div class="seg" id="featseg" role="group" aria-label="Variable affichée"></div>
+            <div class="seg" id="featseg" role="group" aria-label="Mesure affichée"></div>
             <div class="seg" id="scaleseg" role="group" aria-label="Échelle">
               <button type="button" data-sc="lin" aria-pressed="true">Linéaire</button>
               <button type="button" data-sc="log" aria-pressed="false">Log</button>
             </div>
           </div>
         </div>
-        <div class="chart-box"><svg id="chart" role="img" aria-label="Variable choisie pour les quatre roulements au cours de l'essai"></svg></div>
+        <div class="chart-box"><svg id="chart" role="img" aria-label="Mesure choisie pour les quatre roulements au cours de l'essai"></svg></div>
         <div class="legend" id="chart-legend"></div>
+        <p class="cap"><b>Fig. 2.</b> Une courbe par roulement, du 12 février à l'arrêt de la machine. Le trait turquoise marque l'instant affiché ; on peut le déplacer à la souris.</p>
       </div>
 
-      <div class="card" style="margin-top:14px">
+      <div class="card fig" id="fig-tl" style="margin-top:14px">
         <div class="sec-head">
-          <h2>Historique des alertes</h2>
+          <div class="ttl"><span class="fig-n">Fig. 3</span><h2>Historique des alertes</h2></div>
           <span class="muted small" id="srcnote"></span>
         </div>
         <div class="chart-box"><svg id="timeline" role="img" aria-label="Historique des alertes par roulement"></svg></div>
@@ -396,8 +486,8 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
         </div>
       </div>
 
-      <div class="card" style="margin-top:14px">
-        <h2 style="margin-bottom:6px">Combien de temps avant l'arrêt</h2>
+      <div class="card" id="lead-card" style="margin-top:14px">
+        <div class="sec-head"><div class="ttl"><span class="fig-n">Tableau 1</span><h2>Combien de temps avant l'arrêt</h2></div></div>
         <p class="muted small" id="lead-sum" style="margin-bottom:8px"></p>
         <div class="tbl-wrap"><table>
           <thead><tr><th>Roulement</th><th class="num">1re alerte, avant l'arrêt</th><th class="num">Alertes</th><th class="num">Relevés anormaux avant les 72 dernières heures</th></tr></thead>
@@ -408,7 +498,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
 
     <!-- DURÉE DE VIE RESTANTE -->
     <section class="panel" id="p-rul" role="tabpanel" aria-labelledby="t-rul" hidden>
-      <div class="card">
+      <div class="card" id="rul-in">
         <div class="pred">
           <div>
             <div class="fields">
@@ -430,13 +520,13 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
               <input class="hid" type="file" id="rul-dir" webkitdirectory multiple tabindex="-1" aria-hidden="true">
               <input class="hid" type="file" id="rul-files" multiple tabindex="-1" aria-hidden="true">
             </div>
-            <div class="controls" style="margin-top:12px">
+            <div class="controls" style="margin-top:12px" id="rul-ex">
               <span class="muted small">Pas de données sous la main ?</span>
               <button class="btn ghost" id="rul-demo-h" type="button">Exemple : roulement sain</button>
               <button class="btn ghost" id="rul-demo-d" type="button">Exemple : roulement dégradé</button>
             </div>
           </div>
-          <div class="side-note">
+          <div class="side-note" id="rul-why">
             <h3>Pourquoi un seul fichier ne suffit pas</h3>
             <p>Un fichier montre l'état du roulement à un instant. La durée de vie restante se lit dans la façon dont il vieillit : il faut donc une suite de fichiers pris les uns après les autres, au moins <b>230 relevés</b>, soit environ un jour et demi de mesures.</p>
             <p>Les 200 premiers servent à apprendre ce qu'est un roulement neuf, les 30 derniers sont analysés. Pour juger l'état à partir d'un seul fichier, utilisez la page « État d'un roulement ».</p>
@@ -445,14 +535,14 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
         <div class="msg info" id="rul-note" hidden></div>
         <div class="msg err" id="rul-err" hidden></div>
       </div>
-      <div class="card result" id="rul-res" hidden>
+      <div class="card result fig" id="rul-res" hidden>
         <div class="sec-head"><h2>Résultat</h2><span class="muted small" id="rul-meta"></span></div>
         <div class="vbig">
           <div><div class="k">Il reste environ</div><div class="n" id="rul-val">—</div><div class="k" id="rul-unc"></div></div>
-          <div style="flex:1 1 280px;min-width:0"><div class="k" style="display:flex;justify-content:space-between"><span>Panne</span><span>Au moins 2,5 jours</span></div><div class="rbar" id="rul-bar"><div class="f" id="rul-barf"></div></div><div class="k" style="margin-top:6px" id="rul-rms"></div></div>
+          <div style="flex:1 1 300px;min-width:0"><div class="k">Avant la panne</div><div class="rbar" id="rul-bar"><div class="f" id="rul-barf"></div></div><div class="rscale" aria-hidden="true"><span style="left:0">0</span><span style="left:40%">1 j : arrêt</span><span style="left:100%">2,5 j ou plus</span></div><div class="k" style="margin-top:6px" id="rul-rms"></div></div>
         </div>
         <div class="reco ok" id="rul-reco"><span id="rul-reco-t"></span><small id="rul-reco-d"></small></div>
-        <div style="margin-top:16px"><h2 style="margin-bottom:6px">Vibration sur les 30 derniers relevés (5 h)</h2><div class="chart-box"><svg id="rul-chart" role="img" aria-label="Vibration relative au roulement neuf sur les 30 derniers relevés"></svg></div></div>
+        <div style="margin-top:18px"><div class="sec-head" style="margin-bottom:6px"><div class="ttl"><span class="fig-n">Fig. 1</span><h2>Vibration sur les 30 derniers relevés (5 h)</h2></div></div><div class="chart-box"><svg id="rul-chart" role="img" aria-label="Vibration relative au roulement neuf sur les 30 derniers relevés"></svg></div><p class="cap"><b>Fig. 1.</b> Vibration rapportée à celle du roulement neuf (1 = neuf).</p></div>
         <details class="more"><summary>Voir les calculs intermédiaires</summary><div class="tbl-wrap"><table id="rul-table"></table></div></details>
         <p class="note" id="rul-limits"></p>
       </div>
@@ -460,7 +550,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
 
     <!-- ÉTAT D'UN ROULEMENT -->
     <section class="panel" id="p-classe" role="tabpanel" aria-labelledby="t-classe" hidden>
-      <div class="card">
+      <div class="card" id="cl-in">
         <div class="pred">
           <div>
             <div class="fields">
@@ -474,14 +564,14 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
               <div class="muted small">Un relevé d'une seconde : 20 480 lignes, une colonne par roulement. Rien n'est envoyé.</div>
               <input class="hid" type="file" id="cl-file" tabindex="-1" aria-hidden="true">
             </div>
-            <div class="controls" style="margin-top:12px">
+            <div class="controls" style="margin-top:12px" id="cl-ex">
               <span class="muted small">Sans fichier :</span>
               <button class="btn ghost" id="cl-ex-h" type="button">Exemple : relevé du 13 février</button>
               <button class="btn ghost" id="cl-ex-d" type="button">Exemple : relevé du 19 février</button>
               <button class="btn ghost" id="cl-ex-now" type="button">Instant de la supervision</button>
             </div>
           </div>
-          <div class="side-note">
+          <div class="side-note" id="cl-why">
             <h3>Ce que fait cette page</h3>
             <p>Elle calcule quatre mesures sur chaque colonne du fichier (niveau de vibration, énergie, désordre du signal, pics) et dit si chaque roulement vibre comme d'habitude ou non.</p>
             <p>Elle est réglée sur les quatre roulements de cet essai. Pour une autre machine, la réponse ne serait pas fiable : chaque roulement a son propre niveau normal.</p>
@@ -489,20 +579,20 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
         </div>
         <div class="msg err" id="cl-err" hidden></div>
       </div>
-      <div class="card result" id="cl-res" hidden>
+      <div class="card result fig" id="cl-res" hidden>
         <div class="sec-head"><h2>Résultat</h2><span class="muted small" id="cl-meta"></span></div>
         <div class="reco ok" id="cl-sum"><span id="cl-sum-t"></span><small id="cl-sum-d"></small></div>
         <div class="cl-grid" id="cl-cards"></div>
-        <p class="note">Trait : valeur du relevé. Zone verte : plage normale de ce roulement. Une valeur hors plage passe en orange ; une flèche indique qu'elle dépasse l'échelle du graphique.</p>
+        <p class="cap">Trait : valeur du relevé. Zone verte : plage normale de ce roulement. Une valeur hors plage passe en orange ; une flèche indique qu'elle dépasse l'échelle du graphique.</p>
       </div>
     </section>
 
     <!-- MODÈLES -->
     <section class="panel" id="p-modeles" role="tabpanel" aria-labelledby="t-modeles" hidden>
       <div class="cols2 m">
-        <div class="card">
-          <h2>Le même modèle, trois protocoles</h2>
-          <p class="muted small" style="margin:4px 0 10px">Score F1 (de 0 à 1, 1 = aucune erreur) sur les étiquettes de la règle des seuils. Cliquer sur un modèle pour le choisir.</p>
+        <div class="card fig" id="m-card">
+          <div class="sec-head" style="margin-bottom:4px"><div class="ttl"><span class="fig-n">Fig. 1</span><h2>Le même modèle, trois protocoles</h2></div></div>
+          <p class="muted small" style="margin:0 0 10px">Score F1 (de 0 à 1, 1 = aucune erreur) sur les étiquettes de la règle des seuils. Cliquer sur un modèle pour le choisir.</p>
           <div class="legend" style="margin:0 0 8px">
             <span><i class="k1" style="background:var(--c1)"></i>Test classique, tous les roulements mélangés (notebook)</span>
             <span><i style="background:var(--c2)"></i>Roulement jamais vu, mesures brutes</span>
@@ -512,11 +602,11 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
           <p class="note" id="mnote"></p>
         </div>
         <div class="stack">
-          <div class="card">
+          <div class="card fig" id="cm-card">
             <div class="sec-head" style="margin-bottom:0">
-              <h2 id="cm-title">Matrice de confusion</h2>
-              <div class="field" style="flex-direction:row;align-items:center;gap:8px">
-                <label for="cmscope" style="text-transform:none;letter-spacing:0;font-size:13px">Portée</label>
+              <div class="ttl"><span class="fig-n">Fig. 2</span><h2 id="cm-title">Où le modèle se trompe</h2></div>
+              <div class="field inl">
+                <label for="cmscope">Portée</label>
                 <select id="cmscope"></select>
               </div>
             </div>
@@ -524,7 +614,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
             <div class="kpis" id="kpis"></div>
             <p class="note">Chaque relevé est jugé par un modèle qui ne l'a pas vu à l'entraînement (validation croisée en 5 parties). Lignes : étiquette de la règle, colonnes : réponse du modèle.</p>
           </div>
-          <div class="card">
+          <div class="card" id="gap-card">
             <h2 style="margin-bottom:6px">Ce que montre l'écart</h2>
             <p class="muted" id="gapsum"></p>
           </div>
@@ -534,12 +624,12 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
 
     <!-- SIMULATEUR -->
     <section class="panel" id="p-simulateur" role="tabpanel" aria-labelledby="t-simulateur" hidden>
-      <div class="card">
+      <div class="card fig" id="sim-card">
         <div class="sec-head">
           <h2>Et si ce roulement vibrait comme ça ?</h2>
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-            <div class="field" style="flex-direction:row;align-items:center;gap:8px">
-              <label for="simb" style="text-transform:none;letter-spacing:0;font-size:13px">Roulement</label>
+            <div class="field inl">
+              <label for="simb">Roulement</label>
               <select id="simb"></select>
             </div>
             <button class="btn ghost" id="sim-now" type="button">Reprendre l'instant de la supervision</button>
@@ -660,6 +750,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     el.setAttribute('data-s', s);
     $('#bn-title').textContent = title; $('#bn-sub').textContent = sub;
     $('#clk').textContent = new Date(T[S.i]).toLocaleString('fr-FR', { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    $('#mstate').setAttribute('data-s', s); $('#sd-state').textContent = title; $('#sd-time').textContent = fmtDate(S.i);
     $('#clk-rel').textContent = S.i <= FAIL ? ('Arrêt de la machine dans ' + nf(hToStop(S.i), 1) + ' h') : 'Après l\'arrêt de la machine';
   }
 
@@ -899,13 +990,19 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
 
   /* ---------- synoptique et bon de travail ---------- */
   function setHTML(el, h) { if (el._h !== h) { el._h = h; el.innerHTML = h; } }
+  function glyph() {
+    var balls = '';
+    for (var a = 0; a < 8; a++) { var t = a * Math.PI / 4; balls += '<circle cx="' + (32 + Math.cos(t) * 20.5).toFixed(1) + '" cy="' + (32 + Math.sin(t) * 20.5).toFixed(1) + '" r="4.2"/>'; }
+    return '<svg class="gly" viewBox="0 0 64 64" aria-hidden="true"><circle class="o1" cx="32" cy="32" r="29"/><circle class="o2" cx="32" cy="32" r="25"/><g class="cage">' + balls + '</g><circle class="i1" cx="32" cy="32" r="16"/><circle class="i2" cx="32" cy="32" r="9"/><circle class="sh" cx="32" cy="32" r="3.5"/></svg>';
+  }
   function renderSyn() {
     function pal(k) {
       var st = status(B[k], S.i);
-      return '<button type="button" class="pal ' + st[0] + '" data-k="' + k + '" aria-pressed="' + (S.sel === k) + '"><span class="id">R' + (k + 1) + '</span><b>Roulement ' + (k + 1) + '</b><span class="st">' + st[1] + '</span></button>';
+      return '<button type="button" class="pal ' + st[0] + '" data-k="' + k + '" aria-pressed="' + (S.sel === k) + '">' + glyph() + '<span class="id">R' + (k + 1) + '</span><b>Roulement ' + (k + 1) + '</b><span class="st">' + st[1] + '</span></button>';
     }
     var sh = '<div class="shaft"></div>';
-    setHTML($('#syn'), '<div class="motor">Moteur<span>M-01</span></div>' + sh + pal(0) + sh + pal(1) + sh + '<div class="load">Charge radiale</div>' + sh + pal(2) + sh + pal(3));
+    setHTML($('#syn'), '<div class="motor">Moteur<span>M-01</span></div>' + sh + pal(0) + sh + pal(1) + sh + '<div class="load"><svg viewBox="0 0 26 40" aria-hidden="true"><path d="M13 2v30M6 25l7 8 7-8"/></svg><div class="lb">Charge radiale</div></div>' + sh + pal(2) + sh + pal(3) + sh);
+    $('#syn').setAttribute('data-run', D.series[B[0]].rms[S.i] < 0.01 ? '0' : '1');
   }
   function two(n) { return (n < 10 ? '0' : '') + n; }
   function renderWO() {
@@ -1301,8 +1398,15 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
 
   /* ---------- rendu et boucle ---------- */
   function renderLive() { $('#pos').value = S.i; renderBanner(); renderSyn(); renderCards(); renderWO(); renderLog(); moveCursor(); }
+  function renderTicks() {
+    var h = '', f = function (i) { return (i / (N - 1)).toFixed(4); };
+    DAYS.forEach(function (i) { h += '<span style="--f:' + f(i) + '">' + fmtDay(i) + '</span>'; });
+    var a = EP[S.src][B[0]].on[0];
+    h += '<span class="mk-a" style="--f:' + f(a) + '" title="Première alerte du roulement 1">▲</span><span class="mk-s" style="--f:' + f(STOP_I) + '" title="Arrêt machine">■</span>';
+    $('#pos-ticks').innerHTML = h;
+  }
   function renderAll() {
-    $('#pos').value = S.i;
+    $('#pos').value = S.i; renderTicks();
     renderBanner(); renderSyn(); renderCards(); renderWO(); renderLead(); renderLog();
     drawChart(); drawTimeline(); renderModels();
   }
@@ -1324,24 +1428,24 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
   /* ---------- onglets, commandes ---------- */
   var TABS = ['supervision', 'rul', 'classe', 'modeles', 'simulateur', 'limites'];
   var PAGES = {
-    supervision: ['LIGNE D\'ARBRE 2 · 4 ROULEMENTS · 2 000 TR/MIN', 'Supervision de la ligne d\'arbre', 'Rejeu d\'un essai réel (NASA, IMS n° 2) : quatre roulements sur un même arbre, un relevé d\'une seconde toutes les 10 minutes, du 12 au 19 février 2004.'],
-    rul: ['PRÉDIRE', 'Durée de vie restante', 'Déposez les fichiers de vibration d\'un roulement. La page vous dit combien de temps il lui reste avant la panne.'],
-    classe: ['PRÉDIRE', 'État d\'un roulement', 'Déposez un seul fichier de vibration. La page répond, pour chacun des quatre roulements : normal ou anormal.'],
-    modeles: ['COMPRENDRE', 'Comparer les modèles', 'Six modèles essayés pour reproduire la règle des seuils, jugés de trois façons.'],
-    simulateur: ['COMPRENDRE', 'Simulateur de seuils', 'Faire varier les mesures d\'un roulement pour voir quand la règle des seuils déclenche.'],
-    limites: ['COMPRENDRE', 'Limites de l\'étude', 'Ce que les résultats montrent, et ce qu\'ils ne montrent pas.']
+    supervision: ['Surveiller', 'Supervision de la ligne d\'arbre', 'Rejeu d\'un essai réel (NASA, IMS n° 2) : quatre roulements sur un même arbre, un relevé d\'une seconde toutes les 10 minutes, du 12 au 19 février 2004.'],
+    rul: ['Prédire', 'Durée de vie restante', 'Déposez les fichiers de vibration d\'un roulement. La page vous dit combien de temps il lui reste avant la panne.'],
+    classe: ['Prédire', 'État d\'un roulement', 'Déposez un seul fichier de vibration. La page répond, pour chacun des quatre roulements : normal ou anormal.'],
+    modeles: ['Comprendre', 'Comparer les modèles', 'Six modèles essayés pour reproduire la règle des seuils, jugés de trois façons.'],
+    simulateur: ['Comprendre', 'Simulateur de seuils', 'Faire varier les mesures d\'un roulement pour voir quand la règle des seuils déclenche.'],
+    limites: ['Comprendre', 'Limites de l\'étude', 'Ce que les résultats montrent, et ce qu\'ils ne montrent pas.']
   };
   function showTab(name) {
     if (TABS.indexOf(name) < 0) name = 'supervision';
-    S.tab = name;
+    S.tab = name; if (typeof tour !== 'undefined' && tour) endTour(true);
     TABS.forEach(function (t) { $('#p-' + t).hidden = t !== name; $('#t-' + t).setAttribute('aria-selected', t === name ? 'true' : 'false'); $('#t-' + t).tabIndex = t === name ? 0 : -1; });
-    $('#ph-tag').textContent = PAGES[name][0]; (function () { var w = PAGES[name][1].split(' '), k = Math.ceil(w.length / 2); $('#ph-h1').innerHTML = w.slice(0, k).join(' ') + ' <strong>' + w.slice(k).join(' ') + '</strong>'; })(); $('#ph-lead').textContent = PAGES[name][2];
+    $('#ph-tag').textContent = PAGES[name][0]; $('#ph-h1').textContent = PAGES[name][1]; $('#ph-lead').textContent = PAGES[name][2];
     document.title = PAGES[name][1] + ' · Ligne d\'arbre n° 2';
     if (name === 'supervision') { drawChart(); drawTimeline(); }
     if (name === 'simulateur') { if (!Object.keys(SIM.v).length) simLoad(S.i); renderSim(); }
     if (name === 'rul' && RUL_LAST) $('#rul-limits').textContent = rulLimitsText();
   }
-  document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('click', function () { var n = b.getAttribute('data-tab'); try { history.replaceState(null, '', '#' + n); } catch (e) { location.hash = n; } showTab(n); }); });
+  document.querySelectorAll('.tab[data-tab]').forEach(function (b) { b.addEventListener('click', function () { var n = b.getAttribute('data-tab'); try { history.replaceState(null, '', '#' + n); } catch (e) { location.hash = n; } showTab(n); }); });
   window.addEventListener('hashchange', function () { showTab(location.hash.slice(1)); });
 
   $('#play').addEventListener('click', function () { if (!S.playing && S.i >= N - 1) S.i = 0; setPlaying(!S.playing); });
@@ -1377,6 +1481,101 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
   renderLimits();
   renderAll();
   showTab(location.hash.slice(1));
+
+  /* ---------- visite guidée ---------- */
+  var TOURS = {
+    supervision: [
+      ['.nav', 'Les espaces de l\'application', 'Surveiller la ligne en rejeu, prédire à partir de vos fichiers, comprendre les modèles et leurs limites. La visite guidée se relance ici à tout moment, pour la page affichée.'],
+      ['#banner', 'État de la ligne', 'Le bandeau résume la situation à l\'instant affiché : fonctionnement normal, écart isolé, alerte ou machine à l\'arrêt. À droite : la date et le temps restant avant l\'arrêt de l\'essai.'],
+      ['#ctl', 'Rejeu de l\'essai', 'Les mesures réelles de l\'essai NASA IMS n° 2 sont rejouées comme un flux en direct : un relevé toutes les 10 minutes pendant 7 jours. On règle la vitesse, on saute à la première alerte ou à l\'arrêt, on déplace le curseur du temps. Raccourcis : espace et flèches.'],
+      ['#syn-card', 'Schéma de la ligne', 'Moteur, arbre et quatre roulements. Chaque roulement prend la couleur de son état, et ses rouleaux tournent tant que la machine tourne. Un clic le met en évidence dans les cartes en dessous.'],
+      ['#cards', 'Mesures par roulement', 'Quatre mesures par roulement, avec en vert la plage normale. Une valeur hors plage passe en orange.'],
+      ['#wo', 'Bon de travail suggéré', 'Quand une alerte est confirmée, la page propose une action et un délai. Le bon s\'imprime.'],
+      ['#fig-chart', 'Évolution des mesures', 'Une courbe par roulement. On choisit la mesure et l\'échelle (linéaire ou logarithmique). Le trait turquoise suit l\'instant affiché et se déplace à la souris.'],
+      ['#fig-tl', 'Historique des alertes', 'Pour chaque roulement : les périodes d\'alerte, les anomalies isolées et l\'arrêt. La source des étiquettes se choisit avec « État fourni par ».'],
+      ['#lead-card', 'Avance sur l\'arrêt', 'Combien d\'heures avant l\'arrêt chaque roulement a donné sa première alerte.']
+    ],
+    rul: [
+      ['#rul-drop', 'Déposer les fichiers', 'Glissez le dossier des relevés d\'un roulement, ou choisissez les fichiers. Tout se calcule dans votre navigateur, rien n\'est envoyé.'],
+      ['#rul-col', 'Choisir le roulement', 'Indiquez quelle colonne des fichiers correspond au roulement à analyser.'],
+      ['#rul-why', 'Pourquoi plusieurs fichiers', 'La durée restante se lit dans l\'évolution du roulement, pas dans un seul instant. Il faut au moins 230 relevés à la suite : les 200 premiers définissent l\'état neuf, les 30 derniers sont analysés.'],
+      ['#rul-ex', 'Sans données', 'Deux exemples tirés de l\'essai : un roulement sain et un roulement dégradé.'],
+      ['#rul-res', 'Le résultat', 'Durée restante estimée (à plus ou moins 1 jour), échelle avant la panne, recommandation et courbe de vibration des 30 derniers relevés.']
+    ],
+    classe: [
+      ['#cl-model', 'Choisir la méthode', 'Règle des seuils, arbre de décision, régression logistique ou Bayes naïf : les quatre répondent à la même question.'],
+      ['#cl-drop', 'Déposer un fichier', 'Un relevé d\'une seconde : 20 480 lignes, une colonne par roulement.'],
+      ['#cl-ex', 'Exemples', 'Deux relevés réels de l\'essai, ou l\'instant affiché dans la supervision.'],
+      ['#cl-why', 'Ce que fait cette page', 'Elle calcule quatre mesures par colonne et dit si chaque roulement vibre comme d\'habitude. Elle n\'est valable que pour les quatre roulements de cet essai.'],
+      ['#cl-res', 'Résultat par roulement', 'Normal ou anormal pour chacun, avec ses quatre mesures placées dans leur plage normale.']
+    ],
+    modeles: [
+      ['#m-card', 'Six modèles, trois façons de les juger', 'Chaque modèle essaie de reproduire la règle des seuils. Le score F1 baisse nettement quand le modèle doit juger un roulement qu\'il n\'a jamais vu.'],
+      ['#cm-card', 'Où le modèle se trompe', 'Les relevés bien classés en vert, les erreurs en orange, pour le modèle choisi dans la liste.'],
+      ['#gap-card', 'Ce que montre l\'écart', 'Un bon score dans le test classique ne prouve pas qu\'un modèle détecte de vrais défauts.']
+    ],
+    simulateur: [
+      ['#sim-card', 'Tester la règle des seuils', 'Déplacez les curseurs pour voir quand un roulement sort de sa plage normale.'],
+      ['#simb', 'Choisir le roulement', 'Chaque roulement a ses propres seuils. Le bouton à droite reprend les valeurs de l\'instant affiché dans la supervision.'],
+      ['#sim-verdict', 'Le verdict', 'Normal si les quatre mesures restent dans leur plage, anormal dès qu\'une en sort.']
+    ],
+    limites: [
+      ['#limits', 'À lire avant de citer les résultats', 'Ce que l\'étude montre, et ce qu\'elle ne montre pas : étiquettes définies par une règle, un seul événement réel, scores plus faibles sur un roulement jamais vu.']
+    ]
+  };
+  var tour = null;
+  function startTour() {
+    var steps = (TOURS[S.tab] || []).filter(function (st) { var el = document.querySelector(st[0]); return el && el.getClientRects().length; });
+    if (!steps.length) return;
+    endTour(true);
+    tour = { steps: steps, i: 0 };
+    ['tourShield', 'tourHole', 'tourPop'].forEach(function (id) { var d = document.createElement('div'); d.id = id; document.body.appendChild(d); });
+    $('#tourShield').onclick = function () { endTour(); };
+    $('#tourPop').setAttribute('role', 'dialog'); $('#tourPop').setAttribute('aria-label', 'Visite guidée');
+    showStep();
+  }
+  function showStep() {
+    if (!tour) return;
+    var st = tour.steps[tour.i], el = document.querySelector(st[0]);
+    if (!el) { endTour(); return; }
+    try { el.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (e) { el.scrollIntoView(); }
+    requestAnimationFrame(function () {
+      if (!tour) return;
+      var r = el.getBoundingClientRect(), pad = 6, hole = $('#tourHole'), pop = $('#tourPop'), last = tour.i === tour.steps.length - 1;
+      hole.style.left = (r.left - pad) + 'px'; hole.style.top = (r.top - pad) + 'px'; hole.style.width = (r.width + 2 * pad) + 'px'; hole.style.height = (r.height + 2 * pad) + 'px';
+      pop.innerHTML = '<div class="st">Étape ' + (tour.i + 1) + ' sur ' + tour.steps.length + '</div><h4>' + st[1] + '</h4><p>' + st[2] + '</p>' +
+        '<div class="tn"><button class="btn ghost" id="tQuit" type="button">Quitter</button><span class="sp"></span>' + (tour.i ? '<button class="btn ghost" id="tPrev" type="button">Précédent</button>' : '') +
+        '<button class="btn" id="tNext" type="button">' + (last ? 'Terminer' : 'Suivant') + '</button></div>';
+      var ph = pop.offsetHeight, pw = pop.offsetWidth, vw = window.innerWidth, vh = window.innerHeight, top;
+      if (r.bottom + pad + ph + 12 <= vh) top = r.bottom + pad + 12;
+      else if (r.top - pad - ph - 12 >= 0) top = r.top - pad - ph - 12;
+      else top = vh - ph - 12;
+      pop.style.top = Math.max(12, top) + 'px'; pop.style.left = clamp(r.left, 12, Math.max(12, vw - pw - 12)) + 'px';
+      $('#tQuit').onclick = function () { endTour(); };
+      $('#tNext').onclick = function () { if (last) endTour(); else { tour.i++; showStep(); } };
+      if ($('#tPrev')) $('#tPrev').onclick = function () { tour.i--; showStep(); };
+      $('#tNext').focus({ preventScroll: true });
+    });
+  }
+  function endTour(silent) {
+    tour = null;
+    ['tourShield', 'tourHole', 'tourPop'].forEach(function (id) { var e = document.getElementById(id); if (e) e.remove(); });
+    if (!silent) { try { localStorage.setItem('tourVu', '1'); } catch (e) { } }
+  }
+  document.addEventListener('keydown', function (e) {
+    if (!tour) return;
+    if (e.key === 'Escape') { endTour(); return; }
+    if (e.key === 'ArrowRight' && tour.i < tour.steps.length - 1) { e.stopImmediatePropagation(); e.preventDefault(); tour.i++; showStep(); }
+    if (e.key === 'ArrowLeft' && tour.i > 0) { e.stopImmediatePropagation(); e.preventDefault(); tour.i--; showStep(); }
+  }, true);
+  window.addEventListener('resize', function () { if (tour) showStep(); });
+  $('#t-visite').addEventListener('click', startTour);
+  (function () {
+    var seen = false; try { seen = localStorage.getItem('tourVu') === '1'; } catch (e) { }
+    var force = /[?&]visite/.test(location.search), skip = /[?&]sans-visite/.test(location.search);
+    if (force || (!seen && !skip)) setTimeout(startTour, 700);
+  })();
+
   window.__twin = { D: D, S: S, EP: EP, STOP_I: STOP_I, classFeatures: classFeatures, predictClass: predictClass, rulFeatures: rulFeatures, rulPredict: rulPredict, rulRef: rulRef, rulModel: rulModel, parseColumns: parseColumns };
 })();
 </script>
