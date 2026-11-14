@@ -4,32 +4,38 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
 <style>
-/* Poste de supervision d'atelier : fond gris clair, menu graphite, jaune de signalisation pour la page active.
-   La couleur ne sert qu'aux données (4 roulements) et à l'état : normal (vert), écart isolé (jaune), alerte (orange), arrêt (gris). */
+/* Thème de la page d'accueil : fond presque noir, accent turquoise, IBM Plex, filets fins.
+   La couleur sert aux données (4 roulements) et à l'état : normal (vert), écart isolé (jaune), alerte (orange), arrêt (gris). Le texte dit toujours l'état aussi. */
 :root {
-  --bg: #e9eaec;
-  --surface: #ffffff;
-  --surface-2: #dadde1;
-  --ink: #14181d;
-  --ink-2: #4b535d;
-  --ink-3: #5f6772;
-  --line: #c9ccd1;
-  --side: #1b1f24;
-  --side-ink: #e6e9ed;
-  --side-mute: #9aa3ad;
-  --signal: #f2b705;
-  --ok: #175640;   --ok-bg: #dcefe6;  --ok-fill: #1f6f54;
-  --warn: #6b5600; --warn-bg: #fff2bf; --warn-fill: #c9a100;
-  --crit: #8a4a05; --crit-bg: #fdebd8; --crit-fill: #b7650a;
-  --off: #4b535d;  --off-bg: #dadde1;
-  --c1: #0b66c8; --c2: #8240b8; --c3: #0b8791; --c4: #8a6a2c;
+  color-scheme: dark;
+  --bg: #06090d;
+  --surface: rgba(13, 19, 26, 0.88);
+  --surface-2: #1a232d;
+  --ink: #e9eef3;
+  --ink-2: #a3b0bc;
+  --ink-3: #8593a1;
+  --line: rgba(255, 255, 255, 0.10);
+  --line-2: rgba(255, 255, 255, 0.22);
+  --side: rgba(7, 11, 15, 0.86);
+  --side-ink: #e9eef3;
+  --side-mute: #8593a1;
+  --signal: #45c7bd;
+  --acc: #45c7bd; --acc-2: #2b9fb7; --on-acc: #04211f;
+  --ok: #6fdcae;   --ok-bg: #0f2b22;  --ok-fill: #2f9e78;
+  --warn: #f0d25a; --warn-bg: #2d2807; --warn-fill: #d9b200;
+  --crit: #ff9f55; --crit-bg: #33200b; --crit-fill: #e0832b;
+  --off: #b3bec9;  --off-bg: #1f2832;
+  --c1: #6ab0ff; --c2: #c697f5; --c3: #f4a6c7; --c4: #dcb96f;
+  --ease: cubic-bezier(.2, .7, .2, 1);
   --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 h1, h2, h3 { margin: 0; font-weight: 600; text-wrap: balance; }
-h1 { font-size: 28px; letter-spacing: -0.01em; font-weight: 700; }
+h1 { font-size: clamp(30px, 4vw, 46px); line-height: 1.08; letter-spacing: -0.8px; font-weight: 300; margin: 14px 0 12px; }
+h1 strong { font-weight: 600; background: linear-gradient(92deg, #fff 0%, #bfeee9 55%, var(--acc) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 h2 { font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; }
 h3 { font-size: 14px; }
 p { margin: 0; }
@@ -41,15 +47,17 @@ p { margin: 0; }
 
 /* gabarit : menu à gauche */
 .app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
-.side { background: var(--side); color: var(--side-ink); padding: 26px 18px; display: flex; flex-direction: column; gap: 26px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
-.side .brand b { display: block; font-size: 17px; font-weight: 700; }
+.side { background: var(--side); border-right: 1px solid var(--line); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); z-index: 2; color: var(--side-ink); padding: 26px 18px; display: flex; flex-direction: column; gap: 26px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.side .brand { display: flex; gap: 12px; align-items: center; }
+.side .brand .mark { width: 30px; height: 30px; flex: none; }
+.side .brand b { display: block; font-size: 16px; font-weight: 500; letter-spacing: 0.2px; }
 .side .brand span { font-family: var(--mono); font-size: 12px; color: var(--side-mute); }
 .nav { display: flex; flex-direction: column; gap: 3px; }
 .nav .grp { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--side-mute); padding: 16px 12px 6px; }
 .nav .grp:first-child { padding-top: 0; }
 .tab { background: none; border: 0; text-align: left; padding: 10px 12px; border-radius: 3px; cursor: pointer; color: var(--side-ink); font: inherit; font-size: 15px; min-height: 42px; }
-.tab:hover { background: #2a3038; }
-.tab[aria-selected="true"] { background: var(--signal); color: #14181d; font-weight: 600; }
+.tab:hover { background: rgba(255, 255, 255, 0.06); }
+.tab[aria-selected="true"] { background: rgba(69, 199, 189, 0.12); color: var(--acc); font-weight: 600; box-shadow: inset 2px 0 0 var(--acc); }
 .side .foot { margin-top: auto; font-size: 12px; line-height: 1.5; color: var(--side-mute); }
 .side .foot a { color: var(--side-ink); }
 .main { padding: 26px 34px 48px; min-width: 0; max-width: 1240px; width: 100%; }
@@ -63,22 +71,23 @@ p { margin: 0; }
   .main { padding: 18px 16px 40px; }
 }
 
-.ph { border-bottom: 2px solid var(--ink); padding-bottom: 14px; margin-bottom: 18px; }
-.ph .tag { font-family: var(--mono); font-size: 12px; color: var(--ink-2); letter-spacing: 0.04em; }
-.ph p { color: var(--ink-2); max-width: 70ch; margin-top: 6px; }
+.ph { border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; }
+.ph .tag { display: inline-flex; align-items: center; gap: 10px; font: 500 12px/1 var(--mono); letter-spacing: 2px; text-transform: uppercase; color: var(--acc); }
+.ph .tag::before { content: ""; width: 26px; height: 1px; background: var(--acc); }
+.ph p { color: var(--ink-2); max-width: 62ch; margin-top: 0; font-size: 16px; }
 .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .field label { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
 select, button { font: inherit; color: var(--ink); }
-select { background: var(--surface); border: 1px solid #aab0b8; border-radius: 3px; padding: 9px 28px 9px 10px; min-width: 0; max-width: 100%; min-height: 40px; }
+select { background: var(--surface); border: 1px solid var(--line-2); border-radius: 8px; padding: 9px 28px 9px 10px; min-width: 0; max-width: 100%; min-height: 40px; }
 .panel[hidden] { display: none; }
 
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 16px 18px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; min-width: 0; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .card + .card { margin-top: 14px; }
 .stack { display: flex; flex-direction: column; gap: 14px; }
 .stack > .card + .card, .cols2 > .card + .card { margin-top: 0; }
 
 /* bandeau */
-.banner { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; justify-content: space-between; border-radius: 4px; padding: 16px 18px; border: 1px solid var(--line); border-left-width: 1px; background: var(--surface); }
+.banner { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; justify-content: space-between; border-radius: 12px; padding: 16px 20px; border: 1px solid var(--line); border-left-width: 1px; background: var(--surface); }
 .banner .big { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
 .dot { width: 12px; height: 12px; background: currentColor; flex: none; }
 .banner[data-s="ok"] { border-color: var(--ok-fill); } .banner[data-s="ok"] .big { color: var(--ok); }
@@ -90,31 +99,32 @@ select { background: var(--surface); border: 1px solid #aab0b8; border-radius: 3
 
 /* commandes */
 .controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 14px; }
-.btn { background: var(--ink); color: #fff; border: 1px solid var(--ink); border-radius: 3px; padding: 9px 16px; font-weight: 600; cursor: pointer; min-width: 92px; min-height: 42px; }
-.btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid #aab0b8; font-weight: 500; min-width: 0; }
-.btn:hover { opacity: 0.88; }
+.btn { background: var(--acc); color: var(--on-acc); border: 1px solid var(--acc); border-radius: 999px; padding: 9px 20px; font-weight: 600; cursor: pointer; min-width: 92px; min-height: 42px; box-shadow: 0 8px 24px -12px rgba(69, 199, 189, 0.7); transition: transform .3s var(--ease), box-shadow .3s var(--ease), background .3s; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line-2); font-weight: 500; min-width: 0; box-shadow: none; }
+.btn.ghost:hover { background: rgba(255, 255, 255, 0.06); opacity: 1; transform: none; }
+.btn:hover { background: #5dd6cc; transform: translateY(-1px); box-shadow: 0 0 0 4px rgba(69, 199, 189, 0.12), 0 12px 28px -12px rgba(69, 199, 189, 0.8); }
 .slider { flex: 1 1 260px; min-width: 0; display: flex; }
-input[type=range] { width: 100%; accent-color: var(--ink); min-width: 0; }
+input[type=range] { width: 100%; accent-color: var(--acc); min-width: 0; }
 
 /* synoptique */
 .syn { display: flex; align-items: center; overflow-x: auto; padding: 10px 2px 6px; }
-.syn .motor { flex: 0 0 auto; width: 92px; height: 92px; border: 2px solid var(--ink); background: var(--surface-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-weight: 700; }
+.syn .motor { flex: 0 0 auto; width: 92px; height: 92px; border: 2px solid var(--ink-3); border-radius: 10px; background: var(--surface-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-weight: 700; }
 .syn .motor span { font-family: var(--mono); font-size: 12px; font-weight: 400; color: var(--ink-2); }
-.syn .shaft { flex: 1 0 22px; height: 14px; background: #9aa3ad; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
-.syn .load { flex: 0 0 auto; width: 92px; height: 80px; border: 2px dashed var(--ink-2); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; font-weight: 600; padding: 6px; }
-.syn .pal { flex: 0 0 auto; width: 132px; border: 2px solid var(--ok-fill); background: var(--ok-bg); padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; text-align: left; font: inherit; color: var(--ink); }
+.syn .shaft { flex: 1 0 22px; height: 14px; background: #2b3642; border-top: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); }
+.syn .load { flex: 0 0 auto; width: 92px; height: 80px; border-radius: 10px; border: 2px dashed var(--ink-3); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; font-weight: 600; padding: 6px; }
+.syn .pal { flex: 0 0 auto; width: 132px; border-radius: 10px; border: 2px solid var(--ok-fill); background: var(--ok-bg); padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; text-align: left; font: inherit; color: var(--ink); }
 .syn .pal .id { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
 .syn .pal b { font-size: 15px; }
 .syn .pal .st { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; }
 .syn .pal.warn { border-color: var(--warn-fill); background: var(--warn-bg); } .syn .pal.warn .st { color: var(--warn); }
-.syn .pal.crit { border: 3px solid var(--crit-fill); background: var(--crit-bg); padding: 9px 11px; } .syn .pal.crit .st { color: var(--crit); }
+.syn .pal.crit { border: 3px solid var(--crit-fill); border-radius: 10px; background: var(--crit-bg); padding: 9px 11px; } .syn .pal.crit .st { color: var(--crit); }
 .syn .pal.off { border-color: var(--off); background: var(--off-bg); } .syn .pal.off .st { color: var(--off); }
 .syn .pal.ok .st { color: var(--ok); }
 .syn .pal[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--signal); }
 
 /* cartes roulements */
 .grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-top: 14px; }
-.brg { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; min-width: 0; border-top: 4px solid var(--bc); }
+.brg { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; border-top: 4px solid var(--bc); }
 .brg.sel { box-shadow: 0 0 0 3px var(--signal); }
 .brg-head { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
 .brg-head h3 { display: flex; align-items: center; gap: 8px; }
@@ -139,8 +149,8 @@ input[type=range] { width: 100%; accent-color: var(--ink); min-width: 0; }
 .gauge .cr { position: absolute; top: -3px; font-size: 10px; line-height: 14px; color: var(--crit); }
 
 /* bon de travail */
-.wo { padding: 0; overflow: hidden; border-color: var(--ink); }
-.wo-h { background: var(--signal); color: #14181d; padding: 11px 18px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.wo { padding: 0; overflow: hidden; border-color: var(--acc); }
+.wo-h { background: var(--acc); color: var(--on-acc); padding: 11px 18px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .wo-h b { font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; }
 .wo-h span { font-family: var(--mono); font-size: 12px; font-weight: 600; }
 .wo-b { padding: 16px 18px; display: flex; flex-direction: column; gap: 11px; }
@@ -151,10 +161,10 @@ input[type=range] { width: 100%; accent-color: var(--ink); min-width: 0; }
 
 /* graphiques */
 .sec-head { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.seg { display: inline-flex; border: 1px solid #aab0b8; border-radius: 3px; overflow: hidden; background: var(--surface); }
+.seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 999px; overflow: hidden; background: var(--surface); }
 .seg button { background: none; border: 0; padding: 8px 12px; cursor: pointer; color: var(--ink-2); font-size: 13px; min-height: 38px; }
-.seg button + button { border-left: 1px solid #aab0b8; }
-.seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--acc); color: var(--on-acc); font-weight: 600; }
 .chart-box { width: 100%; overflow: hidden; touch-action: pan-y; }
 svg text { font-family: var(--mono); font-size: 11px; fill: var(--ink-3); }
 svg .grid { stroke: var(--line); stroke-width: 1; }
@@ -162,7 +172,7 @@ svg .axis { stroke: var(--ink-3); stroke-width: 1; }
 svg .cur { stroke: var(--ink); stroke-width: 1.5; }
 svg .stop { fill: var(--off-bg); }
 svg .stopl { stroke: var(--off); stroke-dasharray: 4 3; }
-svg .rowbg { fill: #d6e6dd; }
+svg .rowbg { fill: #123428; }
 svg .alert { fill: var(--crit-fill); }
 svg .lbl { fill: var(--ink); font-weight: 500; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink-2); margin-top: 8px; }
@@ -189,8 +199,8 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
 /* modèles */
 .cols2.m { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); margin-top: 0; }
 .mrow { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; padding: 8px 6px; border-radius: 3px; cursor: pointer; align-items: center; border: 1px solid transparent; }
-.mrow:hover { background: #eef0f2; }
-.mrow[aria-current="true"] { border-color: var(--ink); }
+.mrow:hover { background: rgba(255, 255, 255, 0.05); }
+.mrow[aria-current="true"] { border-color: var(--acc); background: rgba(69, 199, 189, 0.07); }
 .mname { font-weight: 500; font-size: 13px; }
 .bars { display: flex; flex-direction: column; gap: 3px; }
 .bar { display: grid; grid-template-columns: minmax(0, 1fr) 40px; gap: 8px; align-items: center; }
@@ -200,16 +210,16 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
 .k1 { --bcol: var(--c1); } .k2 { --bcol: var(--c2); } .k3 { --bcol: var(--c3); }
 .cm { display: grid; grid-template-columns: auto 1fr 1fr; gap: 6px; align-items: stretch; margin-top: 10px; }
 .cm .h { font-size: 11px; color: var(--ink-3); display: flex; align-items: center; justify-content: center; text-align: center; padding: 2px; }
-.cm .c { border-radius: 3px; padding: 12px 8px; text-align: center; font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+.cm .c { border-radius: 8px; padding: 12px 8px; text-align: center; font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
 .cm .c small { display: block; font-family: var(--font); font-size: 11px; color: var(--ink-2); margin-top: 2px; }
 .cm .good { background: var(--ok-bg); color: var(--ok); }
 .cm .bad { background: var(--crit-bg); color: var(--crit); }
 .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-.kpi { background: #eef0f2; border-radius: 3px; padding: 8px 10px; }
+.kpi { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; }
 .kpi .l { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; }
 .kpi .x { font-family: var(--mono); font-size: 16px; font-variant-numeric: tabular-nums; }
 @media (max-width: 860px) { .cols2.m { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 520px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mrow { grid-template-columns: minmax(0, 1fr); } h1 { font-size: 24px; } }
+@media (max-width: 520px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mrow { grid-template-columns: minmax(0, 1fr); } h1 { font-size: 28px; } }
 
 /* simulateur */
 .sim-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 150px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
@@ -224,8 +234,8 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
 /* pages de prédiction */
 .pred { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: start; }
 @media (max-width: 860px) { .pred { grid-template-columns: minmax(0, 1fr); } }
-.drop { border: 2px dashed #8a929c; background: #f6f7f8; border-radius: 3px; padding: 28px 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; }
-.drop.over { background: var(--warn-bg); border-color: var(--warn-fill); }
+.drop { border: 1.5px dashed var(--line-2); background: rgba(255, 255, 255, 0.025); border-radius: 12px; padding: 28px 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; }
+.drop.over { background: rgba(69, 199, 189, 0.1); border-color: var(--acc); }
 .drop .t { font-size: 18px; font-weight: 600; }
 .drop .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .fields { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; }
@@ -235,7 +245,7 @@ td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numer
 .side-note p + p { margin-top: 10px; }
 .msg { margin-top: 14px; padding: 12px 14px; border-radius: 3px; font-size: 14px; }
 .msg.err { background: var(--crit-bg); color: var(--crit); font-weight: 500; }
-.msg.info { background: #eef0f2; color: var(--ink-2); }
+.msg.info { background: var(--surface-2); color: var(--ink-2); }
 .result { margin-top: 14px; }
 .vbig { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: flex-end; }
 .vbig .k { font-size: 13px; color: var(--ink-2); }
@@ -259,8 +269,20 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
 .prose p { margin-top: 6px; color: var(--ink-2); }
 .prose p b { color: var(--ink); font-weight: 600; }
 .note { font-size: 12px; color: var(--ink-3); margin-top: 10px; }
-@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+/* fond : photo de roulement fondue, comme sur la page d'accueil */
+.bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.bg img { position: absolute; top: 50%; right: -14vh; height: min(86vh, 56vw); width: auto; opacity: .55; transform: translateY(-50%);
+  -webkit-mask-image: radial-gradient(ellipse 52% 50% at 62% 52%, #000 58%, transparent 100%); mask-image: radial-gradient(ellipse 52% 50% at 62% 52%, #000 58%, transparent 100%); }
+.bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--bg) 0%, rgba(6, 9, 13, .6) 45%, rgba(6, 9, 13, .1) 100%), linear-gradient(180deg, rgba(6, 9, 13, .6) 0%, rgba(6, 9, 13, 0) 30%, rgba(6, 9, 13, 0) 60%, var(--bg) 100%); }
+.grain { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .05; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.app { position: relative; z-index: 2; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.panel:not([hidden]) { animation: rise .5s var(--ease) both; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
 @media print {
+  :root { color-scheme: light; --bg: #fff; --surface: #fff; --surface-2: #e6e8eb; --ink: #000; --ink-2: #333; --ink-3: #555; --line: #999; --line-2: #666; --acc: #000; --on-acc: #fff; --ok: #175640; --warn: #6b5600; --crit: #8a4a05; --off: #333; --ok-bg: #dcefe6; --warn-bg: #fff2bf; --crit-bg: #fdebd8; --off-bg: #e6e8eb; }
+  .bg, .grain { display: none !important; }
+  .card { backdrop-filter: none; -webkit-backdrop-filter: none; }
   .side, .ph, .controls, .btn { display: none !important; }
   .main { padding: 0; }
   body.pwo #p-supervision > *:not(.row-wo) { display: none !important; }
@@ -269,9 +291,11 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
 }
 </style>
 
+<div class="bg" aria-hidden="true"><img src="fond_roulement.jpg" alt=""></div>
+<div class="grain" aria-hidden="true"></div>
 <div class="app">
   <aside class="side">
-    <div class="brand"><b>Ligne d'arbre n° 2</b><span>Banc d'essai de roulements</span></div>
+    <div class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#45c7bd" stroke-width="1.5"/><circle cx="14" cy="14" r="5.5" fill="none" stroke="#45c7bd" stroke-width="1.5"/><g fill="#45c7bd"><circle cx="14" cy="5.2" r="1.6"/><circle cx="22.8" cy="14" r="1.6"/><circle cx="14" cy="22.8" r="1.6"/><circle cx="5.2" cy="14" r="1.6"/><circle cx="20.2" cy="7.8" r="1.6"/><circle cx="20.2" cy="20.2" r="1.6"/><circle cx="7.8" cy="20.2" r="1.6"/><circle cx="7.8" cy="7.8" r="1.6"/></g></svg><div><b>Ligne d'arbre n° 2</b><span>Banc d'essai de roulements</span></div></div>
     <nav class="nav" role="tablist" aria-label="Sections" aria-orientation="vertical">
       <div class="grp">Surveiller</div>
       <button class="tab" role="tab" id="t-supervision" data-tab="supervision" type="button">Supervision</button>
@@ -327,7 +351,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
       </div>
 
       <div class="card" style="margin-top:14px">
-        <div class="sec-head"><h2>Synoptique de la ligne</h2><span class="muted small">Cliquer sur un palier pour le mettre en évidence</span></div>
+        <div class="sec-head"><h2>Synoptique de la ligne</h2><span class="muted small">Cliquer sur un roulement pour le mettre en évidence</span></div>
         <div class="syn" id="syn"></div>
       </div>
 
@@ -373,10 +397,10 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
       </div>
 
       <div class="card" style="margin-top:14px">
-        <h2 style="margin-bottom:6px">Avance à la détection</h2>
+        <h2 style="margin-bottom:6px">Combien de temps avant l'arrêt</h2>
         <p class="muted small" id="lead-sum" style="margin-bottom:8px"></p>
         <div class="tbl-wrap"><table>
-          <thead><tr><th>Roulement</th><th class="num">1re alerte avant l'arrêt</th><th class="num">Épisodes</th><th class="num">Anomalies avant −72 h</th></tr></thead>
+          <thead><tr><th>Roulement</th><th class="num">1re alerte, avant l'arrêt</th><th class="num">Alertes</th><th class="num">Relevés anormaux avant les 72 dernières heures</th></tr></thead>
           <tbody id="lead-body"></tbody>
         </table></div>
       </div>
@@ -469,7 +493,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
         <div class="sec-head"><h2>Résultat</h2><span class="muted small" id="cl-meta"></span></div>
         <div class="reco ok" id="cl-sum"><span id="cl-sum-t"></span><small id="cl-sum-d"></small></div>
         <div class="cl-grid" id="cl-cards"></div>
-        <p class="note">Trait noir : valeur du relevé. Zone verte : plage normale de ce roulement. Une valeur hors plage est signalée en orange.</p>
+        <p class="note">Trait : valeur du relevé. Zone verte : plage normale de ce roulement. Une valeur hors plage passe en orange ; une flèche indique qu'elle dépasse l'échelle du graphique.</p>
       </div>
     </section>
 
@@ -478,11 +502,11 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
       <div class="cols2 m">
         <div class="card">
           <h2>Le même modèle, trois protocoles</h2>
-          <p class="muted small" style="margin:4px 0 10px">F1 sur les labels de la règle IQR. Cliquer sur un modèle pour le sélectionner.</p>
+          <p class="muted small" style="margin:4px 0 10px">Score F1 (de 0 à 1, 1 = aucune erreur) sur les étiquettes de la règle des seuils. Cliquer sur un modèle pour le choisir.</p>
           <div class="legend" style="margin:0 0 8px">
-            <span><i class="k1" style="background:var(--c1)"></i>Validation croisée 5 plis (notebook)</span>
-            <span><i style="background:var(--c2)"></i>Roulement jamais vu, variables brutes</span>
-            <span><i style="background:var(--c3)"></i>Roulement jamais vu, calibré sur ses 20 % premiers instants</span>
+            <span><i class="k1" style="background:var(--c1)"></i>Test classique, tous les roulements mélangés (notebook)</span>
+            <span><i style="background:var(--c2)"></i>Roulement jamais vu, mesures brutes</span>
+            <span><i style="background:var(--c3)"></i>Roulement jamais vu, réglé sur son début d'essai (20 %)</span>
           </div>
           <div id="mbars"></div>
           <p class="note" id="mnote"></p>
@@ -498,7 +522,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
             </div>
             <div class="cm" id="cm"></div>
             <div class="kpis" id="kpis"></div>
-            <p class="note">Validation croisée 5 plis, un modèle par roulement, graine 42, prédictions hors échantillon. Lignes : vrai label, colonnes : prédiction.</p>
+            <p class="note">Chaque relevé est jugé par un modèle qui ne l'a pas vu à l'entraînement (validation croisée en 5 parties). Lignes : étiquette de la règle, colonnes : réponse du modèle.</p>
           </div>
           <div class="card">
             <h2 style="margin-bottom:6px">Ce que montre l'écart</h2>
@@ -521,10 +545,10 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
             <button class="btn ghost" id="sim-now" type="button">Reprendre l'instant de la supervision</button>
           </div>
         </div>
-        <p class="muted small" style="margin-bottom:6px">Déplacer les curseurs pour tester la règle IQR de ce roulement. L'énergie est calculée à partir du RMS (énergie = 20 480 × RMS²), comme dans les données.</p>
+        <p class="muted small" style="margin-bottom:6px">Déplacez les curseurs pour voir à quel moment la règle des seuils déclenche. L'énergie se déduit de la vibration (énergie = 20 480 × vibration²), comme dans les données.</p>
         <div id="sim"></div>
         <div class="verdict ok" id="sim-verdict"></div>
-        <p class="note">Les seuils de chaque roulement sont calculés sur les 984 acquisitions de l'essai, donc connus après coup. Un système réel devrait les fixer sur une période de référence.</p>
+        <p class="note">Les seuils de chaque roulement sont calculés sur les 984 relevés de l'essai, donc connus après coup. Un système réel devrait les fixer sur une période de référence.</p>
       </div>
     </section>
 
@@ -544,7 +568,9 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
   var N = D.n, B = D.bearings, F = D.feats, FAIL = D.fail_idx;
   var RULE = 'Règle IQR';
   var SRCS = [RULE].concat(D.models);
-  var FL = { rms: 'RMS', energy: 'Énergie', entropy: 'Entropie spectrale', kurtosis: 'Kurtosis' };
+  var FL = { rms: 'Vibration (RMS)', energy: 'Énergie', entropy: 'Désordre du signal', kurtosis: 'Pics de vibration' };
+  var MFR = { 'Règle IQR': 'Règle des seuils', 'Decision Tree': 'Arbre de décision', 'Random Forest': 'Forêt aléatoire', 'KNN': 'K plus proches voisins', 'SVM (RBF)': 'Machine à vecteurs de support', 'Logistic Regression': 'Régression logistique', 'Gaussian Naive Bayes': 'Bayes naïf' };
+  function mfr(n) { return MFR[n] || n; }
   var BCOL = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)'];
   var ROLE = ['Défaillance documentée : bague extérieure', 'Pas de défaillance documentée', 'Pas de défaillance documentée', 'Pas de défaillance documentée'];
   var T = D.timestamps.map(function (s) { return Date.parse(s + 'Z'); });
@@ -578,8 +604,8 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
 
   /* ---------- sélecteur d'état ---------- */
   (function () {
-    var sel = $('#src'), h = '<optgroup label="Référence"><option value="' + RULE + '">' + RULE + ' (labels du notebook)</option></optgroup><optgroup label="Modèles, prédictions hors échantillon">';
-    D.models.forEach(function (m) { h += '<option value="' + m + '">' + m + '</option>'; });
+    var sel = $('#src'), h = '<optgroup label="Référence"><option value="' + RULE + '">' + mfr(RULE) + ' (étiquettes de l\'étude)</option></optgroup><optgroup label="Modèles entraînés (sur des données qu\'ils n\'ont pas vues)">';
+    D.models.forEach(function (m) { h += '<option value="' + m + '">' + mfr(m) + '</option>'; });
     sel.innerHTML = h + '</optgroup>';
     sel.addEventListener('change', function () { setSrc(sel.value); });
   })();
@@ -593,7 +619,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
   function status(b, i) {
     if (D.series[b].rms[i] < 0.01) return ['off', 'ARRÊT'];
     if (EP[S.src][b].st[i]) return ['crit', 'ALERTE'];
-    if (bits(S.src, b).charCodeAt(i) === 49) return ['warn', 'ÉCART'];
+    if (bits(S.src, b).charCodeAt(i) === 49) return ['warn', 'ÉCART ISOLÉ'];
     return ['ok', 'NORMAL'];
   }
   function fmtV(f, v) { return f === 'energy' ? (v >= 100 ? nf(v, 0) : nf(v, 1)) : nf(v, 3); }
@@ -633,7 +659,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     else { s = 'ok'; title = 'Fonctionnement normal'; sub = 'Les quatre roulements restent dans leur plage.'; }
     el.setAttribute('data-s', s);
     $('#bn-title').textContent = title; $('#bn-sub').textContent = sub;
-    $('#clk').textContent = fmtDate(S.i) + ' 2004';
+    $('#clk').textContent = new Date(T[S.i]).toLocaleString('fr-FR', { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     $('#clk-rel').textContent = S.i <= FAIL ? ('Arrêt de la machine dans ' + nf(hToStop(S.i), 1) + ' h') : 'Après l\'arrêt de la machine';
   }
 
@@ -752,7 +778,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     $('#lead-body').innerHTML = rows;
     var f1 = EP[S.src][B[0]].on[0], others = [1, 2, 3].map(function (k) { return hToStop(EP[S.src][B[k]].on[0]); });
     $('#lead-sum').innerHTML = 'Le roulement 1 déclenche <b>' + nf(hToStop(f1), 1) + ' h</b> avant l\'arrêt. Les roulements 2 à 4 suivent entre ' + nf(Math.max.apply(null, others), 1) + ' h et ' + nf(Math.min.apply(null, others), 1) + ' h avant l\'arrêt, probablement parce que les vibrations du roulement 1 se transmettent par l\'arbre commun.';
-    $('#srcnote').textContent = S.src === RULE ? 'Labels de la règle IQR' : S.src + ', prédictions hors échantillon';
+    $('#srcnote').textContent = S.src === RULE ? 'Étiquettes de la règle des seuils' : mfr(S.src) + ', sur des relevés jamais vus à l\'entraînement';
   }
   function eventsFor(src) {
     var ev = [];
@@ -781,7 +807,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     D.models.forEach(function (n) {
       var a = D.cv[n].overall.f1, b = D.lobo[n].mean_f1, c = D.lobo_norm[n].mean_f1;
       function bar(v, k) { var w = clamp(v, 0, 1); return '<div class="bar k' + k + '" style="--w:' + w + '"><div class="tr"><span class="f"></span></div><span class="val">' + nf(v, 3) + '</span></div>'; }
-      h += '<div class="mrow" role="button" tabindex="0" data-m="' + n + '" aria-current="' + (n === S.model) + '"><div class="mname">' + n + '</div><div class="bars">' + bar(a, 1) + bar(b, 2) + bar(c, 3) + '</div></div>';
+      h += '<div class="mrow" role="button" tabindex="0" data-m="' + n + '" aria-current="' + (n === S.model) + '"><div class="mname">' + mfr(n) + '</div><div class="bars">' + bar(a, 1) + bar(b, 2) + bar(c, 3) + '</div></div>';
     });
     $('#mbars').innerHTML = h;
     $('#mbars').querySelectorAll('.mrow').forEach(function (r) {
@@ -791,19 +817,19 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     });
     var ra = f1Range(function (n) { return D.cv[n].overall.f1; }), rb = f1Range(function (n) { return D.lobo[n].mean_f1; }), rc = f1Range(function (n) { return D.lobo_norm[n].mean_f1; });
     var leads = D.models.map(function (n) { return hToStop(EP[n][B[0]].on[0]); });
-    $('#gapsum').innerHTML = 'En validation croisée, les modèles reproduisent la règle avec un F1 de ' + nf(ra[0], 2) + ' à ' + nf(ra[1], 2) + '. Entraînés sur trois roulements et testés sur le quatrième avec les variables brutes, ils tombent à ' + nf(rb[0], 2) + ' à ' + nf(rb[1], 2) + '. Quand chaque roulement est d\'abord calibré sur ses 20 % premiers instants (son état neuf), ils remontent à ' + nf(rc[0], 2) + ' à ' + nf(rc[1], 2) + '. Sur le roulement 1, tous donnent l\'alerte entre ' + nf(Math.min.apply(null, leads), 1) + ' h et ' + nf(Math.max.apply(null, leads), 1) + ' h avant l\'arrêt, comme la règle elle-même.';
-    $('#mnote').textContent = 'F1 sur 3 936 lignes (validation croisée) ou moyenne des quatre roulements testés tour à tour (roulement jamais vu). Forêt aléatoire : écart de quelques millièmes avec le notebook, dû à la version de scikit-learn.';
+    $('#gapsum').innerHTML = 'Dans le test classique, les modèles reproduisent la règle avec un score F1 de ' + nf(ra[0], 2) + ' à ' + nf(ra[1], 2) + '. Entraînés sur trois roulements et testés sur le quatrième avec les mesures brutes, ils tombent à ' + nf(rb[0], 2) + ' à ' + nf(rb[1], 2) + '. Quand chaque roulement est d\'abord réglé sur son début d\'essai (20 %, état neuf), ils remontent à ' + nf(rc[0], 2) + ' à ' + nf(rc[1], 2) + '. Sur le roulement 1, tous donnent l\'alerte entre ' + nf(Math.min.apply(null, leads), 1) + ' h et ' + nf(Math.max.apply(null, leads), 1) + ' h avant l\'arrêt, comme la règle elle-même.';
+    $('#mnote').textContent = 'Score F1 sur les 3 936 relevés (test classique), ou moyenne des quatre roulements testés chacun à son tour (roulement jamais vu). Forêt aléatoire : écart de quelques millièmes avec le notebook, dû à la version de scikit-learn.';
     var scope = $('#cmscope');
     if (!scope.options.length) { scope.innerHTML = '<option value="overall">Les 4 roulements</option>' + B.map(function (b, k) { return '<option value="' + b + '">Roulement ' + (k + 1) + '</option>'; }).join(''); scope.addEventListener('change', renderCM); }
     renderCM();
   }
   function renderCM() {
     var n = S.model, sc = $('#cmscope').value, c = D.cv[n][sc];
-    $('#cm-title').textContent = 'Matrice de confusion : ' + n;
+    $('#cm-title').textContent = 'Où le modèle se trompe : ' + mfr(n);
     $('#cm').innerHTML = '<div></div><div class="h">Prédit normal</div><div class="h">Prédit anomalie</div>' +
       '<div class="h">Vrai normal</div><div class="c good">' + c.tn + '<small>vrais négatifs</small></div><div class="c bad">' + c.fp + '<small>fausses alertes</small></div>' +
       '<div class="h">Vrai anomalie</div><div class="c bad">' + c.fn + '<small>manquées</small></div><div class="c good">' + c.tp + '<small>vrais positifs</small></div>';
-    $('#kpis').innerHTML = [['Exactitude', c.acc], ['Précision', c.prec], ['Rappel', c.rec], ['F1', c.f1]].map(function (k) { return '<div class="kpi"><div class="l">' + k[0] + '</div><div class="x">' + nf(k[1], 3) + '</div></div>'; }).join('');
+    $('#kpis').innerHTML = [['Bonnes réponses', c.acc], ['Précision', c.prec], ['Rappel', c.rec], ['Score F1', c.f1]].map(function (k) { return '<div class="kpi"><div class="l">' + k[0] + '</div><div class="x">' + nf(k[1], 3) + '</div></div>'; }).join('');
   }
 
   /* ---------- simulateur ---------- */
@@ -845,7 +871,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
       var c = $('#sc-' + f); c.className = 'chip ' + (out ? 'crit' : 'ok'); c.textContent = out ? 'Hors plage' : 'Dans la plage';
     });
     var vd = $('#sim-verdict'); vd.className = 'verdict ' + (any ? 'crit' : 'ok');
-    vd.textContent = any ? 'Anomalie selon la règle IQR : au moins une variable sort de sa plage.' : 'Normal selon la règle IQR : les quatre variables sont dans leur plage.';
+    vd.textContent = any ? 'Anormal selon la règle des seuils : au moins une mesure sort de sa plage.' : 'Normal selon la règle des seuils : les quatre mesures sont dans leur plage.';
   }
 
   /* ---------- limites ---------- */
@@ -853,20 +879,22 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     var ra = f1Range(function (n) { return D.cv[n].overall.f1; }), rb = f1Range(function (n) { return D.lobo[n].mean_f1; }), rc = f1Range(function (n) { return D.lobo_norm[n].mean_f1; });
     var early = [1, 2, 3].map(function (k) { return D.lead[RULE][B[k]].early_false_snapshots; });
     $('#limits').innerHTML =
+      '<h3>Les quatre mesures</h3>' +
+      '<p><b>Vibration (RMS)</b> : le niveau moyen de vibration. <b>Énergie</b> : la quantité totale de vibration sur la seconde. <b>Désordre du signal</b> (entropie spectrale) : baisse quand la vibration se concentre sur quelques fréquences, comme le fait un défaut. <b>Pics de vibration</b> (kurtosis) : monte quand il y a des chocs ponctuels, signe typique d\'un écaillage de la bague.</p>' +
       '<h3>Les anomalies sont définies par une règle, pas observées</h3>' +
-      '<p>Un snapshot est étiqueté anomalie quand l\'une des quatre variables sort de l\'intervalle [Q1 − 1,5 × IQR ; Q3 + 1,5 × IQR] de son roulement. Les modèles reçoivent ces mêmes quatre variables : ils apprennent à reproduire la règle, d\'où un F1 de ' + nf(ra[0], 2) + ' à ' + nf(ra[1], 2) + ' en validation croisée. Ce score mesure la fidélité à la règle, pas la détection d\'un défaut.</p>' +
+      '<p>Un relevé est étiqueté anormal quand l\'une des quatre mesures sort de la plage habituelle de son roulement (la plage est fixée par la règle statistique de l\'écart interquartile, avec un facteur 1,5). Les modèles reçoivent ces mêmes mesures : ils apprennent à reproduire la règle, d\'où un score F1 de ' + nf(ra[0], 2) + ' à ' + nf(ra[1], 2) + ' dans le test classique. Ce score mesure la fidélité à la règle, pas la détection d\'un défaut.</p>' +
       '<h3>Un seul événement réel dans l\'essai</h3>' +
-      '<p>Seul le roulement 1 défaille (bague extérieure). Les anomalies des roulements 2 à 4 se concentrent dans les dernières heures, quand la panne se propage. Avant les 72 dernières heures, elles ne concernent que ' + early[0] + ', ' + early[1] + ' et ' + early[2] + ' snapshots (roulements 2, 3 et 4) sur ' + D.lead[RULE][B[1]].early_snapshots + '. Les labels suivent donc surtout la fin de l\'essai. Les deux derniers snapshots, pris machine arrêtée, sont aussi classés anomalie par la règle : l\'interface les affiche comme arrêt.</p>' +
+      '<p>Seul le roulement 1 défaille (bague extérieure). Les anomalies des roulements 2 à 4 se concentrent dans les dernières heures, quand la panne se propage. Avant les 72 dernières heures, elles ne concernent que ' + early[0] + ', ' + early[1] + ' et ' + early[2] + ' relevés (roulements 2, 3 et 4) sur ' + D.lead[RULE][B[1]].early_snapshots + '. Les étiquettes suivent donc surtout la fin de l\'essai. Les deux derniers relevés, pris machine arrêtée, sont aussi classés anormaux par la règle : l\'interface les affiche comme arrêt.</p>' +
       '<h3>Sur un roulement jamais vu, les scores baissent</h3>' +
-      '<p>Entraînés sur trois roulements et testés sur le quatrième, avec les variables brutes, les modèles obtiennent un F1 moyen de ' + nf(rb[0], 2) + ' à ' + nf(rb[1], 2) + '. Les seuils sont propres à chaque roulement et les niveaux de vibration diffèrent d\'un roulement à l\'autre. En calibrant chacun sur ses 20 % premiers instants (son état neuf), le F1 remonte à ' + nf(rc[0], 2) + ' à ' + nf(rc[1], 2) + '. Cette calibration est possible en exploitation, contrairement à des seuils calculés sur tout l\'essai.</p>' +
-      '<h3>Le test sur le 1er essai ne prouve rien</h3>' +
-      '<p>Les seuils appris sur le 2e essai étiquettent les 2 156 snapshots du roulement 3 du 1er essai comme anomalies. Les modèles à 100 % répondent « anomalie » partout. Le résultat utile est que les seuils ne se transfèrent pas d\'un essai à l\'autre.</p>' +
+      '<p>Entraînés sur trois roulements et testés sur le quatrième, avec les mesures brutes, les modèles obtiennent un score F1 moyen de ' + nf(rb[0], 2) + ' à ' + nf(rb[1], 2) + '. Les seuils sont propres à chaque roulement et les niveaux de vibration diffèrent d\'un roulement à l\'autre. En réglant chacun sur son début d\'essai (20 %, état neuf), le score remonte à ' + nf(rc[0], 2) + ' à ' + nf(rc[1], 2) + '. Ce réglage est possible en exploitation, contrairement à des seuils calculés sur tout l\'essai.</p>' +
+      '<h3>Le test sur l\'essai n° 1 n\'est pas concluant</h3>' +
+      '<p>Les seuils fixés sur l\'essai n° 2 classent anormaux les 2 156 relevés du roulement 3 de l\'essai n° 1, et certains modèles répondent « anormal » partout. Il n\'y a rien à en conclure sur les modèles, sinon que les seuils ne se transportent pas d\'un essai à l\'autre.</p>' +
       '<h3>La durée de vie restante demande un historique</h3>' +
       '<p>Le modèle lit une trajectoire de 30 relevés (5 heures) comparée à l\'état neuf, estimé sur les 200 premiers relevés. Il faut donc au moins 230 fichiers à la suite : un seul fichier ne permet pas d\'estimer la durée restante. L\'estimation est à plus ou moins 1 jour près.</p>' +
       '<h3>L\'état d\'un roulement ne vaut que pour ces quatre roulements</h3>' +
       '<p>La page « État d\'un roulement » juge un fichier avec les seuils de cet essai. Les niveaux de vibration normaux changent d\'un roulement à l\'autre et d\'une machine à l\'autre : sur une autre machine, il faudrait refaire les seuils à partir d\'une période de référence.</p>' +
-      '<h3>Quatre variables, trois informations</h3>' +
-      '<p>L\'énergie vaut 20 480 × RMS² : les deux variables portent presque la même information. Pour aller plus loin, il faudrait une vérité terrain (l\'instant réel de la panne) plutôt qu\'une règle statistique, et des variables liées aux fréquences de défaut du roulement.</p>';
+      '<h3>Quatre mesures, trois informations</h3>' +
+      '<p>L\'énergie vaut 20 480 × RMS² : les deux mesures portent presque la même information. Pour aller plus loin, il faudrait une vérité terrain (l\'instant réel de la panne) plutôt qu\'une règle statistique, et des mesures liées aux fréquences de défaut du roulement.</p>';
   }
 
   /* ---------- synoptique et bon de travail ---------- */
@@ -874,7 +902,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
   function renderSyn() {
     function pal(k) {
       var st = status(B[k], S.i);
-      return '<button type="button" class="pal ' + st[0] + '" data-k="' + k + '" aria-pressed="' + (S.sel === k) + '"><span class="id">PAL-' + (k + 1) + '</span><b>Palier ' + (k + 1) + '</b><span class="st">' + st[1] + '</span></button>';
+      return '<button type="button" class="pal ' + st[0] + '" data-k="' + k + '" aria-pressed="' + (S.sel === k) + '"><span class="id">R' + (k + 1) + '</span><b>Roulement ' + (k + 1) + '</b><span class="st">' + st[1] + '</span></button>';
     }
     var sh = '<div class="shaft"></div>';
     setHTML($('#syn'), '<div class="motor">Moteur<span>M-01</span></div>' + sh + pal(0) + sh + pal(1) + sh + '<div class="load">Charge radiale</div>' + sh + pal(2) + sh + pal(3));
@@ -887,13 +915,13 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     var stopped = D.series[B[0]].rms[S.i] < 0.01, crit = [], warn = [];
     B.forEach(function (b, k) { var s = status(b, S.i)[0]; if (s === 'crit') crit.push(k); if (s === 'warn') warn.push(k); });
     var h;
-    function names(a) { return (a.length > 1 ? 'Paliers ' : 'Palier ') + a.map(function (k) { return k + 1; }).join(', '); }
+    function names(a) { return (a.length > 1 ? 'Roulements ' : 'Roulement ') + a.map(function (k) { return k + 1; }).join(', '); }
     if (stopped) {
-      h = row('Équipement', '<b>Ligne d\'arbre n° 2, quatre paliers</b>') + row('Priorité', '<b>Machine à l\'arrêt</b>') + row('Constat', 'Vibration quasi nulle sur les quatre roulements.') + row('Action', 'Inspecter les quatre roulements avant tout redémarrage.') + row('Délai', '<b>Avant le redémarrage</b>');
+      h = row('Équipement', '<b>Ligne d\'arbre n° 2, quatre roulements</b>') + row('Priorité', '<b>Machine à l\'arrêt</b>') + row('Constat', 'Vibration quasi nulle sur les quatre roulements.') + row('Action', 'Inspecter les quatre roulements avant tout redémarrage.') + row('Délai', '<b>Avant le redémarrage</b>');
     } else if (crit.length) {
       var k0 = crit[0], b0 = B[k0], ep = EP[S.src][b0], start = 0;
       ep.on.forEach(function (a) { if (a <= S.i) start = a; });
-      var outs = F.filter(function (f) { var v = D.series[b0][f][S.i], t = D.thr[b0][f]; return v < t.lo || v > t.hi; }).map(function (f) { return f === 'rms' ? 'RMS' : FL[f].toLowerCase(); });
+      var outs = F.filter(function (f) { var v = D.series[b0][f][S.i], t = D.thr[b0][f]; return v < t.lo || v > t.hi; }).map(function (f) { return f === 'rms' ? 'vibration' : FL[f].toLowerCase(); });
       h = row('Équipement', '<b>' + names(crit) + ', ligne d\'arbre n° 2</b>') + row('Priorité', '<b>Élevée</b>') +
         row('Constat', (S.i - start < 1 ? 'Alerte confirmée à l\'instant' : 'Alerte confirmée depuis ' + nf((S.i - start) / 6, 1) + ' h') + (outs.length ? ' : ' + outs.join(', ') + ' hors plage.' : '.')) +
         row('Action', 'Inspecter le roulement, vérifier la lubrification, préparer son remplacement.') +
@@ -1066,7 +1094,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
   }
   var CL_LAST = null;
   function classFromVals(vals, meta) { CL_LAST = { vals: vals, meta: meta }; showMsg('#cl-err', ''); renderClassResult(vals, meta); }
-  function classFromIndex(i, label) { classFromVals(B.map(function (b) { return FKEYS.map(function (f) { return D.series[b][f][i]; }); }), label + ' : valeurs du fichier de mesures déjà calculées, pas de fichier brut.'); }
+  function classFromIndex(i, label) { classFromVals(B.map(function (b) { return FKEYS.map(function (f) { return D.series[b][f][i]; }); }), label + ' : mesures déjà calculées dans les données de l\'étude (pas de signal brut).'); }
   async function classFromFile(list) {
     var f = list && list[0]; if (!f) return;
     $('#cl-res').hidden = true;
@@ -1210,7 +1238,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     $('#rul-bar').className = 'rbar ' + cls; $('#rul-barf').style.width = (clamp(rul / 2.5, 0, 1) * 100) + '%';
     $('#rul-reco').className = 'reco ' + cls; $('#rul-reco-t').textContent = t + ' : durée restante ' + (rul >= 2.5 ? 'supérieure à 2,5' : nf(rul, 1)) + ' jour(s).'; $('#rul-reco-d').textContent = d;
     $('#rul-meta').textContent = note;
-    var ht = '<tr><th>#</th><th class="num">RMS (g)</th><th class="num">Énergie</th><th class="num">Entropie</th><th class="num">Kurtosis</th><th class="num">RMS / neuf</th></tr>';
+    var ht = '<tr><th>#</th><th class="num">Vibration (g)</th><th class="num">Énergie</th><th class="num">Désordre</th><th class="num">Pics</th><th class="num">Vibration / neuf</th></tr>';
     ht += '<tr><td>Réf. neuf</td><td class="num">' + nf(ref[0], 4) + '</td><td class="num">' + nf(ref[1], 1) + '</td><td class="num">' + nf(ref[2], 3) + '</td><td class="num">' + nf(ref[3], 3) + '</td><td class="num">1,00</td></tr>';
     seq.forEach(function (r, i) { ht += '<tr><td>' + (i + 1) + '</td><td class="num">' + nf(r[0], 4) + '</td><td class="num">' + nf(r[1], 1) + '</td><td class="num">' + nf(r[2], 3) + '</td><td class="num">' + nf(r[3], 3) + '</td><td class="num">' + nf(rel[i][0], 2) + '</td></tr>'; });
     $('#rul-table').innerHTML = ht;
@@ -1268,7 +1296,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
   })();
   function rulLimitsText() {
     var l = rulModel().lofo.filter(function (r) { return r['Modèle'] === 'CNN-LSTM'; });
-    return 'Évalué sur un roulement jamais vu (entraînement sur trois pannes IMS, test sur la quatrième, en tournant), l\'erreur moyenne du modèle pendant la phase de dégradation est de ' + l.map(function (r) { return nf(r['MAE dégradation (j)'], 2) + ' jour'; }).join(', ') + '. La durée restante est une estimation à plus ou moins 1 jour : elle sert à déclencher la surveillance puis l\'arrêt, pas à planifier à l\'heure près. Modèle appris sur un banc d\'essai (2 000 tr/min, 6 000 lb) : à revalider sur une autre machine.';
+    return 'Le modèle a été testé sur un roulement qu\'il n\'avait jamais vu (entraîné sur trois pannes, testé sur la quatrième, chacune à son tour). Pendant la dégradation, son erreur moyenne est de ' + l.map(function (r) { return nf(r['MAE dégradation (j)'], 2) + ' jour'; }).join(', ') + '. La durée restante est une estimation à plus ou moins 1 jour : elle sert à déclencher la surveillance puis l\'arrêt, pas à planifier à l\'heure près. Modèle appris sur un banc d\'essai (2 000 tr/min, 6 000 lb) : à revalider sur une autre machine.';
   }
 
   /* ---------- rendu et boucle ---------- */
@@ -1296,10 +1324,10 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
   /* ---------- onglets, commandes ---------- */
   var TABS = ['supervision', 'rul', 'classe', 'modeles', 'simulateur', 'limites'];
   var PAGES = {
-    supervision: ['LIGNE-2 / 4 PALIERS / 2 000 tr/min', 'Supervision de la ligne d\'arbre', 'Rejeu de l\'essai IMS n° 2 : quatre roulements Rexnord ZA-2115 sur un même arbre, 984 acquisitions d\'une seconde toutes les 10 minutes, du 12 au 19 février 2004.'],
+    supervision: ['LIGNE D\'ARBRE 2 · 4 ROULEMENTS · 2 000 TR/MIN', 'Supervision de la ligne d\'arbre', 'Rejeu d\'un essai réel (NASA, IMS n° 2) : quatre roulements sur un même arbre, un relevé d\'une seconde toutes les 10 minutes, du 12 au 19 février 2004.'],
     rul: ['PRÉDIRE', 'Durée de vie restante', 'Déposez les fichiers de vibration d\'un roulement. La page vous dit combien de temps il lui reste avant la panne.'],
     classe: ['PRÉDIRE', 'État d\'un roulement', 'Déposez un seul fichier de vibration. La page répond, pour chacun des quatre roulements : normal ou anormal.'],
-    modeles: ['COMPRENDRE', 'Comparer les modèles', 'Six modèles de classification essayés sur les labels de la règle des seuils, évalués de trois façons.'],
+    modeles: ['COMPRENDRE', 'Comparer les modèles', 'Six modèles essayés pour reproduire la règle des seuils, jugés de trois façons.'],
     simulateur: ['COMPRENDRE', 'Simulateur de seuils', 'Faire varier les mesures d\'un roulement pour voir quand la règle des seuils déclenche.'],
     limites: ['COMPRENDRE', 'Limites de l\'étude', 'Ce que les résultats montrent, et ce qu\'ils ne montrent pas.']
   };
@@ -1307,7 +1335,7 @@ details.more .tbl-wrap { max-height: 320px; overflow: auto; margin-top: 8px; }
     if (TABS.indexOf(name) < 0) name = 'supervision';
     S.tab = name;
     TABS.forEach(function (t) { $('#p-' + t).hidden = t !== name; $('#t-' + t).setAttribute('aria-selected', t === name ? 'true' : 'false'); $('#t-' + t).tabIndex = t === name ? 0 : -1; });
-    $('#ph-tag').textContent = PAGES[name][0]; $('#ph-h1').textContent = PAGES[name][1]; $('#ph-lead').textContent = PAGES[name][2];
+    $('#ph-tag').textContent = PAGES[name][0]; (function () { var w = PAGES[name][1].split(' '), k = Math.ceil(w.length / 2); $('#ph-h1').innerHTML = w.slice(0, k).join(' ') + ' <strong>' + w.slice(k).join(' ') + '</strong>'; })(); $('#ph-lead').textContent = PAGES[name][2];
     document.title = PAGES[name][1] + ' · Ligne d\'arbre n° 2';
     if (name === 'supervision') { drawChart(); drawTimeline(); }
     if (name === 'simulateur') { if (!Object.keys(SIM.v).length) simLoad(S.i); renderSim(); }

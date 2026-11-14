@@ -106,7 +106,7 @@ const ok = (c, m) => { console.log((c ? 'OK   ' : 'ÉCHEC ') + m); if (!c) fails
   // 7. supervision, bon de travail, synoptique
   await pg.click('#t-supervision');
   await pg.click('#go-alert'); await pg.waitForTimeout(200);
-  ok(/Palier 1/.test(await pg.textContent('#wo-body')) && /Élevée/.test(await pg.textContent('#wo-body')), 'bon de travail à la première alerte');
+  ok(/Roulement 1/.test(await pg.textContent('#wo-body')) && /Élevée/.test(await pg.textContent('#wo-body')), 'bon de travail à la première alerte');
   await pg.click('.pal[data-k="1"]');
   ok(await pg.$eval('.pal[data-k="1"]', e => e.getAttribute('aria-pressed') === 'true'), 'clic sur un palier du synoptique');
   await pg.evaluate(() => { const T = window.__twin; let i = 50; while (T.D.bearings.some(b => T.D.rule[b][i] === '1' || T.D.oof['Decision Tree'][b][i] === '1')) i++; const s = document.getElementById('pos'); s.value = i; s.dispatchEvent(new Event('input')); });
