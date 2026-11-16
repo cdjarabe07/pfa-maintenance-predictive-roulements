@@ -14,7 +14,7 @@
 | `make_twin_data.py` | Entraîne le CNN-LSTM **sans le 2nd test** pour le rejeu (prédiction honnête) → `twin_replay.json` |
 | `envelope_validation.py`, `make_twin_extras.py` | Valident le détecteur par spectre d'enveloppe sur les 984 acquisitions du 2nd test et préparent ses données pour l'interface → `twin_extras.json` |
 | `tests/` | Vérifie que le JavaScript de l'interface donne les mêmes résultats que Python/Keras |
-| `classification/` | **Interface unique** (supervision, prédictions, modèles, voir plus bas) : CSV de Salma, préparation des données, gabarit et assemblage de `site/jumeau_roulements.html` |
+| `classification/` | **Interface unique** (supervision, durée de vie restante, simulateur de seuils, voir plus bas) : CSV de Salma, préparation des données, gabarit et assemblage de `site/jumeau_roulements.html` |
 
 ## Interface unique `site/jumeau_roulements.html`
 
@@ -24,14 +24,12 @@ Poste de supervision en une seule page, style atelier (menu à gauche), qui regr
 |---|---|---|
 | Supervision | rejeu des 984 acquisitions du 2nd test IMS | synoptique des 4 paliers, état, bon de travail suggéré, historique des alertes, journal |
 | Durée de vie restante | un dossier de **≥ 230 fichiers** consécutifs d'un roulement (ou un exemple) | durée restante en jours (CNN-LSTM exact, calculé dans le navigateur) |
-| État d'un roulement | **un seul fichier** (20 480 lignes, 4 colonnes) | normal / anormal pour chacun des 4 roulements, au choix règle des seuils, arbre, régression logistique ou Bayes naïf |
-| Comparer les modèles | – | validation croisée, roulement jamais vu, matrices de confusion |
 | Simulateur de seuils | curseurs | verdict de la règle IQR |
-| Limites de l'étude | – | ce que les scores montrent et ne montrent pas |
+| Limites de l'étude | – | ce que les résultats montrent et ne montrent pas |
 
 La durée restante ne peut pas être estimée avec un seul fichier : le modèle lit une trajectoire de 30 relevés comparée à l'état neuf
-(200 premiers relevés). La page « État d'un roulement » n'est valable que pour les quatre roulements de cet essai (seuils propres à
-chaque roulement).
+(200 premiers relevés).
+La classification d'anomalies (état d'un roulement, comparaison de six modèles) est traitée à part, dans le notebook de l'étude ; elle ne fait plus partie de l'interface.
 
 ```
 python classification/prep_twin_data.py classification/bearing_features_labels_2nd_test.csv classification/twin_data.json   # ≈ 30 s

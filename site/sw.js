@@ -2,7 +2,7 @@
    Pages : réseau d'abord (on voit toujours la dernière version), cache en secours.
    Fichiers statiques du même site : cache d'abord, mis à jour en arrière-plan.
    Pour forcer une mise à jour du cache, changer VERSION. */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = 'jumeau-' + VERSION;
 const PRECACHE = ['/', '/index.html', '/jumeau_roulements.html', '/manifest.webmanifest', '/fond_roulement.jpg',
   '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon-monochrome-512.png', '/icons/apple-touch-icon.png'];
